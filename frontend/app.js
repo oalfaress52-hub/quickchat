@@ -34,6 +34,16 @@ if (signupForm) {
   });
 }
 
+auth.onAuthStateChanged((user) => {
+  const onChatPage = window.location.pathname.endsWith("index.html") ||
+                     window.location.pathname === "/" ||
+                     window.location.pathname.endsWith("/");
+
+  if (!user && onChatPage) {
+    window.location.href = "login.html";
+  }
+});
+
 const loginForm = document.getElementById("login-form");
 
 if (loginForm) {
