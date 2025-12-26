@@ -9,31 +9,47 @@
 <script src="frontend/app.js"></script>
 
 // ===== Signup Form =====
-const signupForm = document.getElementById('signup-form');
-if (signupForm) {
-  signupForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const username = document.getElementById('signup-username').value.trim();
-    const email = document.getElementById('signup-email').value.trim();
-    const password = document.getElementById('signup-password').value;
+const signupForm = document.getElementById("signup-form");
 
-    alert(`Signup submitted!\nUsername: ${username}\nEmail: ${email}`);
-    // TODO: Connect to backend auth (Firebase)
-    signupForm.reset();
+if (signupForm) {
+  signupForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById("signup-username").value.trim();
+    const email = document.getElementById("signup-email").value.trim();
+    const password = document.getElementById("signup-password").value;
+
+    auth.createUserWithEmailAndPassword(email, password)
+      .then((userCred) => {
+        return userCred.user.updateProfile({
+          displayName: username
+        });
+      })
+      .then(() => {
+        window.location.href = "index.html";
+      })
+      .catch((err) => {
+        alert(err.message);
+      });
   });
 }
 
-// ===== Login Form =====
-const loginForm = document.getElementById('login-form');
-if (loginForm) {
-  loginForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
+const loginForm = document.getElementById("login-form");
 
-    alert(`Login submitted!\nEmail: ${email}`);
-    // TODO: Connect to backend auth (Firebase)
-    loginForm.reset();
+if (loginForm) {
+  loginForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+
+    auth.signInWithEmailAndPassword(email, password)
+      .then(() => {
+        window.location.href = "index.html";
+      })
+      .catch((err) => {
+        alert(err.message);
+      });
   });
 }
 
