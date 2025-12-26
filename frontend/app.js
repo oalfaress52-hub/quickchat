@@ -1,3 +1,13 @@
+<!-- Firebase SDKs (classic / compat) -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+<!-- Your Firebase init -->
+<script src="frontend/firebase.js"></script>
+
+<!-- App logic -->
+<script src="frontend/app.js"></script>
+
 // ===== Signup Form =====
 const signupForm = document.getElementById('signup-form');
 if (signupForm) {
