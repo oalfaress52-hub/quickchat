@@ -1,21 +1,61 @@
-const form = document.getElementById('chat-form');
-const input = document.getElementById('message-input');
+// ===== Signup Form =====
+const signupForm = document.getElementById('signup-form');
+if (signupForm) {
+  signupForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('signup-username').value.trim();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+
+    alert(`Signup submitted!\nUsername: ${username}\nEmail: ${email}`);
+    // TODO: Connect to backend auth (Firebase)
+    signupForm.reset();
+  });
+}
+
+// ===== Login Form =====
+const loginForm = document.getElementById('login-form');
+if (loginForm) {
+  loginForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    alert(`Login submitted!\nEmail: ${email}`);
+    // TODO: Connect to backend auth (Firebase)
+    loginForm.reset();
+  });
+}
+
+// ===== Profile Form =====
+const profileForm = document.getElementById('profile-form');
+if (profileForm) {
+  profileForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const username = document.getElementById('profile-username').value.trim();
+    const email = document.getElementById('profile-email').value.trim();
+
+    alert(`Profile updated!\nUsername: ${username}\nEmail: ${email}`);
+    // TODO: Connect to backend (Firebase)
+  });
+}
+
+// ===== Chat Form =====
+const chatForm = document.getElementById('chat-form');
 const messagesDiv = document.getElementById('messages');
+if (chatForm) {
+  const input = document.getElementById('message-input');
+  chatForm.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const msg = input.value.trim();
+    if (msg === '') return;
 
-form.addEventListener('submit', (e) => {
-  e.preventDefault();
-  const msg = input.value.trim();
-  if (msg === '') return;
+    const msgDiv = document.createElement('div');
+    msgDiv.classList.add('message');
+    msgDiv.textContent = msg;
+    messagesDiv.appendChild(msgDiv);
+    messagesDiv.scrollTop = messagesDiv.scrollHeight;
 
-  // Display message in chat
-  const msgDiv = document.createElement('div');
-  msgDiv.classList.add('message');
-  msgDiv.textContent = msg;
-  messagesDiv.appendChild(msgDiv);
-
-  // Scroll to bottom
-  messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-  // Clear input
-  input.value = '';
-});
+    input.value = '';
+  });
+}
