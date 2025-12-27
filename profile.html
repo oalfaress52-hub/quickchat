@@ -7,6 +7,26 @@
   <link rel="stylesheet" href="frontend/style.css">
 </head>
 <body>
+<h2>Your Profile</h2>
+
+<form id="profile-form">
+  <input
+    id="profile-name"
+    type="text"
+    placeholder="Display name"
+    required
+  />
+
+  <textarea
+    id="profile-bio"
+    placeholder="Bio"
+    rows="4"
+  ></textarea>
+
+  <button type="submit">Save Profile</button>
+</form>
+
+<p id="profile-status"></p>
   <div class="form-container">
     <h2>Update Profile</h2>
     <form id="profile-form">
