@@ -1,4 +1,23 @@
 // =========================
+// MODERATION — WORD FILTER
+// =========================
+
+const BANNED_WORDS = [
+  "slur1",
+  "slur2",
+  "badword1"
+];
+
+function containsBannedWords(text) {
+  const lower = text.toLowerCase();
+  return BANNED_WORDS.some(word => lower.includes(word));
+}
+
+// =========================
+// everything else starts below
+// =========================
+
+// =========================
 // PROFILE — LOAD & SAVE (FIXED)
 // =========================
 
