@@ -1,4 +1,4 @@
-import { doc, getDoc, updateDoc } from "firebase/firestore";
+import { doc, getDoc, updateDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp } from "firebase/firestore";
 import { db } from "./firebase.js";
 
 // ----------------------------
@@ -14,33 +14,41 @@ function containsBannedWords(text) {
   });
 }
 
-function sendMessage(text, serverId) {
+// ----------------------------
+// SEND MESSAGE
+// ----------------------------
+export async function sendMessage(text, serverId) {
   if (containsBannedWords(text)) {
     alert("Your message contains prohibited language.");
     return;
   }
 
-  // TODO: Add Firestore write logic here
-  // Example:
-  // addDoc(collection(db, "messages"), { text, serverId, uid: currentUser.uid });
+  if (!currentUser) return alert("Not logged in!");
+
+  await addDoc(collection(db, "messages"), {
+    text,
+    serverId,
+    uid: currentUser.uid,
+    createdAt: serverTimestamp()
+  });
 }
 
 // ----------------------------
 // FETCH AND RENDER SERVER
 // ----------------------------
-async function fetchServer(serverId) {
+export async function fetchServer(serverId) {
   const serverRef = doc(db, "servers", serverId);
   const serverSnap = await getDoc(serverRef);
 
   if (serverSnap.exists()) {
-    return { id: serverSnap.id, ...serverSnap.data() }; // Include ID
+    return { id: serverSnap.id, ...serverSnap.data() };
   } else {
     console.error("Server not found!");
     return null;
   }
 }
 
-function renderServer(server) {
+export function renderServer(server) {
   // Render server name
   document.getElementById("serverName").textContent = server.name;
 
@@ -56,7 +64,7 @@ function renderServer(server) {
   // Render Moderators
   const modsUl = document.getElementById("moderatorsList");
   modsUl.innerHTML = "";
-  server.moderators.forEach(uid => {
+  (server.moderators || []).forEach(uid => {
     const li = document.createElement("li");
     li.textContent = uid;
     modsUl.appendChild(li);
@@ -65,7 +73,7 @@ function renderServer(server) {
   // Render Members
   const membersUl = document.getElementById("membersList");
   membersUl.innerHTML = "";
-  server.members.forEach(uid => {
+  (server.members || []).forEach(uid => {
     const li = document.createElement("li");
     li.textContent = uid;
     membersUl.appendChild(li);
@@ -78,7 +86,6 @@ function renderServer(server) {
 function showOwnerButton(server) {
   const container = document.getElementById("serverContainer");
 
-  // Prevent duplicate button
   if (document.getElementById("ownerButton")) return;
 
   const ownerButton = document.createElement("button");
@@ -89,7 +96,6 @@ function showOwnerButton(server) {
 }
 
 function openRolePanel(server) {
-  // Remove old panel if exists
   let oldPanel = document.getElementById("rolePanel");
   if (oldPanel) oldPanel.remove();
 
@@ -104,28 +110,19 @@ function openRolePanel(server) {
     memberDiv.style.marginBottom = "5px";
     memberDiv.textContent = memberUid;
 
-    // Prevent owner from being demoted
     if (!server.owners.includes(memberUid)) {
-      // Promote button
       const promoteBtn = document.createElement("button");
       promoteBtn.textContent = "Make Moderator";
       promoteBtn.style.marginLeft = "10px";
       promoteBtn.onclick = async () => {
         await assignModerator(server.id, memberUid);
-        const updatedServer = await fetchServer(server.id);
-        renderServer(updatedServer);
-        openRolePanel(updatedServer); // Refresh panel
       };
 
-      // Demote button
       const demoteBtn = document.createElement("button");
       demoteBtn.textContent = "Remove Moderator";
       demoteBtn.style.marginLeft = "5px";
       demoteBtn.onclick = async () => {
         await removeModerator(server.id, memberUid);
-        const updatedServer = await fetchServer(server.id);
-        renderServer(updatedServer);
-        openRolePanel(updatedServer); // Refresh panel
       };
 
       memberDiv.appendChild(promoteBtn);
@@ -148,9 +145,7 @@ async function assignModerator(serverId, memberUid) {
 
   const server = serverSnap.data();
   const updatedModerators = Array.from(new Set([...(server.moderators || []), memberUid]));
-
   await updateDoc(serverRef, { moderators: updatedModerators });
-  alert(memberUid + " is now a moderator!");
 }
 
 async function removeModerator(serverId, memberUid) {
@@ -160,24 +155,48 @@ async function removeModerator(serverId, memberUid) {
 
   const server = serverSnap.data();
   const updatedModerators = (server.moderators || []).filter(uid => uid !== memberUid);
-
   await updateDoc(serverRef, { moderators: updatedModerators });
-  alert(memberUid + " is no longer a moderator!");
+}
+
+// ----------------------------
+// REAL-TIME SUBSCRIPTIONS
+// ----------------------------
+export function subscribeToServer(serverId, callback) {
+  const serverRef = doc(db, "servers", serverId);
+  return onSnapshot(serverRef, snap => {
+    if (snap.exists()) callback({ id: snap.id, ...snap.data() });
+  });
+}
+
+export function subscribeToMessages(serverId, callback) {
+  const messagesRef = collection(db, "messages");
+  const q = query(messagesRef, where("serverId", "==", serverId), orderBy("createdAt", "asc"));
+  return onSnapshot(q, snap => {
+    const messages = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    callback(messages);
+  });
 }
 
 // ----------------------------
 // INITIALIZE PAGE
 // ----------------------------
-async function initServerPage(serverId) {
-  const server = await fetchServer(serverId);
-  if (!server) return;
+export async function initServerPage(serverId) {
+  // Subscribe to server updates
+  subscribeToServer(serverId, (server) => {
+    renderServer(server);
+    if (server.owners.includes(currentUser.uid)) showOwnerButton(server);
+    openRolePanel(server); // optional: keep role panel in sync
+  });
 
-  renderServer(server);
-
-  if (server.owners.includes(currentUser.uid)) {
-    showOwnerButton(server);
-  }
+  // Subscribe to messages
+  subscribeToMessages(serverId, (messages) => {
+    const chat = document.getElementById("chatMessages");
+    if (!chat) return;
+    chat.innerHTML = "";
+    messages.forEach(msg => {
+      const div = document.createElement("div");
+      div.textContent = `${msg.uid}: ${msg.text}`;
+      chat.appendChild(div);
+    });
+  });
 }
-
-// Call initialization (replace with actual server ID dynamically)
-initServerPage("server123");
