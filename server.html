@@ -3,12 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>Quickchat - Server</title>
+  <link rel="stylesheet" href="style.css">
   <script type="module" src="firebase.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <h1 id="serverName">Server</h1>
+  <h1 id="serverName">Server Name</h1>
 
+  <!-- Server Container -->
   <div id="serverContainer">
     <h2>Owners</h2>
     <ul id="ownersList"></ul>
@@ -18,25 +20,40 @@
 
     <h2>Members</h2>
     <ul id="membersList"></ul>
-
-    <h2>Send Message</h2>
-    <input type="text" id="messageInput" placeholder="Type a message">
-    <button id="sendBtn">Send</button>
   </div>
+
+  <!-- Chat Section -->
+  <h2>Chat</h2>
+  <div id="chatMessages" style="border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto;"></div>
+  <input type="text" id="messageInput" placeholder="Type a message">
+  <button id="sendBtn">Send</button>
 
   <script type="module">
     import { initServerPage, sendMessage } from './app.js';
+    import { auth } from './firebase.js';
+    import { onAuthStateChanged } from "firebase/auth";
 
-    // Get server ID from URL
-    const params = new URLSearchParams(window.location.search);
-    const serverId = params.get('serverId');
+    let currentUser;
 
-    // Initialize server page
-    initServerPage(serverId);
+    onAuthStateChanged(auth, user => {
+      if (!user) return window.location.href = "login.html";
+      currentUser = user;
+
+      // Get serverId from URL
+      const params = new URLSearchParams(window.location.search);
+      const serverId = params.get('serverId');
+      if (!serverId) return alert("Server ID missing in URL!");
+
+      // Initialize server page (real-time updates included)
+      initServerPage(serverId);
+    });
 
     // Send message
     document.getElementById('sendBtn').onclick = () => {
       const text = document.getElementById('messageInput').value;
+      const params = new URLSearchParams(window.location.search);
+      const serverId = params.get('serverId');
+      if (!serverId) return alert("Server ID missing in URL!");
       sendMessage(text, serverId);
       document.getElementById('messageInput').value = '';
     };
