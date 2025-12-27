@@ -95,3 +95,49 @@ if (chatForm) {
     input.value = '';
   });
 }
+
+// =========================
+// Phase 2B — CHAT MESSAGES
+// =========================
+
+const messageForm = document.getElementById("message-form");
+const messageInput = document.getElementById("message-input");
+const messagesDiv = document.getElementById("messages");
+
+// Send message
+if (messageForm) {
+  messageForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    db.collection("messages").add({
+      text: text,
+      uid: auth.currentUser.uid,
+      sender: auth.currentUser.displayName || "Anonymous",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    messageInput.value = "";
+  });
+}
+
+// Listen for new messages
+if (messagesDiv) {
+  db.collection("messages")
+    .orderBy("timestamp")
+    .limit(50)
+    .onSnapshot((snapshot) => {
+      messagesDiv.innerHTML = "";
+
+      snapshot.forEach((doc) => {
+        const msg = doc.data();
+        const div = document.createElement("div");
+        div.textContent = `${msg.sender}: ${msg.text}`;
+        messagesDiv.appendChild(div);
+      });
+
+      messagesDiv.scrollTop = messagesDiv.scrollHeight;
+    });
+}
