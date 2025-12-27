@@ -3,69 +3,93 @@
 <head>
   <meta charset="UTF-8">
   <title>Quickchat - Home</title>
+  <link rel="stylesheet" href="style.css">
   <script type="module" src="firebase.js"></script>
   <script type="module" src="app.js"></script>
 </head>
 <body>
-  <h1>Quickchat</h1>
+  <h1>Quickchat Home</h1>
 
-  <!-- Login -->
-  <div id="loginContainer">
-    <input type="email" id="email" placeholder="Email">
-    <input type="password" id="password" placeholder="Password">
-    <button id="loginBtn">Login / Sign Up</button>
-  </div>
+  <p>Logged in as: <span id="userEmail"></span></p>
+  <button id="logoutBtn">Logout</button>
 
-  <!-- Server Actions -->
-  <div id="serverActions" style="display:none;">
-    <input type="text" id="serverName" placeholder="New Server Name">
-    <button id="createServerBtn">Create Server</button>
+  <hr>
 
-    <input type="text" id="joinCode" placeholder="Enter Server Code">
-    <button id="joinServerBtn">Join Server</button>
-  </div>
+  <!-- Create Server -->
+  <h2>Create a New Server</h2>
+  <input type="text" id="newServerName" placeholder="Server Name">
+  <button id="createServerBtn">Create Server</button>
+
+  <hr>
+
+  <!-- Join Existing Server -->
+  <h2>Available Servers</h2>
+  <ul id="serverList"></ul>
 
   <script type="module">
     import { auth } from './firebase.js';
-    import { createServer, joinServer } from './app.js';
-    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
+    import { signOut, onAuthStateChanged } from "firebase/auth";
+    import { db } from './firebase.js';
+    import { collection, getDocs, addDoc, updateDoc, doc, arrayUnion } from "firebase/firestore";
 
     let currentUser;
 
-    // Handle auth state
     onAuthStateChanged(auth, user => {
-      if (user) {
-        currentUser = user;
-        document.getElementById('loginContainer').style.display = 'none';
-        document.getElementById('serverActions').style.display = 'block';
-      }
+      if (!user) return window.location.href = "login.html";
+      currentUser = user;
+      document.getElementById("userEmail").textContent = user.email;
+
+      // Load servers
+      loadServers();
     });
 
-    // Login / signup
-    document.getElementById('loginBtn').onclick = async () => {
-      const email = document.getElementById('email').value;
-      const password = document.getElementById('password').value;
-      try {
-        currentUser = (await signInWithEmailAndPassword(auth, email, password)).user;
-      } catch {
-        // If login fails, create account
-        currentUser = (await createUserWithEmailAndPassword(auth, email, password)).user;
-      }
+    document.getElementById("logoutBtn").onclick = () => {
+      signOut(auth).then(() => window.location.href = "login.html");
     };
 
-    // Create server
-    document.getElementById('createServerBtn').onclick = async () => {
-      const name = document.getElementById('serverName').value;
-      const serverId = await createServer(currentUser, name);
-      window.location.href = `server.html?serverId=${serverId}`;
+    // ----------------------------
+    // CREATE SERVER
+    // ----------------------------
+    document.getElementById("createServerBtn").onclick = async () => {
+      const name = document.getElementById("newServerName").value.trim();
+      if (!name) return alert("Please enter a server name");
+
+      const serverRef = await addDoc(collection(db, "servers"), {
+        name,
+        owners: [currentUser.uid],
+        moderators: [],
+        members: [currentUser.uid],
+        createdAt: new Date()
+      });
+
+      window.location.href = `server.html?serverId=${serverRef.id}`;
     };
 
-    // Join server
-    document.getElementById('joinServerBtn').onclick = async () => {
-      const code = document.getElementById('joinCode').value;
-      await joinServer(code, currentUser);
-      window.location.href = `server.html?serverId=${code}`;
-    };
+    // ----------------------------
+    // LOAD SERVERS
+    // ----------------------------
+    async function loadServers() {
+      const list = document.getElementById("serverList");
+      list.innerHTML = "";
+
+      const querySnap = await getDocs(collection(db, "servers"));
+      querySnap.forEach(docSnap => {
+        const server = { id: docSnap.id, ...docSnap.data() };
+        const li = document.createElement("li");
+        const joinBtn = document.createElement("button");
+        joinBtn.textContent = "Join / Open";
+        joinBtn.onclick = async () => {
+          const serverRef = doc(db, "servers", server.id);
+          await updateDoc(serverRef, {
+            members: arrayUnion(currentUser.uid)
+          });
+          window.location.href = `server.html?serverId=${server.id}`;
+        };
+        li.textContent = server.name + " ";
+        li.appendChild(joinBtn);
+        list.appendChild(li);
+      });
+    }
   </script>
 </body>
 </html>
