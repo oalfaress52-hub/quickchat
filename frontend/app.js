@@ -123,6 +123,50 @@ if (messageForm) {
   });
 }
 
+// =========================
+// Phase 2C — GLOBAL SLOW MODE
+// =========================
+
+const SLOW_MODE_MS = 3000; // 3 seconds
+
+function sendMessage(text) {
+  const user = auth.currentUser;
+  if (!user) return;
+
+  const metaRef = db.collection("message_meta").doc(user.uid);
+  const msgRef = db.collection("messages").doc();
+
+  db.runTransaction(async (tx) => {
+    const metaDoc = await tx.get(metaRef);
+    const now = Date.now();
+
+    if (metaDoc.exists) {
+      const last = metaDoc.data().lastMessageAt?.toMillis?.() || 0;
+      if (now - last < SLOW_MODE_MS) {
+        throw new Error("SLOW_MODE");
+      }
+    }
+
+    tx.set(metaRef, {
+      lastMessageAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+
+    tx.set(msgRef, {
+      text,
+      uid: user.uid,
+      sender: user.displayName || "Anonymous",
+      timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+  })
+  .catch((err) => {
+    if (err.message === "SLOW_MODE") {
+      alert("Please wait before sending another message.");
+    } else {
+      alert(err.message);
+    }
+  });
+}
+
 // Listen for new messages
 if (messagesDiv) {
   db.collection("messages")
