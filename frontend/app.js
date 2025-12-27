@@ -21,10 +21,17 @@ if (signupForm) {
 
     auth.createUserWithEmailAndPassword(email, password)
       .then((userCred) => {
-        return userCred.user.updateProfile({
-          displayName: username
-        });
-      })
+  const user = userCred.user;
+
+  return Promise.all([
+    user.updateProfile({ displayName: username }),
+    db.collection("users").doc(user.uid).set({
+      username: username,
+      email: user.email,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+  ]);
+})
       .then(() => {
         window.location.href = "index.html";
       })
