@@ -2,43 +2,70 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quickchat</title>
-  <link rel="stylesheet" href="frontend/style.css">
+  <title>Quickchat - Home</title>
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="app.js"></script>
 </head>
 <body>
-  <div id="chat-container">
-    <div id="messages"></div>
-    <form id="chat-form">
-      <input type="text" id="message-input" placeholder="Type a message..." autocomplete="off" required>
-      <button type="submit">Send</button>
-    </form>
+  <h1>Quickchat</h1>
+
+  <!-- Login -->
+  <div id="loginContainer">
+    <input type="email" id="email" placeholder="Email">
+    <input type="password" id="password" placeholder="Password">
+    <button id="loginBtn">Login / Sign Up</button>
   </div>
-  <script src="frontend/app.js"></script>
-<div id="chat">
-  <div id="messages"></div>
 
-  <form id="message-form">
-    <input
-      id="message-input"
-      type="text"
-      placeholder="Type a message…"
-      autocomplete="off"
-      required
-    />
-    <button type="submit">Send</button>
-  </form>
-</div>
+  <!-- Server Actions -->
+  <div id="serverActions" style="display:none;">
+    <input type="text" id="serverName" placeholder="New Server Name">
+    <button id="createServerBtn">Create Server</button>
 
-<!-- Firebase SDKs (compat) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <input type="text" id="joinCode" placeholder="Enter Server Code">
+    <button id="joinServerBtn">Join Server</button>
+  </div>
 
-<!-- Your Firebase init -->
-<script src="frontend/firebase.js"></script>
+  <script type="module">
+    import { auth } from './firebase.js';
+    import { createServer, joinServer } from './app.js';
+    import { signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged } from "firebase/auth";
 
-<!-- Your app logic -->
-<script src="frontend/app.js"></script>
+    let currentUser;
+
+    // Handle auth state
+    onAuthStateChanged(auth, user => {
+      if (user) {
+        currentUser = user;
+        document.getElementById('loginContainer').style.display = 'none';
+        document.getElementById('serverActions').style.display = 'block';
+      }
+    });
+
+    // Login / signup
+    document.getElementById('loginBtn').onclick = async () => {
+      const email = document.getElementById('email').value;
+      const password = document.getElementById('password').value;
+      try {
+        currentUser = (await signInWithEmailAndPassword(auth, email, password)).user;
+      } catch {
+        // If login fails, create account
+        currentUser = (await createUserWithEmailAndPassword(auth, email, password)).user;
+      }
+    };
+
+    // Create server
+    document.getElementById('createServerBtn').onclick = async () => {
+      const name = document.getElementById('serverName').value;
+      const serverId = await createServer(currentUser, name);
+      window.location.href = `server.html?serverId=${serverId}`;
+    };
+
+    // Join server
+    document.getElementById('joinServerBtn').onclick = async () => {
+      const code = document.getElementById('joinCode').value;
+      await joinServer(code, currentUser);
+      window.location.href = `server.html?serverId=${code}`;
+    };
+  </script>
 </body>
 </html>
