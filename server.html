@@ -2,61 +2,75 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quickchat - Server</title>
+  <title>Server Page</title>
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="app.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { margin-top: 20px; }
+    ul { list-style: none; padding: 0; }
+    li { padding: 5px 0; }
+    .owner { font-weight: bold; color: darkblue; }
+    .moderator { font-weight: bold; color: green; }
+    .banned { color: red; text-decoration: line-through; }
+    .button { margin-left: 10px; padding: 3px 7px; cursor: pointer; }
+    #chatMessages { border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto; margin-top: 20px; }
+  </style>
 </head>
 <body>
   <h1 id="serverName">Server Name</h1>
 
-  <!-- Server Container -->
-  <div id="serverContainer">
-    <h2>Owners</h2>
-    <ul id="ownersList"></ul>
+  <div id="serverContainer"></div>
 
-    <h2>Moderators</h2>
-    <ul id="moderatorsList"></ul>
+  <h2>Owners</h2>
+  <ul id="ownersList"></ul>
 
-    <h2>Members</h2>
-    <ul id="membersList"></ul>
-  </div>
+  <h2>Moderators</h2>
+  <ul id="moderatorsList"></ul>
 
-  <!-- Chat Section -->
+  <h2>Members</h2>
+  <ul id="membersList"></ul>
+
   <h2>Chat</h2>
-  <div id="chatMessages" style="border:1px solid #ccc; padding:10px; height:300px; overflow-y:auto;"></div>
-  <input type="text" id="messageInput" placeholder="Type a message">
-  <button id="sendBtn">Send</button>
+  <div id="chatMessages"></div>
+
+  <input type="text" id="messageInput" placeholder="Type a message..." />
+  <button id="sendButton">Send</button>
 
   <script type="module">
-    import { initServerPage, sendMessage } from './app.js';
-    import { auth } from './firebase.js';
-    import { onAuthStateChanged } from "firebase/auth";
+    import { sendMessage, initServerPage } from "./app.js";
 
-    let currentUser;
+    const serverId = "server123"; // replace with actual server ID
 
-    onAuthStateChanged(auth, user => {
-      if (!user) return window.location.href = "login.html";
-      currentUser = user;
+    // Initialize server page
+    initServerPage(serverId);
 
-      // Get serverId from URL
-      const params = new URLSearchParams(window.location.search);
-      const serverId = params.get('serverId');
-      if (!serverId) return alert("Server ID missing in URL!");
+    const input = document.getElementById("messageInput");
+    const button = document.getElementById("sendButton");
 
-      // Initialize server page (real-time updates included)
-      initServerPage(serverId);
+    button.addEventListener("click", async () => {
+      const text = input.value.trim();
+      if (!text) return;
+      await sendMessage(text, serverId);
+      input.value = "";
     });
 
-    // Send message
-    document.getElementById('sendBtn').onclick = () => {
-      const text = document.getElementById('messageInput').value;
-      const params = new URLSearchParams(window.location.search);
-      const serverId = params.get('serverId');
-      if (!serverId) return alert("Server ID missing in URL!");
-      sendMessage(text, serverId);
-      document.getElementById('messageInput').value = '';
-    };
+    input.addEventListener("keydown", async (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        const text = input.value.trim();
+        if (!text) return;
+        await sendMessage(text, serverId);
+        input.value = "";
+      }
+    });
+
+    // Render badges dynamically
+    function addBadge(li, type) {
+      const span = document.createElement("span");
+      span.textContent = type;
+      span.className = type.toLowerCase();
+      li.appendChild(span);
+    }
   </script>
 </body>
 </html>
