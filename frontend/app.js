@@ -1,14 +1,14 @@
-<!-- Firebase SDKs (classic / compat) -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+// =========================
+// AUTH REFERENCES
+// =========================
 
-<!-- Your Firebase init -->
-<script src="frontend/firebase.js"></script>
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-<!-- App logic -->
-<script src="frontend/app.js"></script>
+// =========================
+// SIGNUP
+// =========================
 
-// ===== Signup Form =====
 const signupForm = document.getElementById("signup-form");
 
 if (signupForm) {
@@ -28,21 +28,13 @@ if (signupForm) {
       .then(() => {
         window.location.href = "index.html";
       })
-      .catch((err) => {
-        alert(err.message);
-      });
+      .catch((err) => alert(err.message));
   });
 }
 
-auth.onAuthStateChanged((user) => {
-  const onChatPage = window.location.pathname.endsWith("index.html") ||
-                     window.location.pathname === "/" ||
-                     window.location.pathname.endsWith("/");
-
-  if (!user && onChatPage) {
-    window.location.href = "login.html";
-  }
-});
+// =========================
+// LOGIN
+// =========================
 
 const loginForm = document.getElementById("login-form");
 
@@ -57,77 +49,55 @@ if (loginForm) {
       .then(() => {
         window.location.href = "index.html";
       })
-      .catch((err) => {
-        alert(err.message);
-      });
-  });
-}
-
-// ===== Profile Form =====
-const profileForm = document.getElementById('profile-form');
-if (profileForm) {
-  profileForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const username = document.getElementById('profile-username').value.trim();
-    const email = document.getElementById('profile-email').value.trim();
-
-    alert(`Profile updated!\nUsername: ${username}\nEmail: ${email}`);
-    // TODO: Connect to backend (Firebase)
-  });
-}
-
-// ===== Chat Form =====
-const chatForm = document.getElementById('chat-form');
-const messagesDiv = document.getElementById('messages');
-if (chatForm) {
-  const input = document.getElementById('message-input');
-  chatForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const msg = input.value.trim();
-    if (msg === '') return;
-
-    const msgDiv = document.createElement('div');
-    msgDiv.classList.add('message');
-    msgDiv.textContent = msg;
-    messagesDiv.appendChild(msgDiv);
-    messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-    input.value = '';
+      .catch((err) => alert(err.message));
   });
 }
 
 // =========================
-// Phase 2B — CHAT MESSAGES
+// AUTH GUARD (CHAT PAGE)
+// =========================
+
+auth.onAuthStateChanged((user) => {
+  const onChatPage =
+    window.location.pathname.endsWith("index.html") ||
+    window.location.pathname === "/" ||
+    window.location.pathname.endsWith("/");
+
+  if (!user && onChatPage) {
+    window.location.href = "login.html";
+  }
+});
+
+// =========================
+// PROFILE (UI ONLY FOR NOW)
+// =========================
+
+const profileForm = document.getElementById("profile-form");
+
+if (profileForm) {
+  profileForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const username = document.getElementById("profile-username").value.trim();
+    const email = document.getElementById("profile-email").value.trim();
+
+    alert(`Profile updated!\nUsername: ${username}\nEmail: ${email}`);
+  });
+}
+
+// =========================
+// CHAT DOM REFERENCES
 // =========================
 
 const messageForm = document.getElementById("message-form");
 const messageInput = document.getElementById("message-input");
 const messagesDiv = document.getElementById("messages");
 
-// Send message
-if (messageForm) {
-  messageForm.addEventListener("submit", (e) => {
-    e.preventDefault();
-
-    const text = messageInput.value.trim();
-    if (!text) return;
-
-    db.collection("messages").add({
-      text: text,
-      uid: auth.currentUser.uid,
-      sender: auth.currentUser.displayName || "Anonymous",
-      timestamp: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    messageInput.value = "";
-  });
-}
-
 // =========================
-// Phase 2C — GLOBAL SLOW MODE
+// PHASE 2C — GLOBAL SLOW MODE
 // =========================
 
-const SLOW_MODE_MS = 3000; // 3 seconds
+const SLOW_MODE_MS = 3000;
 
 function sendMessage(text) {
   const user = auth.currentUser;
@@ -157,8 +127,7 @@ function sendMessage(text) {
       sender: user.displayName || "Anonymous",
       timestamp: firebase.firestore.FieldValue.serverTimestamp()
     });
-  })
-  .catch((err) => {
+  }).catch((err) => {
     if (err.message === "SLOW_MODE") {
       alert("Please wait before sending another message.");
     } else {
@@ -167,7 +136,10 @@ function sendMessage(text) {
   });
 }
 
-// Listen for new messages
+// =========================
+// MESSAGE LISTENER
+// =========================
+
 if (messagesDiv) {
   db.collection("messages")
     .orderBy("timestamp")
@@ -184,4 +156,20 @@ if (messagesDiv) {
 
       messagesDiv.scrollTop = messagesDiv.scrollHeight;
     });
+}
+
+// =========================
+// FINAL SUBMIT HANDLER
+// =========================
+
+if (messageForm) {
+  messageForm.addEventListener("submit", (e) => {
+    e.preventDefault();
+
+    const text = messageInput.value.trim();
+    if (!text) return;
+
+    sendMessage(text);
+    messageInput.value = "";
+  });
 }
