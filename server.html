@@ -1,12 +1,45 @@
-<div id="serverContainer">
-  <h2 id="serverName"></h2>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quickchat - Server</title>
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="app.js"></script>
+</head>
+<body>
+  <h1 id="serverName">Server</h1>
 
-  <h3>Owners</h3>
-  <ul id="ownersList"></ul>
+  <div id="serverContainer">
+    <h2>Owners</h2>
+    <ul id="ownersList"></ul>
 
-  <h3>Moderators</h3>
-  <ul id="moderatorsList"></ul>
+    <h2>Moderators</h2>
+    <ul id="moderatorsList"></ul>
 
-  <h3>Members</h3>
-  <ul id="membersList"></ul>
-</div>
+    <h2>Members</h2>
+    <ul id="membersList"></ul>
+
+    <h2>Send Message</h2>
+    <input type="text" id="messageInput" placeholder="Type a message">
+    <button id="sendBtn">Send</button>
+  </div>
+
+  <script type="module">
+    import { initServerPage, sendMessage } from './app.js';
+
+    // Get server ID from URL
+    const params = new URLSearchParams(window.location.search);
+    const serverId = params.get('serverId');
+
+    // Initialize server page
+    initServerPage(serverId);
+
+    // Send message
+    document.getElementById('sendBtn').onclick = () => {
+      const text = document.getElementById('messageInput').value;
+      sendMessage(text, serverId);
+      document.getElementById('messageInput').value = '';
+    };
+  </script>
+</body>
+</html>
