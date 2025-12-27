@@ -76,19 +76,50 @@ auth.onAuthStateChanged((user) => {
 });
 
 // =========================
-// PROFILE (UI ONLY FOR NOW)
+// PROFILE — LOAD & SAVE
 // =========================
 
 const profileForm = document.getElementById("profile-form");
 
 if (profileForm) {
+  const usernameInput = document.getElementById("profile-username");
+  const emailInput = document.getElementById("profile-email");
+
+  auth.onAuthStateChanged((user) => {
+    if (!user) return;
+
+    db.collection("users").doc(user.uid).get()
+      .then((doc) => {
+        if (doc.exists) {
+          const data = doc.data();
+          usernameInput.value = data.username || "";
+          emailInput.value = data.email || user.email;
+        }
+      });
+  });
+
   profileForm.addEventListener("submit", (e) => {
     e.preventDefault();
 
-    const username = document.getElementById("profile-username").value.trim();
-    const email = document.getElementById("profile-email").value.trim();
+    const username = usernameInput.value.trim();
+    const email = emailInput.value.trim();
+    const user = auth.currentUser;
 
-    alert(`Profile updated!\nUsername: ${username}\nEmail: ${email}`);
+    if (!user) return;
+
+    Promise.all([
+      user.updateProfile({ displayName: username }),
+      user.updateEmail(email),
+      db.collection("users").doc(user.uid).update({
+        username: username,
+        email: email,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      })
+    ])
+    .then(() => {
+      alert("Profile updated successfully!");
+    })
+    .catch((err) => alert(err.message));
   });
 }
 
