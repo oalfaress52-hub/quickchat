@@ -9,9 +9,42 @@ const BANNED_WORDS = ["slur1", "slur2", "badword1"];
 function containsBannedWords(text) {
   const lower = text.toLowerCase();
   return BANNED_WORDS.some(word => {
-    const regex = new RegExp(`\\b${word}\\b`, "i"); // word boundaries
+    const regex = new RegExp(`\\b${word}\\b`, "i");
     return regex.test(lower);
   });
+}
+
+// ----------------------------
+// PSEUDO-IP TRACKING
+// ----------------------------
+function getPseudoIP() {
+  const ua = navigator.userAgent;
+  let hash = 0;
+  for (let i = 0; i < ua.length; i++) {
+    hash = (hash << 5) - hash + ua.charCodeAt(i);
+    hash |= 0;
+  }
+  return "IP-" + Math.abs(hash);
+}
+
+// ----------------------------
+// FORMAT TIMESTAMPS
+// ----------------------------
+function formatTimestamp(timestamp) {
+  if (!timestamp) return "N/A";
+  const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+  return date.toLocaleString(undefined, { timeZoneName: "short" });
+}
+
+// ----------------------------
+// PARSE BAN DURATION
+// ----------------------------
+function parseBanTime(timeStr) {
+  const num = parseInt(timeStr);
+  if (timeStr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
+  if (timeStr.endsWith("h")) return num * 60 * 60 * 1000;
+  if (timeStr.endsWith("m")) return num * 60 * 1000;
+  return num * 1000; // default seconds
 }
 
 // ----------------------------
@@ -19,33 +52,30 @@ function containsBannedWords(text) {
 // ----------------------------
 export async function sendMessage(text, serverId) {
   if (!currentUser) return alert("Not logged in!");
-
   const server = await fetchServer(serverId);
   if (!server) return alert("Server not found!");
 
-  // Prevent banned users from sending messages
-  if ((server.banned || []).some(b => b.uid === currentUser.uid)) {
-    const chat = document.getElementById("chatMessages");
-    const div = document.createElement("div");
-    div.textContent = "You are banned and cannot send messages.";
-    div.style.color = "red";
-    chat.appendChild(div);
+  const pseudoIP = getPseudoIP();
+
+  // Check if user is banned
+  if ((server.banned || []).some(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP)) {
+    showBannedView((server.banned || []).find(b => b.uid === currentUser.uid));
     return;
   }
 
-  // Handle commands if text starts with "/"
+  // Handle commands
   if (text.startsWith("/")) {
     const handled = await handleCommand(server, text);
     if (handled) return;
   }
 
-  // Regular banned words check
+  // Banned words
   if (containsBannedWords(text)) {
     alert("Your message contains prohibited language.");
     return;
   }
 
-  // Firestore write
+  // Add message to Firestore
   await addDoc(collection(db, "messages"), {
     text,
     serverId,
@@ -55,54 +85,95 @@ export async function sendMessage(text, serverId) {
 }
 
 // ----------------------------
-// FETCH AND RENDER SERVER
+// FETCH SERVER
 // ----------------------------
 export async function fetchServer(serverId) {
   const serverRef = doc(db, "servers", serverId);
   const serverSnap = await getDoc(serverRef);
-
-  if (serverSnap.exists()) {
-    return { id: serverSnap.id, ...serverSnap.data() };
-  } else {
-    console.error("Server not found!");
-    return null;
-  }
+  if (serverSnap.exists()) return { id: serverSnap.id, ...serverSnap.data() };
+  console.error("Server not found!");
+  return null;
 }
 
+// ----------------------------
+// SHOW BANNED VIEW
+// ----------------------------
+function showBannedView(banEntry) {
+  const container = document.getElementById("serverContainer");
+  container.innerHTML = "";
+
+  const div = document.createElement("div");
+  div.style.border = "2px solid red";
+  div.style.padding = "20px";
+  div.style.backgroundColor = "#ffe6e6";
+
+  const title = document.createElement("h2");
+  title.textContent = "Access Denied. Reason: Banned.";
+  title.style.color = "red";
+  div.appendChild(title);
+
+  const uidP = document.createElement("p");
+  uidP.textContent = `Banned UID: ${banEntry.uid}`;
+  div.appendChild(uidP);
+
+  const reasonP = document.createElement("p");
+  reasonP.textContent = `Why were you banned? ${banEntry.reason || "No reason provided"}`;
+  div.appendChild(reasonP);
+
+  const startP = document.createElement("p");
+  startP.textContent = `Start ban: ${formatTimestamp(banEntry.timestamp || Date.now())}`;
+  div.appendChild(startP);
+
+  const endP = document.createElement("p");
+  endP.textContent = `End ban: ${formatTimestamp(banEntry.until || Date.now())}`;
+  div.appendChild(endP);
+
+  container.appendChild(div);
+
+  // Hide chat input
+  const chatInput = document.getElementById("messageInput");
+  const sendButton = document.getElementById("sendButton");
+  if (chatInput) chatInput.style.display = "none";
+  if (sendButton) sendButton.style.display = "none";
+}
+
+// ----------------------------
+// RENDER SERVER
+// ----------------------------
 export function renderServer(server) {
-  // Server name
   document.getElementById("serverName").textContent = server.name;
 
-  // Owners
   const ownersUl = document.getElementById("ownersList");
   ownersUl.innerHTML = "";
   server.owners.forEach(uid => {
     const li = document.createElement("li");
     li.textContent = uid;
+    li.className = "owner";
     ownersUl.appendChild(li);
   });
 
-  // Moderators
   const modsUl = document.getElementById("moderatorsList");
   modsUl.innerHTML = "";
   (server.moderators || []).forEach(uid => {
     const li = document.createElement("li");
     li.textContent = uid;
+    li.className = "moderator";
     modsUl.appendChild(li);
   });
 
-  // Members
   const membersUl = document.getElementById("membersList");
   membersUl.innerHTML = "";
   (server.members || []).forEach(uid => {
     const li = document.createElement("li");
-    li.textContent = uid + ((server.banned || []).some(b => b.uid === uid) ? " (BANNED)" : "");
+    const banned = (server.banned || []).some(b => b.uid === uid);
+    li.textContent = uid + (banned ? " (BANNED)" : "");
+    if (banned) li.className = "banned";
     membersUl.appendChild(li);
   });
 }
 
 // ----------------------------
-// OWNER-ONLY ROLE MANAGEMENT
+// OWNER BUTTON & ROLE PANEL
 // ----------------------------
 function showOwnerButton(server) {
   const container = document.getElementById("serverContainer");
@@ -128,7 +199,8 @@ function openRolePanel(server) {
   server.members.forEach(memberUid => {
     const memberDiv = document.createElement("div");
     memberDiv.style.marginBottom = "5px";
-    memberDiv.textContent = memberUid + ((server.banned || []).some(b => b.uid === memberUid) ? " (BANNED)" : "");
+    const banned = (server.banned || []).some(b => b.uid === memberUid);
+    memberDiv.textContent = memberUid + (banned ? " (BANNED)" : "");
 
     if (!server.owners.includes(memberUid)) {
       const promoteBtn = document.createElement("button");
@@ -156,7 +228,7 @@ function openRolePanel(server) {
 }
 
 // ----------------------------
-// FIRESTORE UPDATE FUNCTIONS
+// FIRESTORE UPDATES
 // ----------------------------
 async function assignModerator(serverId, memberUid) {
   const serverRef = doc(db, "servers", serverId);
@@ -185,7 +257,6 @@ async function handleCommand(server, text) {
   const parts = text.trim().split(" ");
   const cmd = parts[0].toLowerCase();
   const args = parts.slice(1);
-
   const uid = currentUser.uid;
   const userPrivileges = (server.privileges && server.privileges[uid]) || [];
 
@@ -221,15 +292,24 @@ function showCommandError(message) {
   return false;
 }
 
-async function banUser(serverId, targetUid, time, reason) {
+async function banUser(serverId, targetUid, untilTime, reason) {
+  const pseudoIP = getPseudoIP();
   const serverRef = doc(db, "servers", serverId);
+  const timestamp = new Date();
+
   await updateDoc(serverRef, {
-    banned: arrayUnion({ uid: targetUid, until: time, reason })
+    banned: arrayUnion({
+      uid: targetUid,
+      pseudoIP,
+      reason: reason || "No reason provided",
+      timestamp,       // start time
+      until: new Date(Date.now() + parseBanTime(untilTime)) // end time
+    })
   });
 
   const chat = document.getElementById("chatMessages");
   const div = document.createElement("div");
-  div.textContent = `${targetUid} has been banned for ${time} (${reason})`;
+  div.textContent = `${targetUid} has been banned for ${untilTime} (${reason})`;
   div.style.color = "orange";
   chat.appendChild(div);
 }
@@ -238,8 +318,8 @@ async function unbanUser(serverId, targetUid) {
   const serverRef = doc(db, "servers", serverId);
   const serverSnap = await getDoc(serverRef);
   if (!serverSnap.exists()) return;
-  const server = serverSnap.data();
 
+  const server = serverSnap.data();
   const updatedBanned = (server.banned || []).filter(b => b.uid !== targetUid);
   await updateDoc(serverRef, { banned: updatedBanned });
 
@@ -274,6 +354,12 @@ export function subscribeToMessages(serverId, callback) {
 // ----------------------------
 export async function initServerPage(serverId) {
   subscribeToServer(serverId, (server) => {
+    const bannedEntry = (server.banned || []).find(b => b.uid === currentUser.uid);
+    if (bannedEntry) {
+      showBannedView(bannedEntry);
+      return;
+    }
+
     renderServer(server);
     if (server.owners.includes(currentUser.uid)) showOwnerButton(server);
     openRolePanel(server);
