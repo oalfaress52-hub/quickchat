@@ -20,8 +20,9 @@ function sendMessage(text, serverId) {
     return;
   }
 
-  // proceed to write the message to Firestore
-  // Example: addDoc(collection(db, "messages"), { text, serverId, uid: currentUser.uid });
+  // TODO: Add Firestore write logic here
+  // Example:
+  // addDoc(collection(db, "messages"), { text, serverId, uid: currentUser.uid });
 }
 
 // ----------------------------
@@ -32,7 +33,7 @@ async function fetchServer(serverId) {
   const serverSnap = await getDoc(serverRef);
 
   if (serverSnap.exists()) {
-    return serverSnap.data();
+    return { id: serverSnap.id, ...serverSnap.data() }; // Include ID
   } else {
     console.error("Server not found!");
     return null;
@@ -48,7 +49,7 @@ function renderServer(server) {
   ownersUl.innerHTML = "";
   server.owners.forEach(uid => {
     const li = document.createElement("li");
-    li.textContent = uid; // replace with username if needed
+    li.textContent = uid;
     ownersUl.appendChild(li);
   });
 
@@ -77,7 +78,11 @@ function renderServer(server) {
 function showOwnerButton(server) {
   const container = document.getElementById("serverContainer");
 
+  // Prevent duplicate button
+  if (document.getElementById("ownerButton")) return;
+
   const ownerButton = document.createElement("button");
+  ownerButton.id = "ownerButton";
   ownerButton.textContent = "Manage Roles";
   ownerButton.onclick = () => openRolePanel(server);
   container.appendChild(ownerButton);
@@ -99,20 +104,34 @@ function openRolePanel(server) {
     memberDiv.style.marginBottom = "5px";
     memberDiv.textContent = memberUid;
 
-    // Promote button
-    const promoteBtn = document.createElement("button");
-    promoteBtn.textContent = "Make Moderator";
-    promoteBtn.style.marginLeft = "10px";
-    promoteBtn.onclick = () => assignModerator(server.id, memberUid);
+    // Prevent owner from being demoted
+    if (!server.owners.includes(memberUid)) {
+      // Promote button
+      const promoteBtn = document.createElement("button");
+      promoteBtn.textContent = "Make Moderator";
+      promoteBtn.style.marginLeft = "10px";
+      promoteBtn.onclick = async () => {
+        await assignModerator(server.id, memberUid);
+        const updatedServer = await fetchServer(server.id);
+        renderServer(updatedServer);
+        openRolePanel(updatedServer); // Refresh panel
+      };
 
-    // Demote button
-    const demoteBtn = document.createElement("button");
-    demoteBtn.textContent = "Remove Moderator";
-    demoteBtn.style.marginLeft = "5px";
-    demoteBtn.onclick = () => removeModerator(server.id, memberUid);
+      // Demote button
+      const demoteBtn = document.createElement("button");
+      demoteBtn.textContent = "Remove Moderator";
+      demoteBtn.style.marginLeft = "5px";
+      demoteBtn.onclick = async () => {
+        await removeModerator(server.id, memberUid);
+        const updatedServer = await fetchServer(server.id);
+        renderServer(updatedServer);
+        openRolePanel(updatedServer); // Refresh panel
+      };
 
-    memberDiv.appendChild(promoteBtn);
-    memberDiv.appendChild(demoteBtn);
+      memberDiv.appendChild(promoteBtn);
+      memberDiv.appendChild(demoteBtn);
+    }
+
     panel.appendChild(memberDiv);
   });
 
@@ -124,33 +143,26 @@ function openRolePanel(server) {
 // ----------------------------
 async function assignModerator(serverId, memberUid) {
   const serverRef = doc(db, "servers", serverId);
-
-  // Fetch current moderators to prevent overwriting
   const serverSnap = await getDoc(serverRef);
   if (!serverSnap.exists()) return;
+
   const server = serverSnap.data();
+  const updatedModerators = Array.from(new Set([...(server.moderators || []), memberUid]));
 
-  await updateDoc(serverRef, {
-    moderators: Array.from(new Set([...server.moderators, memberUid]))
-  });
-
+  await updateDoc(serverRef, { moderators: updatedModerators });
   alert(memberUid + " is now a moderator!");
-  renderServer(server); // refresh UI
 }
 
 async function removeModerator(serverId, memberUid) {
   const serverRef = doc(db, "servers", serverId);
-
   const serverSnap = await getDoc(serverRef);
   if (!serverSnap.exists()) return;
+
   const server = serverSnap.data();
+  const updatedModerators = (server.moderators || []).filter(uid => uid !== memberUid);
 
-  await updateDoc(serverRef, {
-    moderators: server.moderators.filter(uid => uid !== memberUid)
-  });
-
+  await updateDoc(serverRef, { moderators: updatedModerators });
   alert(memberUid + " is no longer a moderator!");
-  renderServer(server); // refresh UI
 }
 
 // ----------------------------
@@ -167,5 +179,5 @@ async function initServerPage(serverId) {
   }
 }
 
-// Call initialization
-initServerPage("server123"); // replace with your server ID
+// Call initialization (replace with actual server ID dynamically)
+initServerPage("server123");
