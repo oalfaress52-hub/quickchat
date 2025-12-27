@@ -2,24 +2,6 @@
 // MODERATION — WORD FILTER
 // =========================
 
-const BANNED_WORDS = ["slur1", "slur2", "badword1"];
-
-function containsBannedWords(text) {
-  const lower = text.toLowerCase();
-  return BANNED_WORDS.some(word => {
-    const regex = new RegExp(`\\b${word}\\b`, "i"); // word boundaries
-    return regex.test(lower);
-  });
-}
-
-// =========================
-// everything else starts below
-// =========================
-
-// =========================
-// MODERATION — WORD FILTER
-// =========================
-
 const BANNED_WORDS = [
   "slur1",
   "slur2",
