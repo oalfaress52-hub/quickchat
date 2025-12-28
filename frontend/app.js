@@ -58,8 +58,9 @@ export async function sendMessage(text, serverId) {
   const pseudoIP = getPseudoIP();
 
   // Check if user is banned
-  if ((server.banned || []).some(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP)) {
-    showBannedView((server.banned || []).find(b => b.uid === currentUser.uid));
+  const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP);
+  if (banEntry) {
+    showBannedView(banEntry);
     return;
   }
 
@@ -280,6 +281,19 @@ async function handleCommand(server, text) {
     return true;
   }
 
+  if (cmd === "/uid") {
+    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to use this command (missing privileges: ban)");
+    if (args.length < 1) return showCommandError("Usage: /uid <Username>");
+
+    const username = args[0];
+    // If you maintain server.usernames map: server.usernames[uid] = username
+    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === username);
+    if (!targetUid) return showCommandError(`User not found: ${username}`);
+
+    showPrivateMessage(`The user has the following UID: ${targetUid}`);
+    return true;
+  }
+
   return showCommandError(`Unknown command: ${cmd}`);
 }
 
@@ -292,6 +306,18 @@ function showCommandError(message) {
   return false;
 }
 
+function showPrivateMessage(message) {
+  const chat = document.getElementById("chatMessages");
+  const div = document.createElement("div");
+  div.textContent = message;
+  div.style.color = "blue";
+  div.style.fontStyle = "italic";
+  chat.appendChild(div);
+}
+
+// ----------------------------
+// BAN/UNBAN LOGIC
+// ----------------------------
 async function banUser(serverId, targetUid, untilTime, reason) {
   const pseudoIP = getPseudoIP();
   const serverRef = doc(db, "servers", serverId);
@@ -302,16 +328,12 @@ async function banUser(serverId, targetUid, untilTime, reason) {
       uid: targetUid,
       pseudoIP,
       reason: reason || "No reason provided",
-      timestamp,       // start time
-      until: new Date(Date.now() + parseBanTime(untilTime)) // end time
+      timestamp,       
+      until: new Date(Date.now() + parseBanTime(untilTime))
     })
   });
 
-  const chat = document.getElementById("chatMessages");
-  const div = document.createElement("div");
-  div.textContent = `${targetUid} has been banned for ${untilTime} (${reason})`;
-  div.style.color = "orange";
-  chat.appendChild(div);
+  showPrivateMessage(`${targetUid} has been banned for ${untilTime} (${reason})`);
 }
 
 async function unbanUser(serverId, targetUid) {
@@ -323,11 +345,7 @@ async function unbanUser(serverId, targetUid) {
   const updatedBanned = (server.banned || []).filter(b => b.uid !== targetUid);
   await updateDoc(serverRef, { banned: updatedBanned });
 
-  const chat = document.getElementById("chatMessages");
-  const div = document.createElement("div");
-  div.textContent = `${targetUid} has been unbanned`;
-  div.style.color = "green";
-  chat.appendChild(div);
+  showPrivateMessage(`${targetUid} has been unbanned`);
 }
 
 // ----------------------------
@@ -354,9 +372,9 @@ export function subscribeToMessages(serverId, callback) {
 // ----------------------------
 export async function initServerPage(serverId) {
   subscribeToServer(serverId, (server) => {
-    const bannedEntry = (server.banned || []).find(b => b.uid === currentUser.uid);
-    if (bannedEntry) {
-      showBannedView(bannedEntry);
+    const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid);
+    if (banEntry) {
+      showBannedView(banEntry);
       return;
     }
 
