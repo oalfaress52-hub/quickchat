@@ -286,7 +286,6 @@ async function handleCommand(server, text) {
     if (args.length < 1) return showCommandError("Usage: /uid <Username>");
 
     const username = args[0];
-    // If you maintain server.usernames map: server.usernames[uid] = username
     const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === username);
     if (!targetUid) return showCommandError(`User not found: ${username}`);
 
@@ -316,24 +315,35 @@ function showPrivateMessage(message) {
 }
 
 // ----------------------------
-// BAN/UNBAN LOGIC
+// BAN/UNBAN LOGIC WITH SYSTEM MESSAGE
 // ----------------------------
 async function banUser(serverId, targetUid, untilTime, reason) {
   const pseudoIP = getPseudoIP();
   const serverRef = doc(db, "servers", serverId);
   const timestamp = new Date();
 
+  // Update banned array
   await updateDoc(serverRef, {
     banned: arrayUnion({
       uid: targetUid,
       pseudoIP,
       reason: reason || "No reason provided",
-      timestamp,       
+      timestamp,
       until: new Date(Date.now() + parseBanTime(untilTime))
     })
   });
 
+  // Private confirmation
   showPrivateMessage(`${targetUid} has been banned for ${untilTime} (${reason})`);
+
+  // System message for everyone
+  await addDoc(collection(db, "messages"), {
+    text: `User "${targetUid}" was banned by "${currentUser.uid}"`,
+    serverId,
+    uid: "SYSTEM",
+    createdAt: serverTimestamp(),
+    system: true
+  });
 }
 
 async function unbanUser(serverId, targetUid) {
@@ -389,7 +399,15 @@ export async function initServerPage(serverId) {
     chat.innerHTML = "";
     messages.forEach(msg => {
       const div = document.createElement("div");
-      div.textContent = `${msg.uid}: ${msg.text}`;
+
+      if (msg.system) {
+        div.textContent = msg.text;
+        div.style.color = "red";
+        div.style.fontStyle = "italic";
+      } else {
+        div.textContent = `${msg.uid}: ${msg.text}`;
+      }
+
       chat.appendChild(div);
     });
   });
