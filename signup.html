@@ -1,138 +1,61 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Quickchat II - Sign Up</title>
-
-  <!-- Link to your CSS -->
-  <link rel="stylesheet" href="style.css">
-
-  <!-- Optional: Google Fonts -->
-  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Quickchat II — Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="signup-wrapper">
-    <div class="signup-container">
+  <div class="auth-wrapper">
+    <div class="auth-card">
       <h1>Quickchat II</h1>
-      <h2>Create Your Account</h2>
+      <h2>Create Account</h2>
 
       <form id="signupForm">
-        <label for="username">Username</label>
-        <input type="text" id="username" name="username" required placeholder="Enter username">
-
-        <label for="email">Email</label>
-        <input type="email" id="email" name="email" required placeholder="Enter email">
-
-        <label for="password">Password</label>
-        <input type="password" id="password" name="password" required placeholder="Enter password">
-
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
         <button type="submit">Sign Up</button>
       </form>
 
-      <p class="login-text">Already have an account? <a href="login.html">Log In</a></p>
+      <p class="switch">
+        Already have an account?
+        <a href="login.html">Login</a>
+      </p>
     </div>
   </div>
 
-  <!-- Firebase and Signup JS -->
-  <script type="module">
-    import { getAuth, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
-    import { app } from "./firebase.js";
+  <!-- FIREBASE SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
 
-    const auth = getAuth(app);
-    const db = getFirestore(app);
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
+      authDomain: "quickchatii.firebaseapp.com",
+      projectId: "quickchatii",
+      storageBucket: "quickchatii.firebasestorage.app",
+      messagingSenderId: "418934265102",
+      appId: "1:418934265102:web:38340c750b6db60d76335f"
+    };
 
-    const signupForm = document.getElementById("signupForm");
+    firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-    signupForm.addEventListener("submit", async (e) => {
+    document.getElementById("signupForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const username = document.getElementById("username").value.trim();
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        const user = userCredential.user;
-
-        // Store additional profile info in Firestore
-        await setDoc(doc(db, "users", user.uid), {
-          username: username,
-          email: email,
-          uid: user.uid,
-          createdAt: new Date().toISOString()
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = "profile.html";
+        })
+        .catch(err => {
+          alert(err.message);
         });
-
-        // Redirect to profile page
-        window.location.href = "profile.html";
-      } catch (error) {
-        alert("Error: " + error.message);
-      }
     });
   </script>
-
-  <!-- Optional inline styles for quick demo -->
-  <style>
-    body {
-      font-family: 'Roboto', sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-    }
-    .signup-wrapper {
-      width: 100%;
-      max-width: 400px;
-    }
-    .signup-container {
-      background: #fff;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-    }
-    h1, h2 {
-      text-align: center;
-      margin: 0 0 20px;
-    }
-    form label {
-      display: block;
-      margin: 10px 0 5px;
-    }
-    form input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 15px;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      background: #007bff;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #0056b3;
-    }
-    .login-text {
-      text-align: center;
-      margin-top: 15px;
-    }
-    .login-text a {
-      color: #007bff;
-      text-decoration: none;
-    }
-    .login-text a:hover {
-      text-decoration: underline;
-    }
-  </style>
 </body>
 </html>
