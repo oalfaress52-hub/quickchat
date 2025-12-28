@@ -2,94 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quickchat - Home</title>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quickchat II - Sign Up</title>
+
+  <!-- Link to your CSS -->
   <link rel="stylesheet" href="style.css">
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="app.js"></script>
+
+  <!-- Optional: Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
 </head>
 <body>
-  <h1>Quickchat Home</h1>
+  <div class="signup-wrapper">
+    <div class="signup-container">
+      <h1>Quickchat II</h1>
+      <h2>Create Your Account</h2>
 
-  <p>Logged in as: <span id="userEmail"></span></p>
-  <button id="logoutBtn">Logout</button>
+      <form id="signupForm">
+        <label for="username">Username</label>
+        <input type="text" id="username" name="username" required placeholder="Enter username">
 
-  <hr>
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required placeholder="Enter email">
 
-  <!-- Create Server -->
-  <h2>Create a New Server</h2>
-  <input type="text" id="newServerName" placeholder="Server Name">
-  <button id="createServerBtn">Create Server</button>
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required placeholder="Enter password">
 
-  <hr>
+        <button type="submit">Sign Up</button>
+      </form>
 
-  <!-- Join Existing Server -->
-  <h2>Available Servers</h2>
-  <ul id="serverList"></ul>
+      <p class="login-text">Already have an account? <a href="login.html">Log In</a></p>
+    </div>
+  </div>
 
-  <script type="module">
-    import { auth } from './firebase.js';
-    import { signOut, onAuthStateChanged } from "firebase/auth";
-    import { db } from './firebase.js';
-    import { collection, getDocs, addDoc, updateDoc, doc, arrayUnion } from "firebase/firestore";
+  <!-- Optional: Signup JS logic -->
+  <script src="signup.js"></script>
 
-    let currentUser;
-
-    onAuthStateChanged(auth, user => {
-      if (!user) return window.location.href = "login.html";
-      currentUser = user;
-      document.getElementById("userEmail").textContent = user.email;
-
-      // Load servers
-      loadServers();
-    });
-
-    document.getElementById("logoutBtn").onclick = () => {
-      signOut(auth).then(() => window.location.href = "login.html");
-    };
-
-    // ----------------------------
-    // CREATE SERVER
-    // ----------------------------
-    document.getElementById("createServerBtn").onclick = async () => {
-      const name = document.getElementById("newServerName").value.trim();
-      if (!name) return alert("Please enter a server name");
-
-      const serverRef = await addDoc(collection(db, "servers"), {
-        name,
-        owners: [currentUser.uid],
-        moderators: [],
-        members: [currentUser.uid],
-        createdAt: new Date()
-      });
-
-      window.location.href = `server.html?serverId=${serverRef.id}`;
-    };
-
-    // ----------------------------
-    // LOAD SERVERS
-    // ----------------------------
-    async function loadServers() {
-      const list = document.getElementById("serverList");
-      list.innerHTML = "";
-
-      const querySnap = await getDocs(collection(db, "servers"));
-      querySnap.forEach(docSnap => {
-        const server = { id: docSnap.id, ...docSnap.data() };
-        const li = document.createElement("li");
-        const joinBtn = document.createElement("button");
-        joinBtn.textContent = "Join / Open";
-        joinBtn.onclick = async () => {
-          const serverRef = doc(db, "servers", server.id);
-          await updateDoc(serverRef, {
-            members: arrayUnion(currentUser.uid)
-          });
-          window.location.href = `server.html?serverId=${server.id}`;
-        };
-        li.textContent = server.name + " ";
-        li.appendChild(joinBtn);
-        list.appendChild(li);
-      });
+  <!-- Optional inline styles for quick demo -->
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      background: #f0f2f5;
+      margin: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
     }
-  </script>
+    .signup-wrapper {
+      width: 100%;
+      max-width: 400px;
+    }
+    .signup-container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+    h1, h2 {
+      text-align: center;
+      margin: 0 0 20px;
+    }
+    form label {
+      display: block;
+      margin: 10px 0 5px;
+    }
+    form input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 15px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    .login-text {
+      text-align: center;
+      margin-top: 15px;
+    }
+    .login-text a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .login-text a:hover {
+      text-decoration: underline;
+    }
+  </style>
 </body>
 </html>
