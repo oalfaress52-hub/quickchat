@@ -5,13 +5,9 @@ import { db } from "./firebase.js";
 // CLIENT-SIDE BANNED WORDS
 // ----------------------------
 const BANNED_WORDS = ["slur1", "slur2", "badword1"];
-
 function containsBannedWords(text) {
   const lower = text.toLowerCase();
-  return BANNED_WORDS.some(word => {
-    const regex = new RegExp(`\\b${word}\\b`, "i");
-    return regex.test(lower);
-  });
+  return BANNED_WORDS.some(word => new RegExp(`\\b${word}\\b`, "i").test(lower));
 }
 
 // ----------------------------
@@ -44,7 +40,7 @@ function parseBanTime(timeStr) {
   if (timeStr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
   if (timeStr.endsWith("h")) return num * 60 * 60 * 1000;
   if (timeStr.endsWith("m")) return num * 60 * 1000;
-  return num * 1000; // default seconds
+  return num * 1000;
 }
 
 // ----------------------------
@@ -57,12 +53,13 @@ export async function sendMessage(text, serverId) {
 
   const pseudoIP = getPseudoIP();
 
-  // Check if user is banned
+  // Check banned
   const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP);
-  if (banEntry) {
-    showBannedView(banEntry);
-    return;
-  }
+  if (banEntry) return showBannedView(banEntry);
+
+  // Check muted
+  const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
+  if (mutedEntry) return showPrivateMessage("You do not have the permission to speak.");
 
   // Handle commands
   if (text.startsWith("/")) {
@@ -71,12 +68,9 @@ export async function sendMessage(text, serverId) {
   }
 
   // Banned words
-  if (containsBannedWords(text)) {
-    alert("Your message contains prohibited language.");
-    return;
-  }
+  if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
 
-  // Add message to Firestore
+  // Add message
   await addDoc(collection(db, "messages"), {
     text,
     serverId,
@@ -131,7 +125,6 @@ function showBannedView(banEntry) {
 
   container.appendChild(div);
 
-  // Hide chat input
   const chatInput = document.getElementById("messageInput");
   const sendButton = document.getElementById("sendButton");
   if (chatInput) chatInput.style.display = "none";
@@ -207,16 +200,12 @@ function openRolePanel(server) {
       const promoteBtn = document.createElement("button");
       promoteBtn.textContent = "Make Moderator";
       promoteBtn.style.marginLeft = "10px";
-      promoteBtn.onclick = async () => {
-        await assignModerator(server.id, memberUid);
-      };
+      promoteBtn.onclick = async () => { await assignModerator(server.id, memberUid); };
 
       const demoteBtn = document.createElement("button");
       demoteBtn.textContent = "Remove Moderator";
       demoteBtn.style.marginLeft = "5px";
-      demoteBtn.onclick = async () => {
-        await removeModerator(server.id, memberUid);
-      };
+      demoteBtn.onclick = async () => { await removeModerator(server.id, memberUid); };
 
       memberDiv.appendChild(promoteBtn);
       memberDiv.appendChild(demoteBtn);
@@ -262,40 +251,52 @@ async function handleCommand(server, text) {
   const userPrivileges = (server.privileges && server.privileges[uid]) || [];
 
   if (cmd === "/ban") {
-    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to use this command (missing privileges: ban)");
+    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to run this command (missing privileges: ban)");
     if (args.length < 3) return showCommandError("Usage: /ban [User's UID] [Time] [Reason]");
-
-    const targetUid = args[0];
-    const time = args[1];
-    const reason = args.slice(2).join(" ");
-    await banUser(server.id, targetUid, time, reason);
+    await banUser(server.id, args[0], args[1], args.slice(2).join(" "));
     return true;
   }
 
   if (cmd === "/unban") {
-    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to use this command (missing privileges: ban)");
+    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to run this command (missing privileges: ban)");
     if (args.length < 1) return showCommandError("Usage: /unban [User's UID]");
-
-    const targetUid = args[0];
-    await unbanUser(server.id, targetUid);
+    await unbanUser(server.id, args[0]);
     return true;
   }
 
   if (cmd === "/uid") {
-    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to use this command (missing privileges: ban)");
+    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to run this command (missing privileges: ban)");
     if (args.length < 1) return showCommandError("Usage: /uid <Username>");
-
-    const username = args[0];
-    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === username);
-    if (!targetUid) return showCommandError(`User not found: ${username}`);
-
+    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
+    if (!targetUid) return showCommandError(`User not found: ${args[0]}`);
     showPrivateMessage(`The user has the following UID: ${targetUid}`);
+    return true;
+  }
+
+  if (cmd === "/mute") {
+    if (!userPrivileges.includes("mute")) return showCommandError("You do not have enough privileges to run this command (missing privileges: mute)");
+    if (args.length < 2) return showCommandError("Usage: /mute [Username] [Reason]");
+    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
+    if (!targetUid) return showCommandError(`User not found: ${args[0]}`);
+    await muteUser(server.id, targetUid, args.slice(1).join(" "));
+    return true;
+  }
+
+  if (cmd === "/unmute") {
+    if (!userPrivileges.includes("mute")) return showCommandError("You do not have enough privileges to run this command (missing privileges: mute)");
+    if (args.length < 1) return showCommandError("Usage: /unmute [Username]");
+    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
+    if (!targetUid) return showCommandError(`User not found: ${args[0]}`);
+    await unmuteUser(server.id, targetUid);
     return true;
   }
 
   return showCommandError(`Unknown command: ${cmd}`);
 }
 
+// ----------------------------
+// PRIVATE/SYSTEM MESSAGES
+// ----------------------------
 function showCommandError(message) {
   const chat = document.getElementById("chatMessages");
   const div = document.createElement("div");
@@ -315,28 +316,24 @@ function showPrivateMessage(message) {
 }
 
 // ----------------------------
-// BAN/UNBAN LOGIC WITH SYSTEM MESSAGE
+// BAN / UNBAN
 // ----------------------------
 async function banUser(serverId, targetUid, untilTime, reason) {
   const pseudoIP = getPseudoIP();
   const serverRef = doc(db, "servers", serverId);
-  const timestamp = new Date();
 
-  // Update banned array
   await updateDoc(serverRef, {
     banned: arrayUnion({
       uid: targetUid,
       pseudoIP,
       reason: reason || "No reason provided",
-      timestamp,
+      timestamp: new Date(),
       until: new Date(Date.now() + parseBanTime(untilTime))
     })
   });
 
-  // Private confirmation
   showPrivateMessage(`${targetUid} has been banned for ${untilTime} (${reason})`);
 
-  // System message for everyone
   await addDoc(collection(db, "messages"), {
     text: `User "${targetUid}" was banned by "${currentUser.uid}"`,
     serverId,
@@ -356,6 +353,38 @@ async function unbanUser(serverId, targetUid) {
   await updateDoc(serverRef, { banned: updatedBanned });
 
   showPrivateMessage(`${targetUid} has been unbanned`);
+}
+
+// ----------------------------
+// MUTE / UNMUTE
+// ----------------------------
+async function muteUser(serverId, targetUid, reason) {
+  const serverRef = doc(db, "servers", serverId);
+  await updateDoc(serverRef, {
+    muted: arrayUnion({ uid: targetUid, reason })
+  });
+
+  await addDoc(collection(db, "messages"), {
+    text: `Player "${targetUid}" cannot speak anymore by "${currentUser.uid}"`,
+    serverId,
+    uid: "SYSTEM",
+    createdAt: serverTimestamp(),
+    system: true
+  });
+
+  showPrivateMessage(`${targetUid} has been muted. Reason: ${reason}`);
+}
+
+async function unmuteUser(serverId, targetUid) {
+  const serverRef = doc(db, "servers", serverId);
+  const serverSnap = await getDoc(serverRef);
+  if (!serverSnap.exists()) return;
+
+  const server = serverSnap.data();
+  const updatedMuted = (server.muted || []).filter(m => m.uid !== targetUid);
+  await updateDoc(serverRef, { muted: updatedMuted });
+
+  showPrivateMessage(`${targetUid} has been unmuted`);
 }
 
 // ----------------------------
@@ -383,10 +412,7 @@ export function subscribeToMessages(serverId, callback) {
 export async function initServerPage(serverId) {
   subscribeToServer(serverId, (server) => {
     const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid);
-    if (banEntry) {
-      showBannedView(banEntry);
-      return;
-    }
+    if (banEntry) return showBannedView(banEntry);
 
     renderServer(server);
     if (server.owners.includes(currentUser.uid)) showOwnerButton(server);
@@ -399,7 +425,6 @@ export async function initServerPage(serverId) {
     chat.innerHTML = "";
     messages.forEach(msg => {
       const div = document.createElement("div");
-
       if (msg.system) {
         div.textContent = msg.text;
         div.style.color = "red";
@@ -407,7 +432,6 @@ export async function initServerPage(serverId) {
       } else {
         div.textContent = `${msg.uid}: ${msg.text}`;
       }
-
       chat.appendChild(div);
     });
   });
