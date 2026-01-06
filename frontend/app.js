@@ -436,3 +436,56 @@ export async function initServerPage(serverId) {
     });
   });
 }
+
+// =============================
+// FOSSIL CLICKER INTEGRATION
+// =============================
+let fossils = 0;
+let clickPower = 1;
+
+const fossilClickerContainer = document.getElementById("fossilClickerContainer");
+const fossilCounter = document.getElementById("fossilCounter");
+const digButton = document.getElementById("digButton");
+const upgradeClickPower = document.getElementById("upgradeClickPower");
+const openFossilGame = document.getElementById("openFossilGame");
+const closeFossilGame = document.getElementById("closeFossilGame");
+
+function updateFossilDisplay() {
+  if (fossilCounter) fossilCounter.textContent = `Fossils: ${fossils}`;
+}
+
+// Open Fossil Clicker
+if (openFossilGame) {
+  openFossilGame.addEventListener("click", () => {
+    if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
+    updateFossilDisplay();
+  });
+}
+
+// Close Fossil Clicker
+if (closeFossilGame) {
+  closeFossilGame.addEventListener("click", () => {
+    if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
+  });
+}
+
+// Dig fossil
+if (digButton) {
+  digButton.addEventListener("click", () => {
+    fossils += clickPower;
+    updateFossilDisplay();
+  });
+}
+
+// Upgrade click power
+if (upgradeClickPower) {
+  upgradeClickPower.addEventListener("click", () => {
+    if (fossils >= 10) {
+      fossils -= 10;
+      clickPower += 1;
+      updateFossilDisplay();
+    } else {
+      alert("Not enough fossils!");
+    }
+  });
+}
