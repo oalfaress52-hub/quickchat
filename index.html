@@ -1,49 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Quickchat II</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .container {
+      background: #161b22;
+      padding: 30px;
+      border-radius: 10px;
+      width: 350px;
+      text-align: center;
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 5px;
+      border: none;
+      background: #238636;
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
+    button:hover {
+      background: #2ea043;
+    }
+
+    a {
+      color: #58a6ff;
+      text-decoration: none;
+    }
+  </style>
 </head>
 <body>
-  <div class="auth-wrapper">
-    <div class="auth-card">
-      <h1>Quickchat II</h1>
-      <p>Welcome to Quickchat II</p>
 
-      <a href="login.html">
-        <button>Login</button>
-      </a>
+  <div class="container">
+    <h1>Welcome to Quickchat II</h1>
 
-      <a href="signup.html">
-        <button>Create Account</button>
-      </a>
-    </div>
+    <button id="loginBtn">Login</button>
+    <button id="signupBtn">Create Account</button>
   </div>
 
-  <!-- FIREBASE SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
+  <script type="module">
+    import { auth } from "./firebase.js";
+    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
 
-  <script>
-    const firebaseConfig = {
-      apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
-      authDomain: "quickchatii.firebaseapp.com",
-      projectId: "quickchatii",
-      storageBucket: "quickchatii.firebasestorage.app",
-      messagingSenderId: "418934265102",
-      appId: "1:418934265102:web:38340c750b6db60d76335f"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-
-    auth.onAuthStateChanged(user => {
+    // Redirect logged-in users automatically
+    onAuthStateChanged(auth, (user) => {
       if (user) {
         window.location.href = "profile.html";
       }
     });
+
+    // Button navigation
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      window.location.href = "login.html";
+    });
+
+    document.getElementById("signupBtn").addEventListener("click", () => {
+      window.location.href = "signup.html";
+    });
   </script>
+
 </body>
 </html>
