@@ -1,105 +1,76 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Quickchat | Sign Up</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-
-    .container {
-      background: #161b22;
-      padding: 30px;
-      border-radius: 10px;
-      width: 350px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    input {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: none;
-      outline: none;
-    }
-
-    button {
-      width: 100%;
-      padding: 10px;
-      margin-top: 10px;
-      border-radius: 5px;
-      border: none;
-      background: #238636;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #2ea043;
-    }
-
-    a {
-      color: #58a6ff;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Quickchat II — Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-
 <body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <h1>Quickchat II</h1>
+      <h2>Create Account</h2>
 
-  <div class="container">
-    <h2>Create Account</h2>
+      <form id="signupForm">
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <button type="submit">Sign Up</button>
+      </form>
 
-    <form id="signupForm">
-      <input type="email" id="signupEmail" placeholder="Email" required>
-      <input type="password" id="signupPassword" placeholder="Password" required>
-      <button type="submit">Sign Up</button>
-    </form>
+      <p class="switch">
+        Already have an account?
+        <a href="login.html">Login</a>
+      </p>
 
-    <p style="text-align:center; margin-top:10px;">
-      Already have an account? <a href="login.html">Login</a>
-    </p>
+      <p id="errorMsg" style="color:red;"></p>
+    </div>
   </div>
 
+  <!-- Firebase Compat SDK -->
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
 
-  <!-- SIGNUP LOGIC -->
-  <script type="module">
-    import { auth } from "./firebase.js";
-    import { createUserWithEmailAndPassword } 
-      from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
+      authDomain: "quickchatii.firebaseapp.com",
+      projectId: "quickchatii",
+      storageBucket: "quickchatii.firebasestorage.app",
+      messagingSenderId: "418934265102",
+      appId: "1:418934265102:web:38340c750b6db60d76335f"
+    };
 
+    // Initialize Firebase only once
+    if (!firebase.apps.length) {
+      firebase.initializeApp(firebaseConfig);
+    }
+
+    const auth = firebase.auth();
     const form = document.getElementById("signupForm");
+    const errorMsg = document.getElementById("errorMsg");
 
-    form.addEventListener("submit", async (e) => {
+    // Redirect if already logged in
+    auth.onAuthStateChanged(user => {
+      if (user) window.location.href = "profile.html";
+    });
+
+    form.addEventListener("submit", function(e) {
       e.preventDefault();
+      errorMsg.textContent = "";
 
-      const email = document.getElementById("signupEmail").value.trim();
-      const password = document.getElementById("signupPassword").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
 
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        alert("Account created successfully!");
-        window.location.href = "index.html";
-      } catch (error) {
-        console.error(error);
-        alert(error.message);
-      }
+      auth.createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = "profile.html";
+        })
+        .catch(err => {
+          console.error(err);
+          errorMsg.textContent = err.message;
+        });
     });
   </script>
-
 </body>
 </html>
