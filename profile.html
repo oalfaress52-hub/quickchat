@@ -1,31 +1,76 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>Quickchat - Profile</title>
-  <link rel="stylesheet" href="style.css">
-  <script type="module" src="firebase.js"></script>
-  <script type="module" src="app.js"></script>
+  <title>Quickchat | Profile</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #0d1117;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 50px;
+      margin: 0;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+    }
+
+    p {
+      margin: 5px 0;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-top: 20px;
+      border-radius: 5px;
+      border: none;
+      background: #238636;
+      color: white;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #2ea043;
+    }
+  </style>
 </head>
+
 <body>
+
   <h1>My Profile</h1>
-  <p id="userEmail"></p>
-  <p id="userUID"></p>
+
+  <p id="userEmail">Email: </p>
+  <p id="userUID">UID: </p>
+
   <button id="logoutBtn">Logout</button>
 
   <script type="module">
-    import { auth } from './firebase.js';
-    import { signOut, onAuthStateChanged } from "firebase/auth";
+    import { auth } from "./firebase.js";
+    import { onAuthStateChanged, signOut } 
+      from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
 
-    onAuthStateChanged(auth, user => {
-      if (!user) return window.location.href = "login.html";
-      document.getElementById("userEmail").textContent = "Email: " + user.email;
-      document.getElementById("userUID").textContent = "UID: " + user.uid;
+    // Show user info or redirect to login
+    onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        document.getElementById("userEmail").textContent = "Email: " + user.email;
+        document.getElementById("userUID").textContent = "UID: " + user.uid;
+      }
     });
 
-    document.getElementById("logoutBtn").onclick = () => {
-      signOut(auth).then(() => window.location.href = "login.html");
-    };
+    // Logout button
+    document.getElementById("logoutBtn").addEventListener("click", async () => {
+      await signOut(auth);
+      window.location.href = "login.html";
+    });
   </script>
+
 </body>
 </html>
+
