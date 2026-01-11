@@ -1,5 +1,9 @@
-import { doc, getDoc, updateDoc, collection, addDoc, query, where, orderBy, onSnapshot, serverTimestamp, arrayUnion } from "firebase/firestore";
-import { db } from "./firebase.js";
+// app.js
+import { db, auth } from "./firebase.js";
+import {
+  doc, getDoc, updateDoc, collection, addDoc, query, where,
+  orderBy, onSnapshot, serverTimestamp, arrayUnion
+} from "https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore.js";
 
 // ----------------------------
 // CLIENT-SIDE BANNED WORDS
@@ -46,7 +50,7 @@ function parseBanTime(timeStr) {
 // ----------------------------
 // SEND MESSAGE
 // ----------------------------
-export async function sendMessage(text, serverId) {
+export async function sendMessage(text, serverId, currentUser) {
   if (!currentUser) return alert("Not logged in!");
   const server = await fetchServer(serverId);
   if (!server) return alert("Server not found!");
@@ -59,11 +63,11 @@ export async function sendMessage(text, serverId) {
 
   // Check muted
   const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
-  if (mutedEntry) return showPrivateMessage("You do not have the permission to speak.");
+  if (mutedEntry) return showPrivateMessage("You do not have permission to speak.");
 
   // Handle commands
   if (text.startsWith("/")) {
-    const handled = await handleCommand(server, text);
+    const handled = await handleCommand(server, text, currentUser);
     if (handled) return;
   }
 
@@ -112,15 +116,15 @@ function showBannedView(banEntry) {
   div.appendChild(uidP);
 
   const reasonP = document.createElement("p");
-  reasonP.textContent = `Why were you banned? ${banEntry.reason || "No reason provided"}`;
+  reasonP.textContent = `Reason: ${banEntry.reason || "No reason provided"}`;
   div.appendChild(reasonP);
 
   const startP = document.createElement("p");
-  startP.textContent = `Start ban: ${formatTimestamp(banEntry.timestamp || Date.now())}`;
+  startP.textContent = `Start: ${formatTimestamp(banEntry.timestamp || Date.now())}`;
   div.appendChild(startP);
 
   const endP = document.createElement("p");
-  endP.textContent = `End ban: ${formatTimestamp(banEntry.until || Date.now())}`;
+  endP.textContent = `End: ${formatTimestamp(banEntry.until || Date.now())}`;
   div.appendChild(endP);
 
   container.appendChild(div);
@@ -167,11 +171,12 @@ export function renderServer(server) {
 }
 
 // ----------------------------
-// OWNER BUTTON & ROLE PANEL
+// OWNER ROLE PANEL
 // ----------------------------
-function showOwnerButton(server) {
+function showOwnerButton(server, currentUser) {
   const container = document.getElementById("serverContainer");
   if (document.getElementById("ownerButton")) return;
+  if (!server.owners.includes(currentUser.uid)) return;
 
   const ownerButton = document.createElement("button");
   ownerButton.id = "ownerButton";
@@ -218,7 +223,7 @@ function openRolePanel(server) {
 }
 
 // ----------------------------
-// FIRESTORE UPDATES
+// ASSIGN / REMOVE MODERATOR
 // ----------------------------
 async function assignModerator(serverId, memberUid) {
   const serverRef = doc(db, "servers", serverId);
@@ -243,7 +248,7 @@ async function removeModerator(serverId, memberUid) {
 // ----------------------------
 // COMMANDS
 // ----------------------------
-async function handleCommand(server, text) {
+async function handleCommand(server, text, currentUser) {
   const parts = text.trim().split(" ");
   const cmd = parts[0].toLowerCase();
   const args = parts.slice(1);
@@ -251,30 +256,21 @@ async function handleCommand(server, text) {
   const userPrivileges = (server.privileges && server.privileges[uid]) || [];
 
   if (cmd === "/ban") {
-    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to run this command (missing privileges: ban)");
-    if (args.length < 3) return showCommandError("Usage: /ban [User's UID] [Time] [Reason]");
+    if (!userPrivileges.includes("ban")) return showCommandError("Missing privileges: ban");
+    if (args.length < 3) return showCommandError("Usage: /ban [User UID] [Time] [Reason]");
     await banUser(server.id, args[0], args[1], args.slice(2).join(" "));
     return true;
   }
 
   if (cmd === "/unban") {
-    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to run this command (missing privileges: ban)");
-    if (args.length < 1) return showCommandError("Usage: /unban [User's UID]");
+    if (!userPrivileges.includes("ban")) return showCommandError("Missing privileges: ban");
+    if (args.length < 1) return showCommandError("Usage: /unban [User UID]");
     await unbanUser(server.id, args[0]);
     return true;
   }
 
-  if (cmd === "/uid") {
-    if (!userPrivileges.includes("ban")) return showCommandError("You do not have enough privileges to run this command (missing privileges: ban)");
-    if (args.length < 1) return showCommandError("Usage: /uid <Username>");
-    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
-    if (!targetUid) return showCommandError(`User not found: ${args[0]}`);
-    showPrivateMessage(`The user has the following UID: ${targetUid}`);
-    return true;
-  }
-
   if (cmd === "/mute") {
-    if (!userPrivileges.includes("mute")) return showCommandError("You do not have enough privileges to run this command (missing privileges: mute)");
+    if (!userPrivileges.includes("mute")) return showCommandError("Missing privileges: mute");
     if (args.length < 2) return showCommandError("Usage: /mute [Username] [Reason]");
     const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
     if (!targetUid) return showCommandError(`User not found: ${args[0]}`);
@@ -283,7 +279,7 @@ async function handleCommand(server, text) {
   }
 
   if (cmd === "/unmute") {
-    if (!userPrivileges.includes("mute")) return showCommandError("You do not have enough privileges to run this command (missing privileges: mute)");
+    if (!userPrivileges.includes("mute")) return showCommandError("Missing privileges: mute");
     if (args.length < 1) return showCommandError("Usage: /unmute [Username]");
     const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
     if (!targetUid) return showCommandError(`User not found: ${args[0]}`);
@@ -291,11 +287,20 @@ async function handleCommand(server, text) {
     return true;
   }
 
+  if (cmd === "/uid") {
+    if (!userPrivileges.includes("ban")) return showCommandError("Missing privileges: ban");
+    if (args.length < 1) return showCommandError("Usage: /uid <Username>");
+    const targetUid = Object.keys(server.usernames || {}).find(k => server.usernames[k] === args[0]);
+    if (!targetUid) return showPrivateMessage(`User not found: ${args[0]}`);
+    showPrivateMessage(`The user has UID: ${targetUid}`);
+    return true;
+  }
+
   return showCommandError(`Unknown command: ${cmd}`);
 }
 
 // ----------------------------
-// PRIVATE/SYSTEM MESSAGES
+// PRIVATE / SYSTEM MESSAGES
 // ----------------------------
 function showCommandError(message) {
   const chat = document.getElementById("chatMessages");
@@ -335,7 +340,7 @@ async function banUser(serverId, targetUid, untilTime, reason) {
   showPrivateMessage(`${targetUid} has been banned for ${untilTime} (${reason})`);
 
   await addDoc(collection(db, "messages"), {
-    text: `User "${targetUid}" was banned by "${currentUser.uid}"`,
+    text: `User "${targetUid}" was banned by "SYSTEM"`,
     serverId,
     uid: "SYSTEM",
     createdAt: serverTimestamp(),
@@ -365,7 +370,7 @@ async function muteUser(serverId, targetUid, reason) {
   });
 
   await addDoc(collection(db, "messages"), {
-    text: `Player "${targetUid}" cannot speak anymore by "${currentUser.uid}"`,
+    text: `Player "${targetUid}" cannot speak anymore by "SYSTEM"`,
     serverId,
     uid: "SYSTEM",
     createdAt: serverTimestamp(),
@@ -407,15 +412,15 @@ export function subscribeToMessages(serverId, callback) {
 }
 
 // ----------------------------
-// INITIALIZE PAGE
+// INITIALIZE SERVER PAGE
 // ----------------------------
-export async function initServerPage(serverId) {
+export async function initServerPage(serverId, currentUser) {
   subscribeToServer(serverId, (server) => {
     const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid);
     if (banEntry) return showBannedView(banEntry);
 
     renderServer(server);
-    if (server.owners.includes(currentUser.uid)) showOwnerButton(server);
+    showOwnerButton(server, currentUser);
     openRolePanel(server);
   });
 
@@ -437,9 +442,9 @@ export async function initServerPage(serverId) {
   });
 }
 
-// =============================
-// FOSSIL CLICKER INTEGRATION
-// =============================
+// ----------------------------
+// FOSSIL CLICKER
+// ----------------------------
 let fossils = 0;
 let clickPower = 1;
 
@@ -454,38 +459,26 @@ function updateFossilDisplay() {
   if (fossilCounter) fossilCounter.textContent = `Fossils: ${fossils}`;
 }
 
-// Open Fossil Clicker
-if (openFossilGame) {
-  openFossilGame.addEventListener("click", () => {
-    if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
+if (openFossilGame) openFossilGame.addEventListener("click", () => {
+  if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
+  updateFossilDisplay();
+});
+
+if (closeFossilGame) closeFossilGame.addEventListener("click", () => {
+  if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
+});
+
+if (digButton) digButton.addEventListener("click", () => {
+  fossils += clickPower;
+  updateFossilDisplay();
+});
+
+if (upgradeClickPower) upgradeClickPower.addEventListener("click", () => {
+  if (fossils >= 10) {
+    fossils -= 10;
+    clickPower += 1;
     updateFossilDisplay();
-  });
-}
-
-// Close Fossil Clicker
-if (closeFossilGame) {
-  closeFossilGame.addEventListener("click", () => {
-    if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
-  });
-}
-
-// Dig fossil
-if (digButton) {
-  digButton.addEventListener("click", () => {
-    fossils += clickPower;
-    updateFossilDisplay();
-  });
-}
-
-// Upgrade click power
-if (upgradeClickPower) {
-  upgradeClickPower.addEventListener("click", () => {
-    if (fossils >= 10) {
-      fossils -= 10;
-      clickPower += 1;
-      updateFossilDisplay();
-    } else {
-      alert("Not enough fossils!");
-    }
-  });
-}
+  } else {
+    alert("Not enough fossils!");
+  }
+});
