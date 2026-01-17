@@ -1,6 +1,11 @@
 // ----------------------------
 // FIREBASE INIT
 // ----------------------------
+if (!window.firebase) {
+  alert("Firebase SDK not loaded! Make sure Firebase scripts are included before app.js.");
+}
+
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
   authDomain: "quickchatii.firebaseapp.com",
@@ -10,6 +15,7 @@ const firebaseConfig = {
   appId: "1:418934265102:web:38340c750b6db60d76335f"
 };
 
+// Initialize Firebase once
 if (!firebase.apps.length) {
   firebase.initializeApp(firebaseConfig);
 }
@@ -69,24 +75,19 @@ async function sendMessage(text, serverId, currentUser) {
 
   const pseudoIP = getPseudoIP();
 
-  // Check banned
   const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP);
   if (banEntry) return showBannedView(banEntry);
 
-  // Check muted
   const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
   if (mutedEntry) return showPrivateMessage("You do not have permission to speak.");
 
-  // Handle commands
   if (text.startsWith("/")) {
     const handled = await handleCommand(server, text, currentUser);
     if (handled) return;
   }
 
-  // Banned words
   if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
 
-  // Add message
   await db.collection("messages").add({
     text,
     serverId,
@@ -190,8 +191,10 @@ if (upgradeClickPower) upgradeClickPower.addEventListener("click", () => {
 });
 
 // ----------------------------
-// Expose functions globally
+// Expose globally
 // ----------------------------
+window.firebaseAuth = auth;
+window.db = db;
 window.sendMessage = sendMessage;
 window.fetchServer = fetchServer;
 window.containsBannedWords = containsBannedWords;
