@@ -3,7 +3,6 @@
 <head>
   <meta charset="UTF-8">
   <title>Quickchat II</title>
-
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -15,7 +14,6 @@
       height: 100vh;
       margin: 0;
     }
-
     .container {
       background: #161b22;
       padding: 30px;
@@ -24,11 +22,6 @@
       text-align: center;
       box-shadow: 0 0 10px rgba(0,0,0,0.5);
     }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
     button {
       width: 100%;
       padding: 10px;
@@ -40,30 +33,16 @@
       cursor: pointer;
       font-size: 16px;
     }
-
     button:hover {
       background: #2ea043;
     }
   </style>
 </head>
 <body>
-
   <div class="container">
     <h1>Welcome to Quickchat II</h1>
-
-    <button id="loginBtn">Login</button>
-    <button id="signupBtn">Create Account</button>
+    <button onclick="location.href='login.html'">Login</button>
+    <button onclick="location.href='signup.html'">Create Account</button>
   </div>
-
-  <script>
-    document.getElementById("loginBtn").onclick = () => {
-      window.location.href = "login.html";
-    };
-
-    document.getElementById("signupBtn").onclick = () => {
-      window.location.href = "signup.html";
-    };
-  </script>
-
 </body>
 </html>
