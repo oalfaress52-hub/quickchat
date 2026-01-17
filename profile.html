@@ -7,24 +7,20 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <h1>My Profile</h1>
-
   <p id="userEmail">Email: </p>
   <p id="userUID">UID: </p>
-
   <button id="logoutBtn">Logout</button>
 
-  <!-- Firebase SDK (compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore-compat.js"></script>
 
-  <!-- Our app.js handles config & logic -->
+  <!-- App logic -->
   <script src="frontend/app.js"></script>
 
   <script>
-    // Redirect to login if not logged in, otherwise display user info
     firebase.auth().onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "login.html";
@@ -34,12 +30,9 @@
       }
     });
 
-    // Logout button
     document.getElementById("logoutBtn").addEventListener("click", () => {
       firebase.auth().signOut()
-        .then(() => {
-          window.location.href = "login.html";
-        })
+        .then(() => window.location.href = "login.html")
         .catch(err => console.error(err));
     });
   </script>
