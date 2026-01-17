@@ -1,24 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Server Page</title>
-  <link rel="stylesheet" href="style.css">
-  <style>
-    body { font-family: Arial, sans-serif; padding: 20px; }
-    h2 { margin-top: 20px; }
-    ul { list-style: none; padding: 0; }
-    li { padding: 5px 0; }
-    .owner { font-weight: bold; color: darkblue; }
-    .moderator { font-weight: bold; color: green; }
-    .banned { color: red; text-decoration: line-through; }
-    .button { margin-left: 10px; padding: 3px 7px; cursor: pointer; }
-    #chatMessages { border: 1px solid #ccc; padding: 10px; height: 200px; overflow-y: auto; margin-top: 20px; }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Quickchat II — Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="frontend/style.css" />
 </head>
 <body>
   <h1 id="serverName">Server Name</h1>
-
   <div id="serverContainer"></div>
 
   <h2>Owners</h2>
@@ -36,41 +25,10 @@
   <input type="text" id="messageInput" placeholder="Type a message..." />
   <button id="sendButton">Send</button>
 
+  <script type="module" src="frontend/app.js"></script>
   <script type="module">
-    import { sendMessage, initServerPage } from "./app.js";
-
     const serverId = "server123"; // replace with actual server ID
-
-    // Initialize server page
-    initServerPage(serverId);
-
-    const input = document.getElementById("messageInput");
-    const button = document.getElementById("sendButton");
-
-    button.addEventListener("click", async () => {
-      const text = input.value.trim();
-      if (!text) return;
-      await sendMessage(text, serverId);
-      input.value = "";
-    });
-
-    input.addEventListener("keydown", async (e) => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        const text = input.value.trim();
-        if (!text) return;
-        await sendMessage(text, serverId);
-        input.value = "";
-      }
-    });
-
-    // Render badges dynamically
-    function addBadge(li, type) {
-      const span = document.createElement("span");
-      span.textContent = type;
-      span.className = type.toLowerCase();
-      li.appendChild(span);
-    }
+    initServerPage(serverId, firebase.auth().currentUser);
   </script>
 </body>
 </html>
