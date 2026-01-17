@@ -1,76 +1,50 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Quickchat | Profile</title>
-
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 50px;
-      margin: 0;
-    }
-
-    h1 {
-      margin-bottom: 20px;
-    }
-
-    p {
-      margin: 5px 0;
-    }
-
-    button {
-      padding: 10px 20px;
-      margin-top: 20px;
-      border-radius: 5px;
-      border: none;
-      background: #238636;
-      color: white;
-      cursor: pointer;
-    }
-
-    button:hover {
-      background: #2ea043;
-    }
-  </style>
+  <meta charset="UTF-8" />
+  <title>Quickchat II — Profile</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="frontend/style.css" />
 </head>
-
 <body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <h1>My Profile</h1>
+      <p id="userEmail">Email: </p>
+      <p id="userUID">UID: </p>
+      <button id="logoutBtn">Logout</button>
+    </div>
+  </div>
 
-  <h1>My Profile</h1>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
+  <script src="frontend/app.js" defer></script>
 
-  <p id="userEmail">Email: </p>
-  <p id="userUID">UID: </p>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
+      authDomain: "quickchatii.firebaseapp.com",
+      projectId: "quickchatii",
+      storageBucket: "quickchatii.firebasestorage.app",
+      messagingSenderId: "418934265102",
+      appId: "1:418934265102:web:38340c750b6db60d76335f"
+    };
 
-  <button id="logoutBtn">Logout</button>
+    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-  <script type="module">
-    import { auth } from "./firebase.js";
-    import { onAuthStateChanged, signOut } 
-      from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-
-    // Show user info or redirect to login
-    onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        window.location.href = "login.html";
-      } else {
+    auth.onAuthStateChanged(user => {
+      if (!user) window.location.href = "login.html";
+      else {
         document.getElementById("userEmail").textContent = "Email: " + user.email;
         document.getElementById("userUID").textContent = "UID: " + user.uid;
       }
     });
 
-    // Logout button
     document.getElementById("logoutBtn").addEventListener("click", async () => {
-      await signOut(auth);
+      await auth.signOut();
       window.location.href = "login.html";
     });
   </script>
-
 </body>
 </html>
-
