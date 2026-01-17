@@ -1,8 +1,5 @@
-// frontend/app.js
-// Fully compatible with Firebase compat SDK on GitHub Pages
-
 // ----------------------------
-// CONFIGURE FIREBASE
+// FIREBASE INIT
 // ----------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
@@ -21,7 +18,7 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 // ----------------------------
-// UTILITY FUNCTIONS
+// CLIENT-SIDE BANNED WORDS
 // ----------------------------
 const BANNED_WORDS = ["slur1", "slur2", "badword1"];
 function containsBannedWords(text) {
@@ -29,6 +26,9 @@ function containsBannedWords(text) {
   return BANNED_WORDS.some(word => new RegExp(`\\b${word}\\b`, "i").test(lower));
 }
 
+// ----------------------------
+// PSEUDO-IP TRACKING
+// ----------------------------
 function getPseudoIP() {
   const ua = navigator.userAgent;
   let hash = 0;
@@ -39,6 +39,9 @@ function getPseudoIP() {
   return "IP-" + Math.abs(hash);
 }
 
+// ----------------------------
+// FORMAT TIMESTAMPS
+// ----------------------------
 function formatTimestamp(timestamp) {
   if (!timestamp) return "N/A";
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
@@ -46,35 +49,44 @@ function formatTimestamp(timestamp) {
 }
 
 // ----------------------------
-// LOGIN / SIGNUP / PROFILE HELPERS
+// PARSE BAN DURATION
 // ----------------------------
-function redirectIfNotLoggedIn() {
-  auth.onAuthStateChanged(user => {
-    if (!user) window.location.href = "login.html";
-  });
+function parseBanTime(timeStr) {
+  const num = parseInt(timeStr);
+  if (timeStr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
+  if (timeStr.endsWith("h")) return num * 60 * 60 * 1000;
+  if (timeStr.endsWith("m")) return num * 60 * 1000;
+  return num * 1000;
 }
 
-function getCurrentUser() {
-  return auth.currentUser;
-}
-
 // ----------------------------
-// SERVER FUNCTIONS
+// SEND MESSAGE
 // ----------------------------
-async function sendMessage(text, serverId) {
-  const currentUser = getCurrentUser();
+async function sendMessage(text, serverId, currentUser) {
   if (!currentUser) return alert("Not logged in!");
+  const server = await fetchServer(serverId);
+  if (!server) return alert("Server not found!");
+
   const pseudoIP = getPseudoIP();
 
-  const serverSnap = await db.collection("servers").doc(serverId).get();
-  if (!serverSnap.exists) return alert("Server not found");
-  const server = serverSnap.data();
-
+  // Check banned
   const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP);
-  if (banEntry) return alert("You are banned!");
+  if (banEntry) return showBannedView(banEntry);
 
-  if (containsBannedWords(text)) return alert("Message contains prohibited words");
+  // Check muted
+  const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
+  if (mutedEntry) return showPrivateMessage("You do not have permission to speak.");
 
+  // Handle commands
+  if (text.startsWith("/")) {
+    const handled = await handleCommand(server, text, currentUser);
+    if (handled) return;
+  }
+
+  // Banned words
+  if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
+
+  // Add message
   await db.collection("messages").add({
     text,
     serverId,
@@ -84,88 +96,56 @@ async function sendMessage(text, serverId) {
 }
 
 // ----------------------------
-// RENDER SERVER
+// FETCH SERVER
 // ----------------------------
-function renderServer(server) {
-  document.getElementById("serverName").textContent = server.name;
-
-  const ownersUl = document.getElementById("ownersList");
-  ownersUl.innerHTML = "";
-  (server.owners || []).forEach(uid => {
-    const li = document.createElement("li");
-    li.textContent = uid;
-    li.className = "owner";
-    ownersUl.appendChild(li);
-  });
-
-  const modsUl = document.getElementById("moderatorsList");
-  modsUl.innerHTML = "";
-  (server.moderators || []).forEach(uid => {
-    const li = document.createElement("li");
-    li.textContent = uid;
-    li.className = "moderator";
-    modsUl.appendChild(li);
-  });
-
-  const membersUl = document.getElementById("membersList");
-  membersUl.innerHTML = "";
-  (server.members || []).forEach(uid => {
-    const li = document.createElement("li");
-    li.textContent = uid;
-    membersUl.appendChild(li);
-  });
+async function fetchServer(serverId) {
+  const serverRef = db.collection("servers").doc(serverId);
+  const serverSnap = await serverRef.get();
+  if (serverSnap.exists) return { id: serverSnap.id, ...serverSnap.data() };
+  console.error("Server not found!");
+  return null;
 }
 
 // ----------------------------
-// SUBSCRIBE TO SERVER + MESSAGES
+// SHOW BANNED VIEW
 // ----------------------------
-function subscribeToServer(serverId, callback) {
-  return db.collection("servers").doc(serverId)
-    .onSnapshot(docSnap => {
-      if (docSnap.exists) callback(docSnap.data());
-    });
-}
+function showBannedView(banEntry) {
+  const container = document.getElementById("serverContainer");
+  if (!container) return;
 
-function subscribeToMessages(serverId, callback) {
-  return db.collection("messages")
-    .where("serverId", "==", serverId)
-    .orderBy("createdAt")
-    .onSnapshot(snapshot => {
-      const messages = snapshot.docs.map(d => d.data());
-      callback(messages);
-    });
-}
+  container.innerHTML = "";
+  const div = document.createElement("div");
+  div.style.border = "2px solid red";
+  div.style.padding = "20px";
+  div.style.backgroundColor = "#ffe6e6";
 
-// ----------------------------
-// INITIALIZE SERVER PAGE
-// ----------------------------
-function initServerPage(serverId) {
-  const currentUser = getCurrentUser();
-  if (!currentUser) return window.location.href = "login.html";
+  const title = document.createElement("h2");
+  title.textContent = "Access Denied. Reason: Banned.";
+  title.style.color = "red";
+  div.appendChild(title);
 
-  subscribeToServer(serverId, server => renderServer(server));
-  subscribeToMessages(serverId, messages => {
-    const chat = document.getElementById("chatMessages");
-    chat.innerHTML = "";
-    messages.forEach(msg => {
-      const div = document.createElement("div");
-      div.textContent = `${msg.uid}: ${msg.text}`;
-      chat.appendChild(div);
-    });
-  });
+  const uidP = document.createElement("p");
+  uidP.textContent = `Banned UID: ${banEntry.uid}`;
+  div.appendChild(uidP);
 
-  const sendBtn = document.getElementById("sendButton");
-  const input = document.getElementById("messageInput");
-  if (sendBtn && input) {
-    sendBtn.onclick = () => sendMessage(input.value, serverId) && (input.value = "");
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        e.preventDefault();
-        sendMessage(input.value, serverId);
-        input.value = "";
-      }
-    });
-  }
+  const reasonP = document.createElement("p");
+  reasonP.textContent = `Reason: ${banEntry.reason || "No reason provided"}`;
+  div.appendChild(reasonP);
+
+  const startP = document.createElement("p");
+  startP.textContent = `Start: ${formatTimestamp(banEntry.timestamp || Date.now())}`;
+  div.appendChild(startP);
+
+  const endP = document.createElement("p");
+  endP.textContent = `End: ${formatTimestamp(banEntry.until || Date.now())}`;
+  div.appendChild(endP);
+
+  container.appendChild(div);
+
+  const chatInput = document.getElementById("messageInput");
+  const sendButton = document.getElementById("sendButton");
+  if (chatInput) chatInput.style.display = "none";
+  if (sendButton) sendButton.style.display = "none";
 }
 
 // ----------------------------
@@ -174,55 +154,48 @@ function initServerPage(serverId) {
 let fossils = 0;
 let clickPower = 1;
 
-function setupFossilClicker() {
-  const container = document.getElementById("fossilClickerContainer");
-  const counter = document.getElementById("fossilCounter");
-  const digBtn = document.getElementById("digButton");
-  const upgradeBtn = document.getElementById("upgradeClickPower");
-  const openBtn = document.getElementById("openFossilGame");
-  const closeBtn = document.getElementById("closeFossilGame");
+const fossilClickerContainer = document.getElementById("fossilClickerContainer");
+const fossilCounter = document.getElementById("fossilCounter");
+const digButton = document.getElementById("digButton");
+const upgradeClickPower = document.getElementById("upgradeClickPower");
+const openFossilGame = document.getElementById("openFossilGame");
+const closeFossilGame = document.getElementById("closeFossilGame");
 
-  function updateDisplay() {
-    if (counter) counter.textContent = `Fossils: ${fossils}`;
-  }
-
-  if (openBtn) openBtn.addEventListener("click", () => {
-    if (container) container.style.display = "block";
-    updateDisplay();
-  });
-
-  if (closeBtn) closeBtn.addEventListener("click", () => {
-    if (container) container.style.display = "none";
-  });
-
-  if (digBtn) digBtn.addEventListener("click", () => {
-    fossils += clickPower;
-    updateDisplay();
-  });
-
-  if (upgradeBtn) upgradeBtn.addEventListener("click", () => {
-    if (fossils >= 10) {
-      fossils -= 10;
-      clickPower += 1;
-      updateDisplay();
-    } else {
-      alert("Not enough fossils!");
-    }
-  });
+function updateFossilDisplay() {
+  if (fossilCounter) fossilCounter.textContent = `Fossils: ${fossils}`;
 }
 
-// Automatically setup fossil clicker if elements exist
-document.addEventListener("DOMContentLoaded", setupFossilClicker);
+if (openFossilGame) openFossilGame.addEventListener("click", () => {
+  if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
+  updateFossilDisplay();
+});
+
+if (closeFossilGame) closeFossilGame.addEventListener("click", () => {
+  if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
+});
+
+if (digButton) digButton.addEventListener("click", () => {
+  fossils += clickPower;
+  updateFossilDisplay();
+});
+
+if (upgradeClickPower) upgradeClickPower.addEventListener("click", () => {
+  if (fossils >= 10) {
+    fossils -= 10;
+    clickPower += 1;
+    updateFossilDisplay();
+  } else {
+    alert("Not enough fossils!");
+  }
+});
 
 // ----------------------------
 // Expose functions globally
 // ----------------------------
-window.auth = auth;
-window.db = db;
 window.sendMessage = sendMessage;
-window.renderServer = renderServer;
-window.subscribeToServer = subscribeToServer;
-window.subscribeToMessages = subscribeToMessages;
-window.initServerPage = initServerPage;
-window.redirectIfNotLoggedIn = redirectIfNotLoggedIn;
-window.getCurrentUser = getCurrentUser;
+window.fetchServer = fetchServer;
+window.containsBannedWords = containsBannedWords;
+window.getPseudoIP = getPseudoIP;
+window.formatTimestamp = formatTimestamp;
+window.parseBanTime = parseBanTime;
+window.showBannedView = showBannedView;
