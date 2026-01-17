@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8">
   <title>Quickchat II — Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="frontend/style.css" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="auth-wrapper">
@@ -27,16 +27,15 @@
     </div>
   </div>
 
-  <!-- Firebase SDK (compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore-compat.js"></script>
 
-  <!-- Our app.js handles config & logic -->
+  <!-- App logic -->
   <script src="frontend/app.js"></script>
 
   <script>
-    // Set up signup form
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
@@ -57,7 +56,6 @@
         });
     });
 
-    // Auto-redirect if already logged in
     firebase.auth().onAuthStateChanged(user => {
       if (user) window.location.href = "profile.html";
     });
