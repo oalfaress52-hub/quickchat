@@ -44,11 +44,6 @@
     button:hover {
       background: #2ea043;
     }
-
-    a {
-      color: #58a6ff;
-      text-decoration: none;
-    }
   </style>
 </head>
 <body>
@@ -60,25 +55,14 @@
     <button id="signupBtn">Create Account</button>
   </div>
 
-  <script type="module">
-    import { auth } from "./firebase.js";
-    import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
-
-    // Redirect logged-in users automatically
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        window.location.href = "profile.html";
-      }
-    });
-
-    // Button navigation
-    document.getElementById("loginBtn").addEventListener("click", () => {
+  <script>
+    document.getElementById("loginBtn").onclick = () => {
       window.location.href = "login.html";
-    });
+    };
 
-    document.getElementById("signupBtn").addEventListener("click", () => {
+    document.getElementById("signupBtn").onclick = () => {
       window.location.href = "signup.html";
-    });
+    };
   </script>
 
 </body>
