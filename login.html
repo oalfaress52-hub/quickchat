@@ -4,7 +4,8 @@
   <meta charset="UTF-8" />
   <title>Quickchat II — Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+  <!-- Fix CSS path -->
+  <link rel="stylesheet" href="frontend/style.css" />
 </head>
 <body>
   <div class="auth-wrapper">
@@ -31,6 +32,9 @@
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
 
+  <!-- Optional shared JS -->
+  <script src="frontend/app.js" defer></script>
+
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
@@ -49,10 +53,12 @@
     const form = document.getElementById("loginForm");
     const errorMsg = document.getElementById("errorMsg");
 
+    // Redirect if already logged in
     auth.onAuthStateChanged(user => {
       if (user) window.location.href = "profile.html";
     });
 
+    // Login handler
     form.addEventListener("submit", function(e) {
       e.preventDefault();
       errorMsg.textContent = "";
