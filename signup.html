@@ -28,15 +28,15 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- 🔹 1. Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore-compat.js"></script>
 
-  <!-- Your app logic (initializes Firebase) -->
+  <!-- 🔹 2. Your app.js (initializes Firebase) -->
   <script src="app.js"></script>
 
-  <!-- Signup logic -->
+  <!-- 🔹 3. Signup logic -->
   <script>
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
@@ -54,6 +54,7 @@
         return;
       }
 
+      // 🔹 Use firebase AFTER SDK + app.js loaded
       firebase.auth().createUserWithEmailAndPassword(email, password)
         .then(() => {
           window.location.href = "profile.html";
@@ -70,3 +71,4 @@
   </script>
 </body>
 </html>
+
