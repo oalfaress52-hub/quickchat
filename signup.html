@@ -5,6 +5,9 @@
   <title>Quickchat II — Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
+  <!-- Use defer to ensure these scripts load before our inline code -->
+  <script defer src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
 </head>
 <body>
   <div class="auth-wrapper">
@@ -28,56 +31,53 @@
     </div>
   </div>
 
-  <!-- 🔹 Firebase SDKs only -->
-  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
-
-  <!-- 🔹 Firebase config and signup logic -->
+  <!-- Inline Firebase initialization and signup logic -->
   <script>
-    // Firebase config
-    const firebaseConfig = {
-      apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
-      authDomain: "quickchatii.firebaseapp.com",
-      projectId: "quickchatii",
-      storageBucket: "quickchatii.firebasestorage.app",
-      messagingSenderId: "418934265102",
-      appId: "1:418934265102:web:38340c750b6db60d76335f"
-    };
+    window.onload = function() {
+      // Initialize Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
+        authDomain: "quickchatii.firebaseapp.com",
+        projectId: "quickchatii",
+        storageBucket: "quickchatii.firebasestorage.app",
+        messagingSenderId: "418934265102",
+        appId: "1:418934265102:web:38340c750b6db60d76335f"
+      };
 
-    // Initialize Firebase
-    if (!firebase.apps.length) {
-      firebase.initializeApp(firebaseConfig);
-    }
-
-    const form = document.getElementById("signupForm");
-    const errorMsg = document.getElementById("errorMsg");
-
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      errorMsg.textContent = "";
-
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const confirm = document.getElementById("confirm").value;
-
-      if (password !== confirm) {
-        errorMsg.textContent = "Passwords do not match.";
-        return;
+      if (!firebase.apps.length) {
+        firebase.initializeApp(firebaseConfig);
       }
 
-      firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "profile.html";
-        })
-        .catch(err => {
-          console.error(err);
-          errorMsg.textContent = err.message;
-        });
-    });
+      const form = document.getElementById("signupForm");
+      const errorMsg = document.getElementById("errorMsg");
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) window.location.href = "profile.html";
-    });
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        errorMsg.textContent = "";
+
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const confirm = document.getElementById("confirm").value;
+
+        if (password !== confirm) {
+          errorMsg.textContent = "Passwords do not match.";
+          return;
+        }
+
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+          .then(() => {
+            window.location.href = "profile.html";
+          })
+          .catch(err => {
+            console.error(err);
+            errorMsg.textContent = err.message;
+          });
+      });
+
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) window.location.href = "profile.html";
+      });
+    };
   </script>
 </body>
 </html>
