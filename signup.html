@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quickchat II — Signup</title>
+  <title>Quickchat II — Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -16,7 +16,7 @@
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
         <input type="password" id="confirm" placeholder="Confirm Password" required />
-        <button type="submit">Create Account</button>
+        <button type="submit">Sign Up</button>
       </form>
 
       <p class="switch">
@@ -28,14 +28,20 @@
     </div>
   </div>
 
-  <!-- ✅ No firebase globals — using app.js module -->
-  <script type="module">
-    import { signup } from "./app.js";
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore-compat.js"></script>
 
+  <!-- Your app logic (initializes Firebase) -->
+  <script src="app.js"></script>
+
+  <!-- Signup logic -->
+  <script>
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    form.addEventListener("submit", async (e) => {
+    form.addEventListener("submit", function (e) {
       e.preventDefault();
       errorMsg.textContent = "";
 
@@ -48,13 +54,18 @@
         return;
       }
 
-      try {
-        await signup(email, password);
-        window.location.href = "profile.html";
-      } catch (err) {
-        console.error(err);
-        errorMsg.textContent = err.message;
-      }
+      firebase.auth().createUserWithEmailAndPassword(email, password)
+        .then(() => {
+          window.location.href = "profile.html";
+        })
+        .catch(err => {
+          console.error(err);
+          errorMsg.textContent = err.message;
+        });
+    });
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) window.location.href = "profile.html";
     });
   </script>
 </body>
