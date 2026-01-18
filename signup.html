@@ -28,47 +28,48 @@
     </div>
   </div>
 
-  <!-- 🔹 1. Firebase SDKs -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore-compat.js"></script>
 
-  <!-- 🔹 2. Your app.js (initializes Firebase) -->
+  <!-- Your app.js (initializes Firebase, auth, db) -->
   <script src="app.js"></script>
 
-  <!-- 🔹 3. Signup logic -->
+  <!-- Signup logic (runs only after DOM + Firebase loaded) -->
   <script>
-    const form = document.getElementById("signupForm");
-    const errorMsg = document.getElementById("errorMsg");
+    window.addEventListener("DOMContentLoaded", () => {
+      const form = document.getElementById("signupForm");
+      const errorMsg = document.getElementById("errorMsg");
 
-    form.addEventListener("submit", function (e) {
-      e.preventDefault();
-      errorMsg.textContent = "";
+      form.addEventListener("submit", function (e) {
+        e.preventDefault();
+        errorMsg.textContent = "";
 
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const confirm = document.getElementById("confirm").value;
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const confirm = document.getElementById("confirm").value;
 
-      if (password !== confirm) {
-        errorMsg.textContent = "Passwords do not match.";
-        return;
-      }
+        if (password !== confirm) {
+          errorMsg.textContent = "Passwords do not match.";
+          return;
+        }
 
-      // 🔹 Use firebase AFTER SDK + app.js loaded
-      firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "profile.html";
-        })
-        .catch(err => {
-          console.error(err);
-          errorMsg.textContent = err.message;
-        });
-    });
+        // ✅ Firebase is now guaranteed to exist
+        firebase.auth().createUserWithEmailAndPassword(email, password)
+          .then(() => {
+            window.location.href = "profile.html";
+          })
+          .catch(err => {
+            console.error(err);
+            errorMsg.textContent = err.message;
+          });
+      });
 
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) window.location.href = "profile.html";
+      firebase.auth().onAuthStateChanged(user => {
+        if (user) window.location.href = "profile.html";
+      });
     });
   </script>
 </body>
 </html>
-
