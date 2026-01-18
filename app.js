@@ -1,6 +1,10 @@
-// ==================================================
-// FIREBASE INIT (RUNS ONCE)
-// ==================================================
+// ----------------------------
+// FIREBASE INIT
+// ----------------------------
+if (!window.firebase) {
+  throw new Error("Firebase SDK not loaded. Make sure Firebase scripts are before app.js.");
+}
+
 const firebaseConfig = {
   apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
   authDomain: "quickchatii.firebaseapp.com",
@@ -17,22 +21,18 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Expose globally for HTML pages
-window.auth = auth;
-window.db = db;
-
-// ==================================================
+// ----------------------------
 // CLIENT-SIDE BANNED WORDS
-// ==================================================
+// ----------------------------
 const BANNED_WORDS = ["slur1", "slur2", "badword1"];
 function containsBannedWords(text) {
   const lower = text.toLowerCase();
   return BANNED_WORDS.some(word => new RegExp(`\\b${word}\\b`, "i").test(lower));
 }
 
-// ==================================================
+// ----------------------------
 // PSEUDO-IP TRACKING
-// ==================================================
+// ----------------------------
 function getPseudoIP() {
   const ua = navigator.userAgent;
   let hash = 0;
@@ -43,18 +43,18 @@ function getPseudoIP() {
   return "IP-" + Math.abs(hash);
 }
 
-// ==================================================
+// ----------------------------
 // FORMAT TIMESTAMPS
-// ==================================================
+// ----------------------------
 function formatTimestamp(timestamp) {
   if (!timestamp) return "N/A";
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   return date.toLocaleString(undefined, { timeZoneName: "short" });
 }
 
-// ==================================================
+// ----------------------------
 // PARSE BAN DURATION
-// ==================================================
+// ----------------------------
 function parseBanTime(timeStr) {
   const num = parseInt(timeStr);
   if (timeStr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
@@ -63,42 +63,9 @@ function parseBanTime(timeStr) {
   return num * 1000;
 }
 
-// ==================================================
-// SEND MESSAGE
-// ==================================================
-async function sendMessage(text, serverId, currentUser) {
-  if (!currentUser) return alert("Not logged in!");
-  const server = await fetchServer(serverId);
-  if (!server) return alert("Server not found!");
-
-  const pseudoIP = getPseudoIP();
-
-  const banEntry = (server.banned || []).find(
-    b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP
-  );
-  if (banEntry) return showBannedView(banEntry);
-
-  const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
-  if (mutedEntry) return alert("You do not have permission to speak.");
-
-  if (text.startsWith("/")) {
-    const handled = await handleCommand?.(server, text, currentUser);
-    if (handled) return;
-  }
-
-  if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
-
-  await db.collection("messages").add({
-    text,
-    serverId,
-    uid: currentUser.uid,
-    createdAt: firebase.firestore.FieldValue.serverTimestamp()
-  });
-}
-
-// ==================================================
+// ----------------------------
 // FETCH SERVER
-// ==================================================
+// ----------------------------
 async function fetchServer(serverId) {
   const serverRef = db.collection("servers").doc(serverId);
   const serverSnap = await serverRef.get();
@@ -107,9 +74,9 @@ async function fetchServer(serverId) {
   return null;
 }
 
-// ==================================================
+// ----------------------------
 // SHOW BANNED VIEW
-// ==================================================
+// ----------------------------
 function showBannedView(banEntry) {
   const container = document.getElementById("serverContainer");
   if (!container) return;
@@ -149,50 +116,87 @@ function showBannedView(banEntry) {
   if (sendButton) sendButton.style.display = "none";
 }
 
-// ==================================================
-// FOSSIL CLICKER
-// ==================================================
+// ----------------------------
+// SEND MESSAGE
+// ----------------------------
+async function sendMessage(text, serverId, currentUser) {
+  if (!currentUser) return alert("Not logged in!");
+  const server = await fetchServer(serverId);
+  if (!server) return alert("Server not found!");
+
+  const pseudoIP = getPseudoIP();
+
+  const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP);
+  if (banEntry) return showBannedView(banEntry);
+
+  const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
+  if (mutedEntry) return alert("You do not have permission to speak.");
+
+  if (text.startsWith("/")) {
+    if (window.handleCommand) {
+      const handled = await handleCommand(server, text, currentUser);
+      if (handled) return;
+    }
+  }
+
+  if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
+
+  await db.collection("messages").add({
+    text,
+    serverId,
+    uid: currentUser.uid,
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  });
+}
+
+// ----------------------------
+// FOSSIL CLICKER (SAFE DOM BINDS)
+// ----------------------------
 let fossils = 0;
 let clickPower = 1;
 
-const fossilClickerContainer = document.getElementById("fossilClickerContainer");
-const fossilCounter = document.getElementById("fossilCounter");
-const digButton = document.getElementById("digButton");
-const upgradeClickPower = document.getElementById("upgradeClickPower");
-const openFossilGame = document.getElementById("openFossilGame");
-const closeFossilGame = document.getElementById("closeFossilGame");
-
 function updateFossilDisplay() {
+  const fossilCounter = document.getElementById("fossilCounter");
   if (fossilCounter) fossilCounter.textContent = `Fossils: ${fossils}`;
 }
 
-if (openFossilGame) openFossilGame.addEventListener("click", () => {
-  if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
-  updateFossilDisplay();
-});
+document.addEventListener("DOMContentLoaded", () => {
+  const fossilClickerContainer = document.getElementById("fossilClickerContainer");
+  const digButton = document.getElementById("digButton");
+  const upgradeClickPower = document.getElementById("upgradeClickPower");
+  const openFossilGame = document.getElementById("openFossilGame");
+  const closeFossilGame = document.getElementById("closeFossilGame");
 
-if (closeFossilGame) closeFossilGame.addEventListener("click", () => {
-  if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
-});
-
-if (digButton) digButton.addEventListener("click", () => {
-  fossils += clickPower;
-  updateFossilDisplay();
-});
-
-if (upgradeClickPower) upgradeClickPower.addEventListener("click", () => {
-  if (fossils >= 10) {
-    fossils -= 10;
-    clickPower += 1;
+  if (openFossilGame) openFossilGame.addEventListener("click", () => {
+    if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
     updateFossilDisplay();
-  } else {
-    alert("Not enough fossils!");
-  }
+  });
+
+  if (closeFossilGame) closeFossilGame.addEventListener("click", () => {
+    if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
+  });
+
+  if (digButton) digButton.addEventListener("click", () => {
+    fossils += clickPower;
+    updateFossilDisplay();
+  });
+
+  if (upgradeClickPower) upgradeClickPower.addEventListener("click", () => {
+    if (fossils >= 10) {
+      fossils -= 10;
+      clickPower += 1;
+      updateFossilDisplay();
+    } else {
+      alert("Not enough fossils!");
+    }
+  });
 });
 
-// ==================================================
-// EXPOSE GLOBALS
-// ==================================================
+// ----------------------------
+// Expose globally
+// ----------------------------
+window.firebaseAuth = auth;
+window.db = db;
 window.sendMessage = sendMessage;
 window.fetchServer = fetchServer;
 window.containsBannedWords = containsBannedWords;
