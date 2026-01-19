@@ -1,12 +1,6 @@
-// ==================================================
-// APP.JS — FULL VERSION (SAFE FIREBASE LOAD)
-// ==================================================
-
-console.log("app.js loaded");
-
-// ----------------------------
-// FIREBASE INIT (RACE-CONDITION SAFE)
-// ----------------------------
+// ============================
+// FIREBASE INIT (GLOBAL SAFE)
+// ============================
 const firebaseConfig = {
   apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
   authDomain: "quickchatii.firebaseapp.com",
@@ -16,41 +10,25 @@ const firebaseConfig = {
   appId: "1:418934265102:web:38340c750b6db60d76335f"
 };
 
-function initFirebase() {
-  if (typeof firebase === "undefined") {
-    console.error("❌ Firebase SDK not loaded");
-    return;
-  }
-
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized");
-  }
-
-  window.auth = firebase.auth();
-  window.db = firebase.firestore();
+if (!firebase.apps.length) {
+  firebase.initializeApp(firebaseConfig);
 }
 
-(function waitForFirebase() {
-  if (typeof firebase !== "undefined") {
-    initFirebase();
-  } else {
-    setTimeout(waitForFirebase, 10);
-  }
-})();
+const auth = firebase.auth();
+const db = firebase.firestore();
 
-// ----------------------------
+// ============================
 // CLIENT-SIDE BANNED WORDS
-// ----------------------------
+// ============================
 const BANNED_WORDS = ["slur1", "slur2", "badword1"];
 function containsBannedWords(text) {
   const lower = text.toLowerCase();
   return BANNED_WORDS.some(word => new RegExp(`\\b${word}\\b`, "i").test(lower));
 }
 
-// ----------------------------
+// ============================
 // PSEUDO-IP TRACKING
-// ----------------------------
+// ============================
 function getPseudoIP() {
   const ua = navigator.userAgent;
   let hash = 0;
@@ -61,18 +39,18 @@ function getPseudoIP() {
   return "IP-" + Math.abs(hash);
 }
 
-// ----------------------------
+// ============================
 // FORMAT TIMESTAMPS
-// ----------------------------
+// ============================
 function formatTimestamp(timestamp) {
   if (!timestamp) return "N/A";
   const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
   return date.toLocaleString(undefined, { timeZoneName: "short" });
 }
 
-// ----------------------------
+// ============================
 // PARSE BAN DURATION
-// ----------------------------
+// ============================
 function parseBanTime(timeStr) {
   const num = parseInt(timeStr);
   if (timeStr.endsWith("d")) return num * 24 * 60 * 60 * 1000;
@@ -81,38 +59,31 @@ function parseBanTime(timeStr) {
   return num * 1000;
 }
 
-// ----------------------------
+// ============================
 // SEND MESSAGE
-// ----------------------------
+// ============================
 async function sendMessage(text, serverId, currentUser) {
-  if (!window.db) return alert("Firebase not ready.");
   if (!currentUser) return alert("Not logged in!");
-
   const server = await fetchServer(serverId);
   if (!server) return alert("Server not found!");
 
   const pseudoIP = getPseudoIP();
 
-  // Check banned
-  const banEntry = (server.banned || []).find(b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP);
+  const banEntry = (server.banned || []).find(
+    b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP
+  );
   if (banEntry) return showBannedView(banEntry);
 
-  // Check muted
   const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
-  if (mutedEntry) return showPrivateMessage("You do not have permission to speak.");
+  if (mutedEntry) return alert("You do not have permission to speak.");
 
-  // Handle commands
   if (text.startsWith("/")) {
-    if (typeof handleCommand === "function") {
-      const handled = await handleCommand(server, text, currentUser);
-      if (handled) return;
-    }
+    const handled = await handleCommand(server, text, currentUser);
+    if (handled) return;
   }
 
-  // Banned words
   if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
 
-  // Add message
   await db.collection("messages").add({
     text,
     serverId,
@@ -121,21 +92,18 @@ async function sendMessage(text, serverId, currentUser) {
   });
 }
 
-// ----------------------------
+// ============================
 // FETCH SERVER
-// ----------------------------
+// ============================
 async function fetchServer(serverId) {
-  if (!window.db) return null;
-  const serverRef = db.collection("servers").doc(serverId);
-  const serverSnap = await serverRef.get();
-  if (serverSnap.exists) return { id: serverSnap.id, ...serverSnap.data() };
-  console.error("Server not found!");
-  return null;
+  const snap = await db.collection("servers").doc(serverId).get();
+  if (!snap.exists) return null;
+  return { id: snap.id, ...snap.data() };
 }
 
-// ----------------------------
+// ============================
 // SHOW BANNED VIEW
-// ----------------------------
+// ============================
 function showBannedView(banEntry) {
   const container = document.getElementById("serverContainer");
   if (!container) return;
@@ -146,26 +114,13 @@ function showBannedView(banEntry) {
   div.style.padding = "20px";
   div.style.backgroundColor = "#ffe6e6";
 
-  const title = document.createElement("h2");
-  title.textContent = "Access Denied. Reason: Banned.";
-  title.style.color = "red";
-  div.appendChild(title);
-
-  const uidP = document.createElement("p");
-  uidP.textContent = `Banned UID: ${banEntry.uid}`;
-  div.appendChild(uidP);
-
-  const reasonP = document.createElement("p");
-  reasonP.textContent = `Reason: ${banEntry.reason || "No reason provided"}`;
-  div.appendChild(reasonP);
-
-  const startP = document.createElement("p");
-  startP.textContent = `Start: ${formatTimestamp(banEntry.timestamp || Date.now())}`;
-  div.appendChild(startP);
-
-  const endP = document.createElement("p");
-  endP.textContent = `End: ${formatTimestamp(banEntry.until || Date.now())}`;
-  div.appendChild(endP);
+  div.innerHTML = `
+    <h2 style="color:red">Access Denied. Reason: Banned.</h2>
+    <p>Banned UID: ${banEntry.uid}</p>
+    <p>Reason: ${banEntry.reason || "No reason provided"}</p>
+    <p>Start: ${formatTimestamp(banEntry.timestamp || Date.now())}</p>
+    <p>End: ${formatTimestamp(banEntry.until || Date.now())}</p>
+  `;
 
   container.appendChild(div);
 
@@ -175,9 +130,9 @@ function showBannedView(banEntry) {
   if (sendButton) sendButton.style.display = "none";
 }
 
-// ----------------------------
+// ============================
 // FOSSIL CLICKER
-// ----------------------------
+// ============================
 let fossils = 0;
 let clickPower = 1;
 
@@ -192,37 +147,39 @@ function updateFossilDisplay() {
   if (fossilCounter) fossilCounter.textContent = `Fossils: ${fossils}`;
 }
 
-if (openFossilGame) openFossilGame.addEventListener("click", () => {
+if (openFossilGame) openFossilGame.onclick = () => {
   if (fossilClickerContainer) fossilClickerContainer.style.display = "block";
   updateFossilDisplay();
-});
+};
 
-if (closeFossilGame) closeFossilGame.addEventListener("click", () => {
+if (closeFossilGame) closeFossilGame.onclick = () => {
   if (fossilClickerContainer) fossilClickerContainer.style.display = "none";
-});
+};
 
-if (digButton) digButton.addEventListener("click", () => {
+if (digButton) digButton.onclick = () => {
   fossils += clickPower;
   updateFossilDisplay();
-});
+};
 
-if (upgradeClickPower) upgradeClickPower.addEventListener("click", () => {
+if (upgradeClickPower) upgradeClickPower.onclick = () => {
   if (fossils >= 10) {
     fossils -= 10;
-    clickPower += 1;
+    clickPower++;
     updateFossilDisplay();
   } else {
     alert("Not enough fossils!");
   }
-});
+};
 
-// ----------------------------
+// ============================
 // EXPOSE GLOBALS
-// ----------------------------
+// ============================
+window.auth = auth;
+window.db = db;
+window.sendMessage = sendMessage;
+window.fetchServer = fetchServer;
 window.containsBannedWords = containsBannedWords;
 window.getPseudoIP = getPseudoIP;
 window.formatTimestamp = formatTimestamp;
 window.parseBanTime = parseBanTime;
 window.showBannedView = showBannedView;
-window.sendMessage = sendMessage;
-window.fetchServer = fetchServer;
