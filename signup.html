@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quickchat II — Sign Up</title>
+  <title>Quickchat II — Login</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -10,72 +10,53 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Quickchat II</h1>
-      <h2>Create Account</h2>
+      <h2>Login</h2>
 
-      <form id="signupForm">
+      <form id="loginForm">
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
-        <input type="password" id="confirm" placeholder="Confirm Password" required />
-        <button type="submit">Sign Up</button>
+        <button type="submit">Login</button>
       </form>
 
       <p class="switch">
-        Already have an account?
-        <a href="login.html">Login</a>
+        Don't have an account?
+        <a href="signup.html">Create one</a>
       </p>
 
       <p id="errorMsg" style="color:red;"></p>
     </div>
   </div>
 
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-app.js";
-    import {
-      getAuth,
-      createUserWithEmailAndPassword,
-      onAuthStateChanged
-    } from "https://www.gstatic.com/firebasejs/10.6.1/firebase-auth.js";
+  <!-- Firebase SDKs (MUST be before app.js) -->
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.6.1/firebase-firestore-compat.js"></script>
 
-    const firebaseConfig = {
-      apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
-      authDomain: "quickchatii.firebaseapp.com",
-      projectId: "quickchatii",
-      storageBucket: "quickchatii.firebasestorage.app",
-      messagingSenderId: "418934265102",
-      appId: "1:418934265102:web:38340c750b6db60d76335f"
-    };
+  <!-- App -->
+  <script src="app.js"></script>
 
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-
-    const form = document.getElementById("signupForm");
+  <script>
+    const form = document.getElementById("loginForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    form.addEventListener("submit", async e => {
+    form.onsubmit = e => {
       e.preventDefault();
       errorMsg.textContent = "";
 
-      const email = email.value.trim();
-      const password = password.value;
-      const confirm = confirm.value;
+      const email = emailInput.value.trim();
+      const password = passwordInput.value;
 
-      if (password !== confirm) {
-        errorMsg.textContent = "Passwords do not match.";
-        return;
-      }
+      firebase.auth().signInWithEmailAndPassword(email, password)
+        .then(() => window.location.href = "profile.html")
+        .catch(err => errorMsg.textContent = err.message);
+    };
 
-      try {
-        await createUserWithEmailAndPassword(auth, email, password);
-        window.location.href = "profile.html";
-      } catch (err) {
-        console.error(err);
-        errorMsg.textContent = err.message;
-      }
-    });
-
-    onAuthStateChanged(auth, user => {
+    firebase.auth().onAuthStateChanged(user => {
       if (user) window.location.href = "profile.html";
     });
+
+    const emailInput = document.getElementById("email");
+    const passwordInput = document.getElementById("password");
   </script>
 </body>
 </html>
