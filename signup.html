@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quickchat II — Login</title>
+  <title>Quickchat II — Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -10,17 +10,17 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Quickchat II</h1>
-      <h2>Login</h2>
+      <h2>Create Account</h2>
 
-      <form id="loginForm">
+      <form id="signupForm">
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
-        <button type="submit">Login</button>
+        <button type="submit">Sign Up</button>
       </form>
 
       <p class="switch">
-        Don't have an account?
-        <a href="signup.html">Create one</a>
+        Already have an account?
+        <a href="login.html">Login</a>
       </p>
 
       <p id="errorMsg" style="color:red;"></p>
@@ -36,7 +36,7 @@
   <script src="app.js"></script>
 
   <script>
-    const form = document.getElementById("loginForm");
+    const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
     form.onsubmit = e => {
@@ -46,7 +46,7 @@
       const email = emailInput.value.trim();
       const password = passwordInput.value;
 
-      firebase.auth().signInWithEmailAndPassword(email, password)
+      firebase.auth().createUserWithEmailAndPassword(email, password)
         .then(() => window.location.href = "profile.html")
         .catch(err => errorMsg.textContent = err.message);
     };
