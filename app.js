@@ -1,21 +1,28 @@
 // ============================
 // FIREBASE INIT (GLOBAL SAFE)
 // ============================
-const firebaseConfig = {
-  apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
-  authDomain: "quickchatii.firebaseapp.com",
-  projectId: "quickchatii",
-  storageBucket: "quickchatii.firebasestorage.app",
-  messagingSenderId: "418934265102",
-  appId: "1:418934265102:web:38340c750b6db60d76335f"
-};
+(function () {
+  if (typeof firebase === "undefined") {
+    console.error("Firebase SDK not loaded. Check script order.");
+    return;
+  }
 
-if (!firebase.apps.length) {
-  firebase.initializeApp(firebaseConfig);
-}
+  const firebaseConfig = {
+    apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
+    authDomain: "quickchatii.firebaseapp.com",
+    projectId: "quickchatii",
+    storageBucket: "quickchatii.firebasestorage.app",
+    messagingSenderId: "418934265102",
+    appId: "1:418934265102:web:38340c750b6db60d76335f"
+  };
 
-const auth = firebase.auth();
-const db = firebase.firestore();
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  window.auth = firebase.auth();
+  window.db = firebase.firestore();
+})();
 
 // ============================
 // CLIENT-SIDE BANNED WORDS
@@ -69,8 +76,8 @@ async function sendMessage(text, serverId, currentUser) {
 
   const pseudoIP = getPseudoIP();
 
-  const banEntry = (server.banned || []).find(
-    b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP
+  const banEntry = (server.banned || []).find(b =>
+    b.uid === currentUser.uid || b.pseudoIP === pseudoIP
   );
   if (banEntry) return showBannedView(banEntry);
 
@@ -174,8 +181,6 @@ if (upgradeClickPower) upgradeClickPower.onclick = () => {
 // ============================
 // EXPOSE GLOBALS
 // ============================
-window.auth = auth;
-window.db = db;
 window.sendMessage = sendMessage;
 window.fetchServer = fetchServer;
 window.containsBannedWords = containsBannedWords;
