@@ -1,219 +1,182 @@
-/* ============================= */
-/* GLOBAL BODY & FONT SETTINGS  */
-/* ============================= */
-body {
+/* ==================================================
+   GLOBAL RESET
+   ================================================== */
+* {
+  box-sizing: border-box;
   margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #0f172a;
-  color: white;
+  padding: 0;
 }
 
-/* ============================= */
-/* AUTH PAGES (Login / Signup)   */
-/* ============================= */
-.auth-wrapper {
+html, body {
+  height: 100%;
+  font-family: Arial, Helvetica, sans-serif;
+  background: #0d1117;
+  color: #e5e7eb;
+}
+
+/* ==================================================
+   SHARED UTILITIES
+   ================================================== */
+.hidden {
+  display: none;
+}
+
+.centered {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+button {
+  font-family: inherit;
+}
+
+/* ==================================================
+   AUTH PAGES (LOGIN / SIGNUP)
+   ================================================== */
+.auth-container {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
+  background: #0d1117;
 }
 
-.auth-card {
-  background: #020617;
-  padding: 30px;
+.auth-box {
+  background: #161b22;
+  padding: 32px;
   border-radius: 12px;
-  width: 320px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
+  width: 350px;
+  max-width: 90%;
+  box-shadow: 0 0 16px rgba(0, 0, 0, 0.6);
   text-align: center;
 }
 
-.auth-card h1 {
-  margin-bottom: 5px;
+.auth-box h1 {
+  margin-bottom: 16px;
+  font-size: 24px;
+  font-weight: 600;
 }
 
-.auth-card h2 {
-  margin-top: 0;
-  font-weight: normal;
-  opacity: 0.8;
-}
-
-.auth-card input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: none;
-  background: #111827;
-  color: #f1f5f9;
-}
-
-.auth-card input::placeholder {
-  color: #94a3b8;
-}
-
-.auth-card button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background: #2563eb;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.auth-card button:hover {
-  background: #1d4ed8;
-}
-
-.switch {
-  margin-top: 12px;
+.auth-box p {
+  margin-bottom: 20px;
+  color: #9ca3af;
   font-size: 14px;
 }
 
-.switch a {
-  color: #60a5fa;
+.auth-box input {
+  width: 100%;
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 8px;
+  border: none;
+  background: #0d1117;
+  color: #e5e7eb;
+  font-size: 15px;
+}
+
+.auth-box input::placeholder {
+  color: #6b7280;
+}
+
+.auth-box button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 4px;
+  border-radius: 8px;
+  border: none;
+  background: #2563eb;
+  color: white;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.auth-box button:hover {
+  background: #1d4ed8;
+}
+
+.auth-box button:active {
+  transform: scale(0.98);
+}
+
+.auth-box .link {
+  margin-top: 14px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.auth-box .link a {
+  color: #3b82f6;
   text-decoration: none;
 }
 
-/* ============================= */
-/* PROFILE PAGE CARD             */
-/* ============================= */
-.profile-card {
+.auth-box .link a:hover {
+  text-decoration: underline;
+}
+
+.auth-error {
+  color: #ef4444;
+  font-size: 13px;
+  margin-bottom: 10px;
+}
+
+/* ==================================================
+   SERVER PAGE LAYOUT
+   ================================================== */
+.server-header {
+  text-align: center;
+  padding-top: 20px;
+}
+
+.server-header h1 {
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.server-header p {
+  margin-top: 4px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.server-page {
+  min-height: calc(100vh - 80px);
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 12px;
-  padding: 30px;
-  background: #020617;
-  border-radius: 12px;
-  width: 320px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
-  margin: 50px auto;
-  text-align: center;
 }
 
-.profile-card button {
-  width: 100%;
-  padding: 10px;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.profile-card button#chatBtn {
-  background: #2563eb;
-}
-
-.profile-card button#chatBtn:hover {
-  background: #1d4ed8;
-}
-
-.profile-card button#logoutBtn {
-  background: #ef4444;
-}
-
-.profile-card button#logoutBtn:hover {
-  background: #b91c1c;
-}
-
-/* ============================= */
-/* PROFILE EDIT NICKNAME          */
-/* ============================= */
-.nickname-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 10px;
-  font-size: 16px;
-}
-
-.nickname-value {
-  font-weight: 600;
-  color: #e5e7eb;
-}
-
-.edit-btn {
-  background: transparent;
-  border: 1px solid #334155;
-  color: #cbd5f5;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.edit-btn:hover {
-  background: #1e293b;
-  border-color: #3b82f6;
-  color: white;
-}
-
-.edit-container {
-  display: none;
-  margin-top: 10px;
-  gap: 6px;
-  justify-content: center;
-}
-
-.edit-container input {
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: none;
-  background: #111827;
-  color: white;
-  width: 160px;
-}
-
-.save-btn {
-  background: #2563eb;
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
-
-.save-btn:hover {
-  background: #1d4ed8;
-}
-
-#statusMsg {
-  margin-top: 8px;
-  font-size: 13px;
-}
-
-/* ============================= */
-/* SERVER / CHAT PAGE             */
-/* ============================= */
+/* ==================================================
+   CHAT SYSTEM
+   ================================================== */
 .chat-container {
   width: 90%;
   max-width: 600px;
   flex: 1;
+  margin-top: 20px;
+  padding: 12px;
+  border-radius: 10px;
+  border: 1px solid #1f2937;
+  background: #020617;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #020617;
-  margin-top: 20px;
-  overflow-y: auto;
+  gap: 6px;
 }
 
 .chat-message {
-  margin-bottom: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: #111827;
-  word-wrap: break-word;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: #111827;
+  font-size: 14px;
+  line-height: 1.4;
+  word-break: break-word;
+}
+
+.chat-message.you {
+  background: #1e3a8a;
 }
 
 .chat-input-container {
@@ -221,61 +184,207 @@ body {
   max-width: 600px;
   display: flex;
   gap: 8px;
-  margin-top: 10px;
+  margin: 10px 0 20px;
 }
 
 .chat-input-container input {
   flex: 1;
-  padding: 10px;
-  border-radius: 6px;
+  padding: 12px;
+  border-radius: 8px;
   border: none;
-  font-size: 16px;
   background: #111827;
-  color: white;
+  color: #e5e7eb;
+  font-size: 15px;
 }
 
 .chat-input-container input::placeholder {
-  color: #94a3b8;
+  color: #6b7280;
 }
 
 .chat-input-container button {
-  padding: 10px 16px;
-  border-radius: 6px;
+  padding: 12px 18px;
+  border-radius: 8px;
   border: none;
   background: #2563eb;
   color: white;
+  font-size: 15px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.05s ease;
 }
 
 .chat-input-container button:hover {
   background: #1d4ed8;
 }
 
-/* ============================= */
-/* FOSSIL CLICKER                */
-/* ============================= */
+.chat-input-container button:active {
+  transform: scale(0.97);
+}
+
+/* ==================================================
+   GAMES PANEL
+   ================================================== */
+.games-wrapper {
+  width: 90%;
+  max-width: 600px;
+  margin-bottom: 30px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.game-search {
+  padding: 10px 12px;
+  border-radius: 8px;
+  border: none;
+  background: #111827;
+  color: #e5e7eb;
+  font-size: 14px;
+}
+
+.game-search::placeholder {
+  color: #6b7280;
+}
+
+.games-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.game-item {
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: #1e293b;
+  color: #e5e7eb;
+  font-size: 13px;
+  border: 1px solid #334155;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.05s ease, border-color 0.15s ease;
+  user-select: none;
+}
+
+.game-item:hover {
+  background: #2563eb;
+  border-color: #3b82f6;
+  color: white;
+}
+
+.game-item:active {
+  transform: scale(0.96);
+}
+
+.game-container {
+  margin-top: 12px;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Game header row */
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.game-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+}
+
+/* Close game button */
+.close-game-btn {
+  background: transparent;
+  border: 1px solid #334155;
+  color: #cbd5f5;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.close-game-btn:hover {
+  background: #1e293b;
+  border-color: #ef4444;
+  color: white;
+}
+
+.close-game-btn:active {
+  transform: scale(0.96);
+}
+
+/* ==================================================
+   FOSSIL CLICKER GAME
+   ================================================== */
 .fossil-game {
-  margin-top: 20px;
-  padding: 15px;
-  background-color: #020617;
+  padding: 16px;
+  background: #020617;
   border-radius: 12px;
-  width: 300px;
+  width: 280px;
   text-align: center;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.6);
+  border: 1px solid #1f2937;
+}
+
+.fossil-game p {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 500;
 }
 
 .fossil-game button {
-  margin-top: 8px;
   width: 100%;
-  padding: 8px;
-  border-radius: 6px;
+  padding: 10px;
+  margin-top: 8px;
+  border-radius: 8px;
   border: none;
   background: #2563eb;
   color: white;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
-  transition: background 0.15s ease;
+  transition: background 0.15s ease, transform 0.05s ease;
 }
 
 .fossil-game button:hover {
   background: #1d4ed8;
+}
+
+.fossil-game button:active {
+  transform: scale(0.97);
+}
+
+/* ==================================================
+   ANIMATIONS
+   ================================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ==================================================
+   SCROLLBARS (CHROME / EDGE)
+   ================================================== */
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: #020617;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 4px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #334155;
 }
