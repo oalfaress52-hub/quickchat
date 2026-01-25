@@ -55,10 +55,6 @@
           errorMsg.textContent = err.message;
         });
     };
-
-    firebase.auth().onAuthStateChanged(user => {
-      if (user) window.location.href = "profile.html";
-    });
   </script>
 </body>
 </html>
