@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Quickchat II — Sign Up</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
@@ -15,6 +15,7 @@
       <form id="signupForm">
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
         <button type="submit">Sign Up</button>
       </form>
 
@@ -27,34 +28,40 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/10.24.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.24.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.24.0/firebase-firestore-compat.js"></script>
+  <!-- ✅ Firebase SDKs (COMPAT — VALID CDN) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.5/firebase-auth-compat.js"></script>
 
-<!-- App logic -->
-<script src="app.js"></script>
+  <!-- ✅ App logic -->
+  <script src="app.js"></script>
 
+  <!-- ✅ Page logic -->
   <script>
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    form.onsubmit = function (e) {
+    form.onsubmit = async function (e) {
       e.preventDefault();
       errorMsg.textContent = "";
 
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
+      const confirmPassword = document.getElementById("confirmPassword").value;
 
-      firebase.auth().createUserWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "profile.html";
-        })
-        .catch(err => {
-          console.error(err);
-          errorMsg.textContent = err.message;
-        });
+      if (password !== confirmPassword) {
+        errorMsg.textContent = "Passwords do not match.";
+        return;
+      }
+
+      try {
+        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        window.location.href = "profile.html";
+      } catch (err) {
+        console.error(err);
+        errorMsg.textContent = err.message;
+      }
     };
   </script>
 </body>
 </html>
+
