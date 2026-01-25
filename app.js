@@ -38,9 +38,7 @@
   const BANNED_WORDS = ["slur1", "slur2", "badword1"];
   function containsBannedWords(text) {
     const lower = text.toLowerCase();
-    return BANNED_WORDS.some(word =>
-      new RegExp(`\\b${word}\\b`, "i").test(lower)
-    );
+    return BANNED_WORDS.some(word => new RegExp(`\\b${word}\\b`, "i").test(lower));
   }
 
   // ==================================================
@@ -94,16 +92,14 @@
     const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
     if (mutedEntry) return alert("You do not have permission to speak.");
 
-    if (text.startsWith("/")) return;
+    if (text.startsWith("/")) return; // optional: add commands later
 
-    if (containsBannedWords(text))
-      return alert("Your message contains prohibited language.");
+    if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
 
     await db.collection("messages").add({
       text,
       serverId,
-      uid: currentUser.uid,
-      nickname: currentUser.displayName || null,
+      nickname: currentUser.displayName || "Anonymous",
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
@@ -162,7 +158,7 @@
   }
 
   // ==================================================
-  // 🦴 FOSSIL CLICKER — PRESERVED
+  // 🦴 FOSSIL CLICKER
   // ==================================================
   let fossils = 0;
   let clickPower = 1;
@@ -204,3 +200,4 @@
   window.showBannedView = showBannedView;
 
 })();
+
