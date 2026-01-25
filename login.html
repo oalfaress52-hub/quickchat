@@ -46,16 +46,22 @@
       const password = document.getElementById("password").value;
 
       try {
+        // Sign in with Firebase Auth
         const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Optional: fetch nickname for profile display
-        const userDoc = await db.collection("users").doc(user.uid).get();
-        if (userDoc.exists) {
-          const data = userDoc.data();
-          localStorage.setItem("nickname", data.nickname || "");
+        // Optional: ensure displayName exists
+        if (!user.displayName) {
+          const userDoc = await db.collection("users").doc(user.uid).get();
+          if (userDoc.exists) {
+            const data = userDoc.data();
+            if (data.nickname) {
+              await user.updateProfile({ displayName: data.nickname });
+            }
+          }
         }
 
+        // Redirect to profile or chat page
         window.location.href = "profile.html";
       } catch (err) {
         console.error(err);
