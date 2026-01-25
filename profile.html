@@ -23,7 +23,7 @@
   <script>
     firebase.auth().onAuthStateChanged(user => {
       if (!user) {
-        window.location.href- = "login.html";
+        window.location.href = "login.html";
       } else {
         document.getElementById("userEmail").textContent = "Email: " + user.email;
         document.getElementById("userUID").textContent = "UID: " + user.uid;
