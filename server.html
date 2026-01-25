@@ -6,20 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
   <style>
-    body {
-      margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: #0f172a;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-    }
+    /* ============================= */
+    /* Server header */
+    /* ============================= */
     .server-header {
       margin-top: 20px;
       text-align: center;
     }
+
+    /* ============================= */
+    /* Chat container */
+    /* ============================= */
     .chat-container {
       width: 90%;
       max-width: 600px;
@@ -33,12 +30,15 @@
       margin-top: 20px;
       overflow-y: auto;
     }
+
     .chat-message {
       margin-bottom: 6px;
       padding: 4px 8px;
       border-radius: 4px;
       background-color: #111827;
+      word-wrap: break-word;
     }
+
     .chat-input-container {
       width: 90%;
       max-width: 600px;
@@ -46,13 +46,21 @@
       gap: 8px;
       margin-top: 10px;
     }
+
     .chat-input-container input {
       flex: 1;
       padding: 10px;
       border-radius: 6px;
       border: none;
       font-size: 16px;
+      background: #111827;
+      color: white;
     }
+
+    .chat-input-container input::placeholder {
+      color: #94a3b8;
+    }
+
     .chat-input-container button {
       padding: 10px 16px;
       border-radius: 6px;
@@ -60,23 +68,83 @@
       background: #2563eb;
       color: white;
       cursor: pointer;
+      transition: background 0.15s ease;
     }
+
     .chat-input-container button:hover {
       background: #1d4ed8;
     }
 
-    /* Fossil Clicker */
-    .fossil-game {
+    /* ============================= */
+    /* Games Section */
+    /* ============================= */
+    .games-wrapper {
       margin-top: 20px;
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .game-search {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background: #111827;
+      color: white;
+      font-size: 15px;
+    }
+
+    .games-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .game-item {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s ease;
+      font-size: 14px;
+    }
+
+    .game-item:hover {
+      background: #1d4ed8;
+    }
+
+    .game-container {
+      margin-top: 12px;
+    }
+
+    /* ============================= */
+    /* Fossil Clicker (will be injected dynamically) */
+    /* ============================= */
+    .fossil-game {
       padding: 15px;
       background-color: #020617;
       border-radius: 12px;
       width: 300px;
       text-align: center;
     }
+
     .fossil-game button {
       margin-top: 8px;
       width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
+
+    .fossil-game button:hover {
+      background: #1d4ed8;
     }
   </style>
 </head>
@@ -86,18 +154,18 @@
     <p id="serverInfo">Server: Demo Server</p>
   </div>
 
+  <!-- Chat -->
   <div class="chat-container" id="chatContainer"></div>
-
   <div class="chat-input-container">
     <input type="text" id="chatInput" placeholder="Type your message..." />
     <button id="sendBtn">Send</button>
   </div>
 
-  <div class="fossil-game">
-    <h3>Fossil Clicker</h3>
-    <p id="fossilCounter">Fossils: 0</p>
-    <button id="digBtn">Dig Fossil</button>
-    <button id="upgradeClickPower">Upgrade Click Power</button>
+  <!-- Games Section -->
+  <div class="games-wrapper">
+    <input type="text" id="gameSearch" placeholder="Search games..." class="game-search" />
+    <div id="gamesList" class="games-list"></div>
+    <div id="gameContainer" class="game-container"></div>
   </div>
 
   <!-- Firebase SDKs -->
@@ -109,9 +177,15 @@
   <script src="app.js"></script>
 
   <script>
+    // ===============================
+    // Chat Logic
+    // ===============================
     const chatContainer = document.getElementById("chatContainer");
     const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
+
+    let fossils = 0;
+    let clickPower = 1;
 
     firebase.auth().onAuthStateChanged(currentUser => {
       if (!currentUser) {
@@ -119,65 +193,104 @@
         return;
       }
 
+      const uid = currentUser.uid;
       const serverId = "demoServer";
 
-      const dbRef = firebase.firestore()
-        .collection("messages")
+      const dbRef = firebase.firestore().collection("messages")
         .where("serverId", "==", serverId)
         .orderBy("createdAt");
 
-      // Real-time listener
+      // Real-time chat
       dbRef.onSnapshot(snapshot => {
         chatContainer.innerHTML = "";
         snapshot.forEach(doc => {
           const msg = doc.data();
           const div = document.createElement("div");
           div.className = "chat-message";
-
-          const displayName = msg.nickname || "Anonymous";
+          const displayName = msg.uid === uid ? "You" : msg.nickname || "Anonymous";
           div.textContent = `${displayName}: ${msg.text}`;
           chatContainer.appendChild(div);
         });
         chatContainer.scrollTop = chatContainer.scrollHeight;
       });
 
-      // ✅ FIX 2 + CORRECT PIPELINE
+      // Send message
       sendBtn.onclick = async () => {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        await sendMessage(text, serverId, currentUser);
+        await firebase.firestore().collection("messages").add({
+          text,
+          serverId,
+          uid: uid,
+          nickname: currentUser.displayName || "Anonymous",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
         chatInput.value = "";
       };
     });
 
     // ===============================
-    // Fossil Clicker Logic
+    // Games Section Logic
     // ===============================
-    let fossils = 0;
-    let clickPower = 1;
-    const fossilCounter = document.getElementById("fossilCounter");
-    const digBtn = document.getElementById("digBtn");
-    const upgradeBtn = document.getElementById("upgradeClickPower");
+    const games = [
+      { id: "fossilClicker", name: "Fossil Clicker" },
+      // Add more games here
+    ];
 
-    function updateFossilDisplay() {
-      fossilCounter.textContent = `Fossils: ${fossils}`;
+    const gamesListDiv = document.getElementById("gamesList");
+    const gameSearchInput = document.getElementById("gameSearch");
+    const gameContainer = document.getElementById("gameContainer");
+
+    function renderGames(filter = "") {
+      gamesListDiv.innerHTML = "";
+      const filtered = games.filter(g => g.name.toLowerCase().includes(filter.toLowerCase()));
+      filtered.forEach(game => {
+        const div = document.createElement("div");
+        div.className = "game-item";
+        div.textContent = game.name;
+        div.onclick = () => selectGame(game.id);
+        gamesListDiv.appendChild(div);
+      });
     }
 
-    digBtn.onclick = () => {
-      fossils += clickPower;
-      updateFossilDisplay();
-    };
+    function selectGame(gameId) {
+      gameContainer.innerHTML = "";
 
-    upgradeBtn.onclick = () => {
-      if (fossils >= 10) {
-        fossils -= 10;
-        clickPower++;
-        updateFossilDisplay();
-      } else {
-        alert("Not enough fossils!");
+      if (gameId === "fossilClicker") {
+        const fossilDiv = document.createElement("div");
+        fossilDiv.className = "fossil-game";
+        fossilDiv.innerHTML = `
+          <h3>Fossil Clicker</h3>
+          <p id="fossilCounter">Fossils: ${fossils}</p>
+          <button id="digBtn">Dig Fossil</button>
+          <button id="upgradeClickPower">Upgrade Click Power</button>
+        `;
+        gameContainer.appendChild(fossilDiv);
+
+        // Fossil clicker logic
+        const digBtn = document.getElementById("digBtn");
+        const upgradeBtn = document.getElementById("upgradeClickPower");
+        const fossilCounter = document.getElementById("fossilCounter");
+
+        function updateFossilDisplay() {
+          fossilCounter.textContent = `Fossils: ${fossils}`;
+        }
+
+        digBtn.onclick = () => { fossils += clickPower; updateFossilDisplay(); };
+        upgradeBtn.onclick = () => {
+          if (fossils >= 10) { fossils -= 10; clickPower++; updateFossilDisplay(); }
+          else alert("Not enough fossils!");
+        };
       }
-    };
+
+      // Add other games here in future
+    }
+
+    gameSearchInput.oninput = () => renderGames(gameSearchInput.value);
+
+    renderGames(); // initial render
   </script>
 </body>
 </html>
