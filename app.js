@@ -1,15 +1,20 @@
 // ==================================================
-// WAIT FOR FIREBASE TO LOAD
+// WAIT FOR FIREBASE + FIRESTORE TO LOAD
 // ==================================================
 (function waitForFirebase() {
-  if (typeof firebase === "undefined") {
+  if (
+    typeof firebase === "undefined" ||
+    !firebase.apps ||
+    !firebase.auth ||
+    !firebase.firestore
+  ) {
     console.warn("Waiting for Firebase SDK...");
     setTimeout(waitForFirebase, 50);
     return;
   }
 
   // ==================================================
-  // Firebase Init (GLOBAL, SINGLE SOURCE OF TRUTH)
+  // FIREBASE INIT (SINGLE SOURCE OF TRUTH)
   // ==================================================
   const firebaseConfig = {
     apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
