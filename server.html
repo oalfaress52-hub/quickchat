@@ -2,114 +2,193 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quickchat II - The Main Server</title>
-  <meta name="viewport" content="width=device-width, intial-scale=1.9">
-  <link rel="stylesheet" href="style.css">
+  <title>Quickchat II — Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .server-header {
+      margin-top: 20px;
+      text-align: center;
+    }
+    .chat-container {
+      width: 90%;
+      max-width: 600px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #020617;
+      margin-top: 20px;
+      overflow-y: auto;
+    }
+    .chat-message {
+      margin-bottom: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #111827;
+    }
+    .chat-input-container {
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .chat-input-container input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+    }
+    .chat-input-container button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+    }
+    .chat-input-container button:hover {
+      background: #1d4ed8;
+    }
+
+    /* Fossil Clicker */
+    .fossil-game {
+      margin-top: 20px;
+      padding: 15px;
+      background-color: #020617;
+      border-radius: 12px;
+      width: 300px;
+      text-align: center;
+    }
+    .fossil-game button {
+      margin-top: 8px;
+      width: 100%;
+    }
+  </style>
 </head>
 <body>
-  <div class="server-wrapper">
-    <!-- Server Info -->
-    <div class="server-card" id="serverCard">
-      <h1 id="serverName">Server: Loading...</h1>
-      <p id="serverID">ID: </p>
-      <p id="bannedUsers">Banned Users: </p>
-      <p id="mutedUsers">Muted Users: </p>
-    </div>
+  <div class="server-header">
+    <h1>Quickchat II — Server</h1>
+    <p id="serverInfo">Server: Demo Server</p>
+  </div>
 
-    <!-- Chat Section -->
-    <div class="chat-card">
-      <div id="chatMessages" class="chat-messages"></div>
-      <input type="text" id="messageInput" placeholder="Type a message..." />
-      <button id="sendButton">Send</button>
-    </div>
+  <div class="chat-container" id="chatContainer"></div>
 
-    <!-- Fossil Clicker -->
-    <div class="fossil-card" id="fossilClickerContainer">
-      <h2>🦴 Fossil Clicker</h2>
-      <p id="fossilCounter">Fossils: 0</p>
-      <button id="digButton">Dig Fossil</button>
-      <button id="upgradeClickPower">Upgrade Click Power</button>
-    </div>
+  <div class="chat-input-container">
+    <input type="text" id="chatInput" placeholder="Type your message..." />
+    <button id="sendBtn">Send</button>
+  </div>
 
-    <!-- Navigation -->
-    <div class="nav-buttons">
-      <button id="openFossilGame">Open Fossil Clicker</button>
-      <button id="goProfileBtn">Go to Profile</button>
-    </div>
+  <div class="fossil-game">
+    <h3>Fossil Clicker</h3>
+    <p id="fossilCounter">Fossils: 0</p>
+    <button id="digBtn">Dig Fossil</button>
+    <button id="upgradeClickPower">Upgrade Click Power</button>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
-    const serverId = "main-server"; // Change or fetch dynamically if needed
+    const chatContainer = document.getElementById("chatContainer");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
 
-    const chatMessages = document.getElementById("chatMessages");
-    const messageInput = document.getElementById("messageInput");
-    const sendButton = document.getElementById("sendButton");
-    const goProfileBtn = document.getElementById("goProfileBtn");
-    const serverNameEl = document.getElementById("serverName");
-    const serverIdEl = document.getElementById("serverID");
-    const bannedUsersEl = document.getElementById("bannedUsers");
-    const mutedUsersEl = document.getElementById("mutedUsers");
+    const user = firebase.auth().currentUser;
 
-    // Redirect to profile
-    goProfileBtn.onclick = () => window.location.href = "profile.html";
-
-    // Auth check
-    firebase.auth().onAuthStateChanged(user => {
-      if (!user) {
+    // Wait for auth state
+    firebase.auth().onAuthStateChanged(currentUser => {
+      if (!currentUser) {
         window.location.href = "login.html";
-      } else {
-        loadServerInfo();
-        loadMessages();
+        return;
       }
-    });
 
-    // Load server info
-    async function loadServerInfo() {
-      const server = await fetchServer(serverId);
-      if (!server) return;
-      serverNameEl.textContent = `Server: ${server.name } || "Main Server"}`;
-      serverIDEl.textContent = `ID: ${server.id}`;
+      const uid = currentUser.uid;
 
-      bannedUsersEl.textContent = `Banned Users: ${(server.banned || []).map(b => uid || b.psuedoIP).join(", ") || "None"}`;
-      mutedUsersEl.textContent - `Muted Users: ${(server.muted || []).map(m => uid).join(", ") || "None"}`;
-    }
+      const serverId = "demoServer"; // Example server ID
+      const dbRef = firebase.firestore().collection("messages")
+        .where("serverId", "==", serverId)
+        .orderBy("createdAt");
 
-    // Load messages in real-time 
-    function loadMessages() {
-      db.collection("messages")
-      .where("serverId", "==", serverId)
-      .orderBy("createdAt")
-      .onSnapshot(snapshot => {
-        chatmessages.innerHTML = "";
+      // Real-time listener
+      dbRef.onSnapshot(snapshot => {
+        chatContainer.innerHTML = "";
         snapshot.forEach(doc => {
           const msg = doc.data();
           const div = document.createElement("div");
-          div.textContent = `${msg.uid}: ${msg.text}`;
           div.className = "chat-message";
-          chatMessages.appendChild(div);
-          chatMessages.scrollTop = chatMessages.scrollHeight;
-          });
+
+          // Option 1: Show "You" for your messages
+          const displayName = msg.uid === uid ? "You" : msg.nickname || "Anonymous";
+          div.textContent = `${displayName}: ${msg.text}`;
+          chatContainer.appendChild(div);
         });
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
+
+      // Send message
+      sendBtn.onclick = async () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        await firebase.firestore().collection("messages").add({
+          text,
+          serverId,
+          uid: uid,
+          nickname: currentUser.displayName || null,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        chatInput.value = "";
+      };
+    });
+
+    // ===============================
+    // Fossil Clicker Logic
+    // ===============================
+    let fossils = 0;
+    let clickPower = 1;
+    const fossilCounter = document.getElementById("fossilCounter");
+    const digBtn = document.getElementById("digBtn");
+    const upgradeBtn = document.getElementById("upgradeClickPower");
+
+    function updateFossilDisplay() {
+      fossilCounter.textContent = `Fossils: ${fossils}`;
     }
 
-    // Send message
-    sendButton.onclick = async () => {
-      const user = firebase.auth().currentUser;
-      if (!user) return alert("Not logged in!"); 
-      const text = messageInput.value.trim();
-      if (!text) return;
+    digBtn.onclick = () => {
+      fossils += clickPower;
+      updateFossilDisplay();
+    };
 
-      await sendMessage(text, serverId, user);
-      messageInput.value = "";
-    }; 
+    upgradeBtn.onclick = () => {
+      if (fossils >= 10) {
+        fossils -= 10;
+        clickPower++;
+        updateFossilDisplay();
+      } else {
+        alert("Not enough fossils!");
+      }
+    };
   </script>
 </body>
 </html>
