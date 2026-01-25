@@ -77,7 +77,7 @@
   }
 
   // ==================================================
-  // SEND MESSAGE
+  // SEND MESSAGE WITH NICKNAME
   // ==================================================
   async function sendMessage(text, serverId, currentUser) {
     if (!currentUser) return alert("Not logged in!");
@@ -103,6 +103,7 @@
       text,
       serverId,
       uid: currentUser.uid,
+      nickname: currentUser.displayName || null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
   }
@@ -154,8 +155,8 @@
 
     container.appendChild(div);
 
-    const chatInput = document.getElementById("messageInput");
-    const sendButton = document.getElementById("sendButton");
+    const chatInput = document.getElementById("chatInput");
+    const sendButton = document.getElementById("sendBtn");
     if (chatInput) chatInput.style.display = "none";
     if (sendButton) sendButton.style.display = "none";
   }
@@ -166,27 +167,13 @@
   let fossils = 0;
   let clickPower = 1;
 
-  const fossilClickerContainer = document.getElementById("fossilClickerContainer");
   const fossilCounter = document.getElementById("fossilCounter");
-  const digButton = document.getElementById("digButton");
+  const digButton = document.getElementById("digBtn");
   const upgradeClickPower = document.getElementById("upgradeClickPower");
-  const openFossilGame = document.getElementById("openFossilGame");
-  const closeFossilGame = document.getElementById("closeFossilGame");
 
   function updateFossilDisplay() {
     if (fossilCounter) fossilCounter.textContent = `Fossils: ${fossils}`;
   }
-
-  if (openFossilGame) openFossilGame.onclick = () => {
-    if (fossilClickerContainer)
-      fossilClickerContainer.style.display = "block";
-    updateFossilDisplay();
-  };
-
-  if (closeFossilGame) closeFossilGame.onclick = () => {
-    if (fossilClickerContainer)
-      fossilClickerContainer.style.display = "none";
-  };
 
   if (digButton) digButton.onclick = () => {
     fossils += clickPower;
@@ -215,4 +202,5 @@
   window.formatTimestamp = formatTimestamp;
   window.parseBanTime = parseBanTime;
   window.showBannedView = showBannedView;
+
 })();
