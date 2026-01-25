@@ -13,6 +13,7 @@
       <h2>Create Account</h2>
 
       <form id="signupForm">
+        <input type="text" id="nickname" placeholder="Nickname" required />
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
         <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
@@ -20,31 +21,30 @@
       </form>
 
       <p class="switch">
-        Already have an account?
-        <a href="login.html">Login</a>
+        Already have an account? <a href="login.html">Login</a>
       </p>
 
       <p id="errorMsg" style="color:red;"></p>
     </div>
   </div>
 
-  <!-- ✅ Firebase SDKs (COMPAT — VALID CDN) -->
+  <!-- Firebase SDKs (v9 compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- ✅ App logic -->
+  <!-- App logic -->
   <script src="app.js"></script>
 
-  <!-- ✅ Page logic -->
   <script>
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    form.onsubmit = async function (e) {
+    form.onsubmit = async function(e) {
       e.preventDefault();
       errorMsg.textContent = "";
 
+      const nickname = document.getElementById("nickname").value.trim();
       const email = document.getElementById("email").value.trim();
       const password = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirmPassword").value;
@@ -55,7 +55,15 @@
       }
 
       try {
-        await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // Save nickname in Firestore
+        await db.collection("users").doc(user.uid).set({
+          nickname: nickname,
+          email: email
+        });
+
         window.location.href = "profile.html";
       } catch (err) {
         console.error(err);
@@ -65,4 +73,3 @@
   </script>
 </body>
 </html>
-
