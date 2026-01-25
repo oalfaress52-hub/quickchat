@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Quickchat II - Profile</title>
+  <title>Quickchat II — Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
 </head>
@@ -21,7 +21,7 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs (REAL CDN FILES — SAME AS LOGIN/SIGNUP) -->
+  <!-- Firebase SDKs v9.23.0 (compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -30,6 +30,7 @@
   <script src="app.js"></script>
 
   <script>
+    // Redirect if not logged in and display user info
     firebase.auth().onAuthStateChanged(user => {
       if (!user) {
         window.location.href = "login.html";
@@ -39,10 +40,16 @@
       }
     });
 
+    // Logout button
     document.getElementById("logoutBtn").onclick = () => {
       firebase.auth().signOut()
         .then(() => window.location.href = "login.html")
-        .catch(consoel.error);
+        .catch(err => console.error(err));
+    };
+
+    // Go to Chat button
+    document.getElementById("chatBtn").onclick = () => {
+      window.location.href = "index.html"; // replace with your chat page
     };
   </script>
 </body>
