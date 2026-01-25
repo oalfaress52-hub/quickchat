@@ -1,356 +1,332 @@
-/* ============================= */
-/* Global */
-/* ============================= */
-body {
-  margin: 0;
-  font-family: Arial, Helvetica, sans-serif;
-  background: #0f172a;
-  color: white;
-}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Quickchat II — Server</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .server-header {
+      margin-top: 20px;
+      text-align: center;
+    }
 
-/* ============================= */
-/* Auth Pages */
-/* ============================= */
-.auth-wrapper {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
+    .chat-container {
+      width: 90%;
+      max-width: 600px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      border: 1px solid #444;
+      border-radius: 8px;
+      padding: 10px;
+      background-color: #020617;
+      margin-top: 20px;
+      overflow-y: auto;
+    }
 
-.auth-card {
-  background: #020617;
-  padding: 30px;
-  border-radius: 12px;
-  width: 320px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
-  text-align: center;
-}
+    .chat-message {
+      margin-bottom: 6px;
+      padding: 4px 8px;
+      border-radius: 4px;
+      background-color: #111827;
+      word-wrap: break-word;
+    }
 
-.auth-card h1 {
-  margin-bottom: 5px;
-}
+    .chat-input-container {
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+    }
 
-.auth-card h2 {
-  margin-top: 0;
-  font-weight: normal;
-  opacity: 0.8;
-}
+    .chat-input-container input {
+      flex: 1;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      font-size: 16px;
+      background: #111827;
+      color: white;
+    }
 
-.auth-card input {
-  width: 100%;
-  padding: 10px;
-  margin: 10px 0;
-  border-radius: 6px;
-  border: none;
-  background: #111827;
-  color: white;
-}
+    .chat-input-container input::placeholder {
+      color: #94a3b8;
+    }
 
-.auth-card input::placeholder {
-  color: #94a3b8;
-}
+    .chat-input-container button {
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
 
-.auth-card button {
-  width: 100%;
-  padding: 10px;
-  margin-top: 10px;
-  background: #2563eb;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
+    .chat-input-container button:hover {
+      background: #1d4ed8;
+    }
 
-.auth-card button:hover {
-  background: #1d4ed8;
-}
+    /* ============================= */
+    /* Games Section */
+    /* ============================= */
+    .games-wrapper {
+      margin-top: 20px;
+      width: 90%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
 
-.switch {
-  margin-top: 12px;
-  font-size: 14px;
-}
+    .game-search {
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: none;
+      background: #111827;
+      color: white;
+      font-size: 15px;
+    }
 
-.switch a {
-  color: #60a5fa;
-  text-decoration: none;
-}
+    .game-search::placeholder {
+      color: #94a3b8;
+    }
 
-/* ============================= */
-/* Profile Page */
-/* ============================= */
-.profile-card {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 12px;
-  padding: 30px;
-  background: #020617;
-  border-radius: 12px;
-  width: 320px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.6);
-  margin: 50px auto;
-  text-align: center;
-}
+    .games-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
 
-.profile-card p {
-  margin: 0;
-  font-size: 15px;
-  opacity: 0.9;
-}
+    .game-item {
+      padding: 6px 12px;
+      border-radius: 6px;
+      background: #1e293b;
+      color: #e5e7eb;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      font-size: 14px;
+      border: 1px solid #334155;
+    }
 
-/* Chat button */
-.profile-card button#chatBtn {
-  width: 100%;
-  padding: 10px;
-  background: #2563eb;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
+    .game-item:hover {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: white;
+    }
 
-.profile-card button#chatBtn:hover {
-  background: #1d4ed8;
-}
+    .game-container {
+      margin-top: 12px;
+      animation: fadeIn 0.25s ease;
+    }
 
-/* Logout button (FIXED — no more 100px padding lol) */
-.profile-card button#logoutBtn {
-  width: 100%;
-  padding: 10px;
-  background: #ef4444;
-  border: none;
-  border-radius: 6px;
-  color: white;
-  font-size: 15px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 8px;
+    }
 
-.profile-card button#logoutBtn:hover {
-  background: #b91c1c;
-}
+    .close-game-btn {
+      background: transparent;
+      border: 1px solid #334155;
+      color: #cbd5f5;
+      padding: 4px 10px;
+      border-radius: 6px;
+      font-size: 13px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
 
-/* ============================= */
-/* Profile Nickname Editor */
-/* ============================= */
-.nickname-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-top: 8px;
-  font-size: 15px;
-}
+    .close-game-btn:hover {
+      background: #1e293b;
+      border-color: #ef4444;
+      color: white;
+    }
 
-.nickname-value {
-  font-weight: 600;
-  color: #e5e7eb;
-}
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
 
-.edit-btn {
-  background: transparent;
-  border: 1px solid #334155;
-  color: #cbd5f5;
-  padding: 4px 10px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
+    /* ============================= */
+    /* Fossil Clicker */
+    /* ============================= */
+    .fossil-game {
+      padding: 15px;
+      background-color: #020617;
+      border-radius: 12px;
+      width: 300px;
+      text-align: center;
+      box-shadow: 0 0 12px rgba(0,0,0,0.4);
+    }
 
-.edit-btn:hover {
-  background: #1e293b;
-  border-color: #3b82f6;
-  color: white;
-}
+    .fossil-game button {
+      margin-top: 8px;
+      width: 100%;
+      padding: 8px;
+      border-radius: 6px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      cursor: pointer;
+      transition: background 0.15s ease;
+    }
 
-.edit-container {
-  display: none;
-  margin-top: 10px;
-  gap: 6px;
-}
+    .fossil-game button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <div class="server-header">
+    <h1>Quickchat II — Server</h1>
+    <p id="serverInfo">Server: Demo Server</p>
+  </div>
 
-.edit-container input {
-  padding: 6px 8px;
-  border-radius: 6px;
-  border: none;
-  background: #111827;
-  color: white;
-  width: 160px;
-}
+  <!-- Chat -->
+  <div class="chat-container" id="chatContainer"></div>
+  <div class="chat-input-container">
+    <input type="text" id="chatInput" placeholder="Type your message..." />
+    <button id="sendBtn">Send</button>
+  </div>
 
-.save-btn {
-  background: #2563eb;
-  border: none;
-  color: white;
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
+  <!-- Games -->
+  <div class="games-wrapper">
+    <input type="text" id="gameSearch" placeholder="Search games..." class="game-search" />
+    <div id="gamesList" class="games-list"></div>
+    <div id="gameContainer" class="game-container"></div>
+  </div>
 
-.save-btn:hover {
-  background: #1d4ed8;
-}
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-/* ============================= */
-/* Server Chat */
-/* ============================= */
-.chat-container {
-  width: 90%;
-  max-width: 600px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  border: 1px solid #444;
-  border-radius: 8px;
-  padding: 10px;
-  background-color: #020617;
-  margin-top: 20px;
-  overflow-y: auto;
-}
+  <!-- App logic -->
+  <script src="app.js"></script>
 
-.chat-message {
-  margin-bottom: 6px;
-  padding: 4px 8px;
-  border-radius: 4px;
-  background-color: #111827;
-  word-wrap: break-word;
-  font-size: 14px;
-}
+  <script>
+    // ===============================
+    // Chat Logic
+    // ===============================
+    const chatContainer = document.getElementById("chatContainer");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
 
-.chat-input-container {
-  width: 90%;
-  max-width: 600px;
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
+    let fossils = 0;
+    let clickPower = 1;
 
-.chat-input-container input {
-  flex: 1;
-  padding: 10px;
-  border-radius: 6px;
-  border: none;
-  font-size: 16px;
-  background: #111827;
-  color: white;
-}
+    firebase.auth().onAuthStateChanged(currentUser => {
+      if (!currentUser) {
+        window.location.href = "login.html";
+        return;
+      }
 
-.chat-input-container input::placeholder {
-  color: #94a3b8;
-}
+      const uid = currentUser.uid;
+      const serverId = "demoServer";
 
-.chat-input-container button {
-  padding: 10px 16px;
-  border-radius: 6px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
+      const dbRef = firebase.firestore().collection("messages")
+        .where("serverId", "==", serverId)
+        .orderBy("createdAt");
 
-.chat-input-container button:hover {
-  background: #1d4ed8;
-}
+      dbRef.onSnapshot(snapshot => {
+        chatContainer.innerHTML = "";
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.className = "chat-message";
+          const displayName = msg.uid === uid ? "You" : msg.nickname || "Anonymous";
+          div.textContent = `${displayName}: ${msg.text}`;
+          chatContainer.appendChild(div);
+        });
+        chatContainer.scrollTop = chatContainer.scrollHeight;
+      });
 
-/* ============================= */
-/* Games Section */
-/* ============================= */
-.games-wrapper {
-  margin-top: 20px;
-  width: 90%;
-  max-width: 600px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
+      sendBtn.onclick = async () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
 
-.game-search {
-  padding: 8px 12px;
-  border-radius: 6px;
-  border: none;
-  background: #111827;
-  color: white;
-  font-size: 15px;
-}
+        await firebase.firestore().collection("messages").add({
+          text,
+          serverId,
+          uid: uid,
+          nickname: currentUser.displayName || "Anonymous",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
 
-.game-search::placeholder {
-  color: #94a3b8;
-}
+        chatInput.value = "";
+      };
+    });
 
-.games-list {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
+    // ===============================
+    // Games System
+    // ===============================
+    const games = [
+      { id: "fossilClicker", name: "Fossil Clicker" }
+    ];
 
-.game-item {
-  padding: 6px 12px;
-  border-radius: 6px;
-  background: #1e293b;
-  color: #e5e7eb;
-  cursor: pointer;
-  transition: all 0.15s ease;
-  font-size: 14px;
-  border: 1px solid #334155;
-}
+    const gamesListDiv = document.getElementById("gamesList");
+    const gameSearchInput = document.getElementById("gameSearch");
+    const gameContainer = document.getElementById("gameContainer");
 
-.game-item:hover {
-  background: #2563eb;
-  border-color: #3b82f6;
-  color: white;
-}
+    function renderGames(filter = "") {
+      gamesListDiv.innerHTML = "";
+      games
+        .filter(g => g.name.toLowerCase().includes(filter.toLowerCase()))
+        .forEach(game => {
+          const div = document.createElement("div");
+          div.className = "game-item";
+          div.textContent = game.name;
+          div.onclick = () => selectGame(game.id);
+          gamesListDiv.appendChild(div);
+        });
+    }
 
-/* Game container fade-in */
-.game-container {
-  margin-top: 12px;
-  animation: fadeIn 0.25s ease;
-}
+    function closeGame() {
+      gameContainer.innerHTML = "";
+    }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(4px); }
-  to { opacity: 1; transform: translateY(0); }
-}
+    function selectGame(gameId) {
+      gameContainer.innerHTML = "";
 
-/* ============================= */
-/* Fossil Clicker Game */
-/* ============================= */
-.fossil-game {
-  padding: 15px;
-  background-color: #020617;
-  border-radius: 12px;
-  width: 300px;
-  text-align: center;
-  box-shadow: 0 0 12px rgba(0,0,0,0.4);
-}
+      if (gameId === "fossilClicker") {
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = `
+          <div class="game-header">
+            <h3>Fossil Clicker</h3>
+            <button id="closeGameBtn" class="close-game-btn">Close</button>
+          </div>
+          <div class="fossil-game">
+            <p id="fossilCounter">Fossils: ${fossils}</p>
+            <button id="digBtn">Dig Fossil</button>
+            <button id="upgradeClickPower">Upgrade Click Power</button>
+          </div>
+        `;
+        gameContainer.appendChild(wrapper);
 
-.fossil-game h3 {
-  margin-top: 0;
-}
+        document.getElementById("closeGameBtn").onclick = closeGame;
 
-.fossil-game p {
-  margin: 6px 0;
-}
+        const digBtn = document.getElementById("digBtn");
+        const upgradeBtn = document.getElementById("upgradeClickPower");
+        const fossilCounter = document.getElementById("fossilCounter");
 
-.fossil-game button {
-  margin-top: 8px;
-  width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  cursor: pointer;
-  transition: background 0.15s ease;
-}
+        function updateFossilDisplay() {
+          fossilCounter.textContent = `Fossils: ${fossils}`;
+        }
 
-.fossil-game button:hover {
-  background: #1d4ed8;
-}
+        digBtn.onclick = () => { fossils += clickPower; updateFossilDisplay(); };
+        upgradeBtn.onclick = () => {
+          if (fossils >= 10) { fossils -= 10; clickPower++; updateFossilDisplay(); }
+          else alert("Not enough fossils!");
+        };
+      }
+    }
+
+    gameSearchInput.oninput = () => renderGames(gameSearchInput.value);
+    renderGames();
+  </script>
+</body>
+</html>
