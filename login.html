@@ -27,37 +27,36 @@
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (COMPAT — VALID URLs) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- App -->
+  <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
     const form = document.getElementById("loginForm");
     const errorMsg = document.getElementById("errorMsg");
-    const emailInput = document.getElementById("email");
-    const passwordInput = document.getElementById("password");
 
-    form.addEventListener("submit", function(e) {
+    form.onsubmit = function (e) {
       e.preventDefault();
       errorMsg.textContent = "";
 
-      auth.signInWithEmailAndPassword(
-        emailInput.value.trim(),
-        passwordInput.value
-      )
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value;
+
+      firebase.auth().signInWithEmailAndPassword(email, password)
         .then(() => {
           window.location.href = "profile.html";
         })
         .catch(err => {
+          console.error(err);
           errorMsg.textContent = err.message;
         });
-    });
+    };
 
-    auth.onAuthStateChanged(user => {
+    firebase.auth().onAuthStateChanged(user => {
       if (user) window.location.href = "profile.html";
     });
   </script>
