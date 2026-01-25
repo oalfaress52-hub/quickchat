@@ -9,8 +9,9 @@
   }
 
   // ==================================================
-  // FIREBASE INIT
+  // Firebase Init (GLOBAL, SINGLE SOURCE OF TRUTH)
   // ==================================================
+
   const firebaseConfig = {
     apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
     authDomain: "quickchatii.firebaseapp.com",
@@ -20,13 +21,12 @@
     appId: "1:418934265102:web:38340c750b6db60d76335f"
   };
 
+  // Prevent double init
   if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
   }
 
-  window.auth = firebase.auth();
-  window.db = firebase.firestore();
-})();
+  const auth = firebase.auth();
 
 // ==================================================
 // CLIENT-SIDE BANNED WORDS
