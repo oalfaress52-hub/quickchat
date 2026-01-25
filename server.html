@@ -113,19 +113,16 @@
     const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
 
-    const user = firebase.auth().currentUser;
-
-    // Wait for auth state
     firebase.auth().onAuthStateChanged(currentUser => {
       if (!currentUser) {
         window.location.href = "login.html";
         return;
       }
 
-      const uid = currentUser.uid;
+      const serverId = "demoServer";
 
-      const serverId = "demoServer"; // Example server ID
-      const dbRef = firebase.firestore().collection("messages")
+      const dbRef = firebase.firestore()
+        .collection("messages")
         .where("serverId", "==", serverId)
         .orderBy("createdAt");
 
@@ -137,27 +134,19 @@
           const div = document.createElement("div");
           div.className = "chat-message";
 
-          // Option 1: Show "You" for your messages
-          const displayName = msg.uid === uid ? "You" : msg.nickname || "Anonymous";
+          const displayName = msg.nickname || "Anonymous";
           div.textContent = `${displayName}: ${msg.text}`;
           chatContainer.appendChild(div);
         });
         chatContainer.scrollTop = chatContainer.scrollHeight;
       });
 
-      // Send message
+      // ✅ FIX 2 + CORRECT PIPELINE
       sendBtn.onclick = async () => {
         const text = chatInput.value.trim();
         if (!text) return;
 
-        await firebase.firestore().collection("messages").add({
-          text,
-          serverId,
-          uid: uid,
-          nickname: currentUser.displayName || null,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
+        await sendMessage(text, serverId, currentUser);
         chatInput.value = "";
       };
     });
