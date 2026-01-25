@@ -49,21 +49,32 @@
       const password = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirmPassword").value;
 
+      if (!nickname) {
+        errorMsg.textContent = "Nickname cannot be empty.";
+        return;
+      }
+
       if (password !== confirmPassword) {
         errorMsg.textContent = "Passwords do not match.";
         return;
       }
 
       try {
+        // Create user in Firebase Auth
         const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
         const user = userCredential.user;
 
-        // Save nickname in Firestore
+        // Set displayName on Auth user (used for chat nickname)
+        await user.updateProfile({ displayName: nickname });
+
+        // Save user info in Firestore
         await db.collection("users").doc(user.uid).set({
           nickname: nickname,
-          email: email
+          email: email,
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
+        // Redirect to profile or chat page
         window.location.href = "profile.html";
       } catch (err) {
         console.error(err);
