@@ -1,12 +1,16 @@
 // ==================================================
-// FIREBASE INIT (GLOBAL SAFE)
+// WAIT FOR FIREBASE TO LOAD
 // ==================================================
-(function () {
+(function waitForFirebase() {
   if (typeof firebase === "undefined") {
-    console.error("Firebase SDK not loaded BEFORE app.js");
+    console.warn("Waiting for Firebase SDK...");
+    setTimeout(waitForFirebase, 50);
     return;
   }
 
+  // ==================================================
+  // FIREBASE INIT
+  // ==================================================
   const firebaseConfig = {
     apiKey: "AIzaSyDU3BOPdu427etC9mACyPIMqYXMUQo9w1E",
     authDomain: "quickchatii.firebaseapp.com",
@@ -150,7 +154,7 @@ function showBannedView(banEntry) {
 }
 
 // ==================================================
-// 🦴 FOSSIL CLICKER (UNCHANGED)
+// 🦴 FOSSIL CLICKER — PRESERVED
 // ==================================================
 let fossils = 0;
 let clickPower = 1;
@@ -191,7 +195,7 @@ if (upgradeClickPower) upgradeClickPower.onclick = () => {
 };
 
 // ==================================================
-// EXPOSE GLOBALS
+// EXPORT GLOBALS
 // ==================================================
 window.sendMessage = sendMessage;
 window.fetchServer = fetchServer;
