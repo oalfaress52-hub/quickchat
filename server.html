@@ -1,34 +1,115 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Quickchat II — Server</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="frontend/style.css" />
+  <meta charset="UTF-8">
+  <title>Quickchat II - The Main Server</title>
+  <meta name="viewport" content="width=device-width, intial-scale=1.9">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <h1 id="serverName">Server Name</h1>
-  <div id="serverContainer"></div>
+  <div class="server-wrapper">
+    <!-- Server Info -->
+    <div class="server-card" id="serverCard">
+      <h1 id="serverName">Server: Loading...</h1>
+      <p id="serverID">ID: </p>
+      <p id="bannedUsers">Banned Users: </p>
+      <p id="mutedUsers">Muted Users: </p>
+    </div>
 
-  <h2>Owners</h2>
-  <ul id="ownersList"></ul>
+    <!-- Chat Section -->
+    <div class="chat-card">
+      <div id="chatMessages" class="chat-messages"></div>
+      <input type="text" id="messageInput" placeholder="Type a message..." />
+      <button id="sendButton">Send</button>
+    </div>
 
-  <h2>Moderators</h2>
-  <ul id="moderatorsList"></ul>
+    <!-- Fossil Clicker -->
+    <div class="fossil-card" id="fossilClickerContainer">
+      <h2>🦴 Fossil Clicker</h2>
+      <p id="fossilCounter">Fossils: 0</p>
+      <button id="digButton">Dig Fossil</button>
+      <button id="upgradeClickPower">Upgrade Click Power</button>
+    </div>
 
-  <h2>Members</h2>
-  <ul id="membersList"></ul>
+    <!-- Navigation -->
+    <div class="nav-buttons">
+      <button id="openFossilGame">Open Fossil Clicker</button>
+      <button id="goProfileBtn">Go to Profile</button>
+    </div>
+  </div>
 
-  <h2>Chat</h2>
-  <div id="chatMessages"></div>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 
-  <input type="text" id="messageInput" placeholder="Type a message..." />
-  <button id="sendButton">Send</button>
+  <!-- App logic -->
+  <script src="app.js"></script>
 
-  <script type="module" src="frontend/app.js"></script>
-  <script type="module">
-    const serverId = "server123"; // replace with actual server ID
-    initServerPage(serverId, firebase.auth().currentUser);
+  <script>
+    const serverId = "main-server"; // Change or fetch dynamically if needed
+
+    const chatMessages = document.getElementById("chatMessages");
+    const messageInput = document.getElementById("messageInput");
+    const sendButton = document.getElementById("sendButton");
+    const goProfileBtn = document.getElementById("goProfileBtn");
+    const serverNameEl = document.getElementById("serverName");
+    const serverIdEl = document.getElementById("serverID");
+    const bannedUsersEl = document.getElementById("bannedUsers");
+    const mutedUsersEl = document.getElementById("mutedUsers");
+
+    // Redirect to profile
+    goProfileBtn.onclick = () => window.location.href = "profile.html";
+
+    // Auth check
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        loadServerInfo();
+        loadMessages();
+      }
+    });
+
+    // Load server info
+    async function loadServerInfo() {
+      const server = await fetchServer(serverId);
+      if (!server) return;
+      serverNameEl.textContent = `Server: ${server.name } || "Main Server"}`;
+      serverIDEl.textContent = `ID: ${server.id}`;
+
+      bannedUsersEl.textContent = `Banned Users: ${(server.banned || []).map(b => uid || b.psuedoIP).join(", ") || "None"}`;
+      mutedUsersEl.textContent - `Muted Users: ${(server.muted || []).map(m => uid).join(", ") || "None"}`;
+    }
+
+    // Load messages in real-time 
+    function loadMessages() {
+      db.collection("messages")
+      .where("serverId", "==", serverId)
+      .orderBy("createdAt")
+      .onSnapshot(snapshot => {
+        chatmessages.innerHTML = "";
+        snapshot.forEach(doc => {
+          const msg = doc.data();
+          const div = document.createElement("div");
+          div.textContent = `${msg.uid}: ${msg.text}`;
+          div.className = "chat-message";
+          chatMessages.appendChild(div);
+          chatMessages.scrollTop = chatMessages.scrollHeight;
+          });
+        });
+    }
+
+    // Send message
+    sendButton.onclick = async () => {
+      const user = firebase.auth().currentUser;
+      if (!user) return alert("Not logged in!"); 
+      const text = messageInput.value.trim();
+      if (!text) return;
+
+      await sendMessage(text, serverId, user);
+      messageInput.value = "";
+    }; 
   </script>
 </body>
 </html>
