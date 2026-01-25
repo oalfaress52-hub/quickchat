@@ -10,14 +10,26 @@
   <div class="profile-wrapper">
     <div class="profile-card">
       <h1>My Profile</h1>
+
       <p id="userEmail">Email: </p>
       <p id="userUID">UID: </p>
+      <p>
+        Nickname: <span id="userNickname"></span>
+        <button id="editNicknameBtn">Edit</button>
+      </p>
+
+      <div id="editNicknameContainer" style="display:none; margin-top:10px;">
+        <input type="text" id="newNickname" placeholder="New nickname" />
+        <button id="saveNicknameBtn">Save</button>
+      </div>
 
       <!-- Go to Chat button -->
       <button id="chatBtn">Go to Chat</button>
 
       <!-- Logout button -->
       <button id="logoutBtn">Logout</button>
+
+      <p id="statusMsg" style="color:green; margin-top:10px;"></p>
     </div>
   </div>
 
@@ -25,31 +37,88 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  
+
   <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
-    // Redirect if not logged in and display user info
-    firebase.auth().onAuthStateChanged(user => {
+    const userEmail = document.getElementById("userEmail");
+    const userUID = document.getElementById("userUID");
+    const userNicknameSpan = document.getElementById("userNickname");
+    const editBtn = document.getElementById("editNicknameBtn");
+    const editContainer = document.getElementById("editNicknameContainer");
+    const newNicknameInput = document.getElementById("newNickname");
+    const saveBtn = document.getElementById("saveNicknameBtn");
+    const statusMsg = document.getElementById("statusMsg");
+
+    const chatBtn = document.getElementById("chatBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+
+    firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
         window.location.href = "login.html";
-      } else {
-        document.getElementById("userEmail").textContent = "Email: " + user.email;
-        document.getElementById("userUID").textContent = "UID: " + user.uid;
+        return;
+      }
+
+      userEmail.textContent = "Email: " + user.email;
+      userUID.textContent = "UID: " + user.uid;
+      userNicknameSpan.textContent = user.displayName || "Anonymous";
+
+      // Ensure displayName is set from Firestore if missing
+      if (!user.displayName) {
+        const doc = await db.collection("users").doc(user.uid).get();
+        if (doc.exists && doc.data().nickname) {
+          await user.updateProfile({ displayName: doc.data().nickname });
+          userNicknameSpan.textContent = doc.data().nickname;
+        }
       }
     });
 
-    // Logout button
-    document.getElementById("logoutBtn").onclick = () => {
+    // Toggle edit nickname
+    editBtn.onclick = () => {
+      editContainer.style.display = editContainer.style.display === "none" ? "block" : "none";
+      newNicknameInput.value = userNicknameSpan.textContent;
+      statusMsg.textContent = "";
+    };
+
+    // Save nickname
+    saveBtn.onclick = async () => {
+      const newNick = newNicknameInput.value.trim();
+      if (!newNick) {
+        statusMsg.style.color = "red";
+        statusMsg.textContent = "Nickname cannot be empty.";
+        return;
+      }
+
+      const user = firebase.auth().currentUser;
+      if (!user) return;
+
+      try {
+        // Update Firebase Auth displayName
+        await user.updateProfile({ displayName: newNick });
+
+        // Update Firestore
+        await db.collection("users").doc(user.uid).update({ nickname: newNick });
+
+        userNicknameSpan.textContent = newNick;
+        statusMsg.style.color = "green";
+        statusMsg.textContent = "Nickname updated successfully!";
+        editContainer.style.display = "none";
+      } catch (err) {
+        console.error(err);
+        statusMsg.style.color = "red";
+        statusMsg.textContent = "Failed to update nickname.";
+      }
+    };
+
+    // Go to chat
+    chatBtn.onclick = () => window.location.href = "server.html";
+
+    // Logout
+    logoutBtn.onclick = () => {
       firebase.auth().signOut()
         .then(() => window.location.href = "login.html")
         .catch(err => console.error(err));
-    };
-
-    // Go to Chat button
-    document.getElementById("chatBtn").onclick = () => {
-      window.location.href = "server.html"; // replace with your chat page
     };
   </script>
 </body>
