@@ -79,29 +79,44 @@
   // ==================================================
   async function sendMessage(text, serverId, currentUser) {
     if (!currentUser) return alert("Not logged in!");
+
+    const cleanText = text.trim();
+    if (!cleanText) return;
+
     const server = await fetchServer(serverId);
     if (!server) return alert("Server not found!");
-
-    const pseudoIP = getPseudoIP();
+    
+    const psuedoIP = getPsuedoIP();
 
     const banEntry = (server.banned || []).find(
-      b => b.uid === currentUser.uid || b.pseudoIP === pseudoIP
+      b => b.uid === currentUser.uid || b.psuedoIP === psuedoIP
     );
     if (banEntry) return showBannedView(banEntry);
 
     const mutedEntry = (server.muted || []).find(m => m.uid === currentUser.uid);
     if (mutedEntry) return alert("You do not have permission to speak.");
 
-    if (text.startsWith("/")) return; // optional: add commands later
+    if (containsBannedWords(cleanText)) {
+      alert("Your message contains prohibhited language.");
+      return;
+    }
 
-    if (containsBannedWords(text)) return alert("Your message contains prohibited language.");
+    const nickname =
+      typeof currentUser.displayName == "string" && currentUser.displayName.trim()
+        ? currentUser.displayName.trim()
+        : "Anonymous";
 
-    await db.collection("messages").add({
-      text,
-      serverId,
-      nickname: currentUser.displayName || "Anonymous",
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
+    try {
+      await db.collection("messages").add({
+        text: cleanText,
+        serverId,
+        nickname,
+        createdAt: firebase.firestore.FieldValue.serverTimeStamp()
+      });
+    } catch (err) {
+      console.error("Message send failed:", err);
+      alert("Message failed to send. Check console.");
+    }
   }
 
   // ==================================================
