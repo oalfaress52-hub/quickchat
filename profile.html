@@ -7,71 +7,84 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="profile-card">
-    <h2 id="nicknameDisplay"></h2>
-    <p id="emailDisplay"></p>
+  <div class="profile-wrapper">
+    <div class="profile-card">
+      <h1>Quickchat II</h1>
+      <h2>Your Profile</h2>
 
-    <input type="text" id="nicknameInput" placeholder="Nickname" />
-    <input type="email" id="emailInput" placeholder="Email" />
+      <div class="profile-fields">
+        <input type="text" id="nicknameInput" placeholder="Nickname" />
+        <input type="email" id="emailInput" placeholder="Email" autocomplete="email" />
+      </div>
 
-    <button class="primary" id="saveBtn">Save</button>
-    <button class="secondary" id="editBtn">Edit</button>
-    <button class="danger" id="logoutBtn">Logout</button>
+      <div class="profile-buttons">
+        <button class="primary-btn" id="saveBtn">Save</button>
+        <button class="secondary-btn" id="refreshBtn">Refresh</button>
+        <button class="danger-btn" id="logoutBtn">Logout</button>
+      </div>
 
-    <p id="errorMsg" class="error-text"></p>
+      <p id="errorMsg" class="error-text"></p>
+    </div>
   </div>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="firebase-init.js"></script>
 
   <script>
-    const nicknameDisplay = document.getElementById("nicknameDisplay");
-    const emailDisplay = document.getElementById("emailDisplay");
     const nicknameInput = document.getElementById("nicknameInput");
     const emailInput = document.getElementById("emailInput");
     const saveBtn = document.getElementById("saveBtn");
+    const refreshBtn = document.getElementById("refreshBtn");
     const logoutBtn = document.getElementById("logoutBtn");
     const errorMsg = document.getElementById("errorMsg");
 
-    firebase.auth().onAuthStateChanged(async (user) => {
+    firebase.auth().onAuthStateChanged(loadProfile);
+
+    async function loadProfile(user) {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
 
-      const doc = await firebase.firestore().collection("users").doc(user.uid).get();
-      const data = doc.data();
+      try {
+        const doc = await firebase.firestore().collection("users").doc(user.uid).get();
+        const data = doc.data();
 
-      nicknameDisplay.textContent = data.nickname || "Anonymous";
-      emailDisplay.textContent = data.email || "";
-      nicknameInput.value = data.nickname || "";
-      emailInput.value = data.email || "";
-    });
+        nicknameInput.value = data?.nickname || "";
+        emailInput.value = data?.email || user.email || "";
+      } catch (err) {
+        console.error(err);
+        errorMsg.textContent = err.message;
+      }
+    }
 
     saveBtn.onclick = async () => {
       errorMsg.textContent = "";
       const user = firebase.auth().currentUser;
       if (!user) return;
 
-      const newNickname = nicknameInput.value.trim();
-      const newEmail = emailInput.value.trim();
+      const nickname = nicknameInput.value.trim();
+      const email = emailInput.value.trim();
 
       try {
         await firebase.firestore().collection("users").doc(user.uid).update({
-          nickname: newNickname,
-          email: newEmail
+          nickname,
+          email,
         });
 
-        await user.updateProfile({ displayName: newNickname });
-
-        nicknameDisplay.textContent = newNickname;
-        emailDisplay.textContent = newEmail;
+        if (email !== user.email) {
+          await user.updateEmail(email);
+        }
       } catch (err) {
         console.error(err);
         errorMsg.textContent = err.message;
       }
+    };
+
+    refreshBtn.onclick = () => {
+      loadProfile(firebase.auth().currentUser);
     };
 
     logoutBtn.onclick = async () => {
