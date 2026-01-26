@@ -12,7 +12,7 @@
       <h1>Quickchat II</h1>
       <h2>Welcome back</h2>
 
-      <form id="loginForm" novalidate>
+      <form id="loginForm">
         <input type="email" id="email" placeholder="Email" required />
         <input type="password" id="password" placeholder="Password" required />
         <button type="submit">Log In</button>
@@ -29,17 +29,21 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
-    (function () {
+    (function waitForFirebase() {
+      if (!window.firebase || !firebase.auth) {
+        setTimeout(waitForFirebase, 30);
+        return;
+      }
+
       const form = document.getElementById("loginForm");
       const errorMsg = document.getElementById("errorMsg");
 
-      form.addEventListener("submit", async function (e) {
+      form.addEventListener("submit", async (e) => {
         e.preventDefault();
         errorMsg.textContent = "";
 
@@ -47,16 +51,7 @@
         const password = document.getElementById("password").value;
 
         try {
-          const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
-          const user = userCredential.user;
-
-          // Preserve original behavior
-          const userDoc = await db.collection("users").doc(user.uid).get();
-          if (userDoc.exists) {
-            const data = userDoc.data();
-            localStorage.setItem("nickname", data.nickname || "");
-          }
-
+          await firebase.auth().signInWithEmailAndPassword(email, password);
           window.location.href = "profile.html";
         } catch (err) {
           console.error(err);
