@@ -7,71 +7,50 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Quickchat II</h1>
       <h2>Create Account</h2>
 
-      <form id="signupForm" novalidate>
-        <input type="text" id="nickname" placeholder="Nickname" required />
-        <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
-        <button type="submit">Sign Up</button>
-      </form>
+      <input type="text" id="nickname" placeholder="Display Name" />
+      <input type="email" id="email" placeholder="Email" />
+
+      <div class="password-wrapper">
+        <input type="password" id="password" placeholder="Password" />
+        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
+      </div>
+
+      <div class="password-wrapper">
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
+        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)">👁</button>
+      </div>
+
+      <button id="signupBtn">Sign Up</button>
 
       <p class="switch">
-        Already have an account? <a href="login.html">Login</a>
+        Already have an account? <a href="login.html">Log in</a>
       </p>
 
-      <p id="errorMsg" style="color:#f87171; margin-top:10px;"></p>
+      <p id="errorMsg" style="color:#f87171;margin-top:10px;"></p>
     </div>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
-    (function () {
-      const form = document.getElementById("signupForm");
-      const errorMsg = document.getElementById("errorMsg");
-
-      form.addEventListener("submit", async function (e) {
-        e.preventDefault();
-        errorMsg.textContent = "";
-
-        const nickname = document.getElementById("nickname").value.trim();
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-        const confirmPassword = document.getElementById("confirmPassword").value;
-
-        if (password !== confirmPassword) {
-          errorMsg.textContent = "Passwords do not match.";
-          return;
-        }
-
-        try {
-          const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-          const user = userCredential.user;
-
-          // Preserve original behavior
-          await db.collection("users").doc(user.uid).set({
-            nickname: nickname,
-            email: email
-          });
-
-          window.location.href = "profile.html";
-        } catch (err) {
-          console.error(err);
-          errorMsg.textContent = err.message;
-        }
-      });
-    })();
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      btn.textContent = isHidden ? "🙈" : "👁";
+    }
   </script>
+
 </body>
 </html>
