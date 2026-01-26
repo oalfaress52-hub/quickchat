@@ -15,7 +15,9 @@
 
 <div class="server-layout">
 
-  <!-- CHAT SECTION -->
+  <!-- ===================== -->
+  <!-- Chat Section -->
+  <!-- ===================== -->
   <div class="chat-section">
     <div class="chat-container" id="chatContainer"></div>
 
@@ -26,38 +28,46 @@
     </div>
   </div>
 
-  <!-- GAMES PANEL -->
-  <div class="games-panel">
-    <div class="game-controls">
-      <input type="text" class="game-search" id="gameSearch" placeholder="Search games..." />
-      <button class="game-close-btn" id="toggleGames">Close</button>
+  <!-- ===================== -->
+  <!-- Games Panel -->
+  <!-- ===================== -->
+  <div class="games-panel" id="gamesPanel">
+    <div class="games-header">
+      <h2>Games</h2>
+      <input type="text" class="games-search" id="gameSearch" placeholder="Search games..." />
     </div>
-    <div class="games-grid" id="gamesGrid">
+    <div class="game-list" id="gameList">
       <!-- Example Game Card -->
       <div class="game-card">
         <div class="game-info">
-          <h3>Fossil Clicker</h3>
+          <h4>Fossil Clicker</h4>
           <p>Dig and collect fossils!</p>
         </div>
-        <button class="playBtn" data-game="fossil">Play</button>
+        <button class="open-game-btn" data-game="fossil">Play</button>
       </div>
+      <!-- Add more game cards here -->
     </div>
   </div>
+
 </div>
 
-<!-- ACTIVE GAME CONTAINER (Hidden by default) -->
-<div class="game-container hidden" id="activeGame">
-  <div class="game-header">
-    <h3 id="activeGameTitle">Game</h3>
-    <button class="game-close-btn" id="closeActiveGame">Close</button>
-  </div>
-  <div class="game-body" id="activeGameBody">
-    <!-- Fossil Clicker will be injected here -->
-    <div class="fossil-game hidden" id="fossilGame">
-      <h3>Fossil Clicker</h3>
-      <p id="fossilCounter">Fossils: 0</p>
-      <button id="digBtn">Dig Fossil</button>
-      <button id="upgradeClickPower">Upgrade Click Power</button>
+<!-- ===================== -->
+<!-- Game Modal (Hidden by default) -->
+<!-- ===================== -->
+<div class="game-modal hidden" id="gameModal">
+  <div class="game-modal-card">
+    <div class="game-modal-header">
+      <h3 id="gameTitle">Game</h3>
+      <button class="close-game-btn" id="closeGameModal">×</button>
+    </div>
+    <div class="game-modal-body" id="gameContainer">
+      <!-- Game will render here dynamically -->
+      <div class="fossil-game hidden" id="fossilGame">
+        <h3>Fossil Clicker</h3>
+        <p id="fossilCounter">Fossils: 0</p>
+        <button id="digBtn">Dig Fossil</button>
+        <button id="upgradeClickPower">Upgrade Click Power</button>
+      </div>
     </div>
   </div>
 </div>
@@ -75,13 +85,10 @@ const sendBtn = document.getElementById("sendBtn");
 const gifBtn = document.getElementById("gifBtn");
 
 const gameSearch = document.getElementById("gameSearch");
-const toggleGamesBtn = document.getElementById("toggleGames");
-const gamesGrid = document.getElementById("gamesGrid");
-
-const activeGameContainer = document.getElementById("activeGame");
-const activeGameTitle = document.getElementById("activeGameTitle");
-const activeGameBody = document.getElementById("activeGameBody");
-const closeActiveGame = document.getElementById("closeActiveGame");
+const gameList = document.getElementById("gameList");
+const gameModal = document.getElementById("gameModal");
+const gameContainer = document.getElementById("gameContainer");
+const closeGameModal = document.getElementById("closeGameModal");
 
 const fossilGame = document.getElementById("fossilGame");
 const fossilCounter = document.getElementById("fossilCounter");
@@ -91,9 +98,9 @@ const upgradeBtn = document.getElementById("upgradeClickPower");
 let fossils = 0;
 let clickPower = 1;
 
-/* ============================== */
-/* Fossil Clicker Logic            */
-/* ============================== */
+// ==============================
+// Fossil Clicker Logic
+// ==============================
 function updateFossilDisplay() {
   fossilCounter.textContent = `Fossils: ${fossils}`;
 }
@@ -113,9 +120,9 @@ upgradeBtn.onclick = () => {
   }
 };
 
-/* ============================== */
-/* Firebase Chat                   */
-/* ============================== */
+// ==============================
+// Firebase Chat
+// ==============================
 firebase.auth().onAuthStateChanged(currentUser => {
   if(!currentUser) {
     window.location.href = "login.html";
@@ -179,39 +186,38 @@ firebase.auth().onAuthStateChanged(currentUser => {
   };
 });
 
-/* ============================== */
-/* Games Search + Toggle           */
-/* ============================== */
+// ==============================
+// Game Search
+// ==============================
 gameSearch.oninput = () => {
   const filter = gameSearch.value.toLowerCase();
-  const cards = gamesGrid.getElementsByClassName("game-card");
-  Array.from(cards).forEach(card => {
-    const name = card.querySelector("h3").textContent.toLowerCase();
+  Array.from(gameList.getElementsByClassName("game-card")).forEach(card => {
+    const name = card.querySelector("h4").textContent.toLowerCase();
     card.style.display = name.includes(filter) ? "flex" : "none";
   });
 };
 
-toggleGamesBtn.onclick = () => {
-  const panel = document.querySelector(".games-panel");
-  panel.style.display = panel.style.display === "none" ? "flex" : "none";
-};
-
-/* ============================== */
-/* Play Game Buttons               */
-/* ============================== */
-document.querySelectorAll(".playBtn").forEach(btn => {
+// ==============================
+// Open Game Modal
+// ==============================
+document.querySelectorAll(".open-game-btn").forEach(btn => {
   btn.onclick = () => {
     const game = btn.dataset.game;
-    activeGameContainer.classList.remove("hidden");
+    gameModal.classList.remove("hidden");
+    // Render Fossil Clicker only
     if(game === "fossil") {
-      activeGameTitle.textContent = "Fossil Clicker";
       fossilGame.classList.remove("hidden");
+    } else {
+      fossilGame.classList.add("hidden");
     }
   };
 });
 
-closeActiveGame.onclick = () => {
-  activeGameContainer.classList.add("hidden");
+// ==============================
+// Close Game Modal
+// ==============================
+closeGameModal.onclick = () => {
+  gameModal.classList.add("hidden");
   fossilGame.classList.add("hidden");
 };
 </script>
