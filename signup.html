@@ -7,50 +7,96 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Quickchat II</h1>
       <h2>Create Account</h2>
 
-      <input type="text" id="nickname" placeholder="Display Name" />
-      <input type="email" id="email" placeholder="Email" />
+      <form id="signupForm" novalidate>
+        <input type="text" id="nickname" placeholder="Nickname" required />
+        <input type="email" id="email" placeholder="Email" required />
 
-      <div class="password-wrapper">
-        <input type="password" id="password" placeholder="Password" />
-        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
-      </div>
+        <div class="password-field">
+          <input type="password" id="password" placeholder="Password" required />
+          <span class="password-toggle" id="togglePassword">Show</span>
+        </div>
 
-      <div class="password-wrapper">
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" />
-        <button type="button" class="toggle-password" onclick="togglePassword('confirmPassword', this)">👁</button>
-      </div>
+        <div class="password-field">
+          <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+          <span class="password-toggle" id="toggleConfirmPassword">Show</span>
+        </div>
 
-      <button id="signupBtn">Sign Up</button>
+        <button type="submit" class="primary-btn">Sign Up</button>
+      </form>
 
       <p class="switch">
-        Already have an account? <a href="login.html">Log in</a>
+        Already have an account? <a href="login.html">Login</a>
       </p>
 
-      <p id="errorMsg" style="color:#f87171;margin-top:10px;"></p>
+      <p id="errorMsg" class="error-text"></p>
     </div>
   </div>
 
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
-    function togglePassword(inputId, btn) {
-      const input = document.getElementById(inputId);
-      const isHidden = input.type === "password";
-      input.type = isHidden ? "text" : "password";
-      btn.textContent = isHidden ? "🙈" : "👁";
-    }
-  </script>
+    const form = document.getElementById("signupForm");
+    const errorMsg = document.getElementById("errorMsg");
 
+    const passwordInput = document.getElementById("password");
+    const confirmInput = document.getElementById("confirmPassword");
+    const togglePassword = document.getElementById("togglePassword");
+    const toggleConfirm = document.getElementById("toggleConfirmPassword");
+
+    togglePassword.onclick = () => {
+      const hidden = passwordInput.type === "password";
+      passwordInput.type = hidden ? "text" : "password";
+      togglePassword.textContent = hidden ? "Hide" : "Show";
+    };
+
+    toggleConfirm.onclick = () => {
+      const hidden = confirmInput.type === "password";
+      confirmInput.type = hidden ? "text" : "password";
+      toggleConfirm.textContent = hidden ? "Hide" : "Show";
+    };
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = "";
+
+      const nickname = document.getElementById("nickname").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmInput.value;
+
+      if (password !== confirmPassword) {
+        errorMsg.textContent = "Passwords do not match.";
+        return;
+      }
+
+      try {
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        await user.updateProfile({ displayName: nickname });
+
+        await db.collection("users").doc(user.uid).set({
+          nickname,
+          email
+        });
+
+        window.location.href = "profile.html";
+      } catch (err) {
+        console.error(err);
+        errorMsg.textContent = err.message;
+      }
+    };
+  </script>
 </body>
 </html>
