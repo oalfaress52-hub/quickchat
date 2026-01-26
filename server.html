@@ -119,30 +119,48 @@ upgradeBtn.onclick = () => {
 };
 
 // ==============================
-// Command Handler
+// Command Handler (Dynamic Helper)
 // ==============================
+const commands = {
+  mute: {
+    description: "Mute a user",
+    action: muteUser
+  },
+  ban: {
+    description: "Ban a user",
+    action: banUser
+  },
+  // future commands can be added here
+};
+
 function handleCommand(cmd) {
   const parts = cmd.slice(1).split(" "); // remove "/" and split
-  const command = parts[0].toLowerCase();
-  const arg = parts.slice(1).join(" ");
+  const commadn = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(" "0;
 
-  switch (command) {
-    case "mute":
-      if (!arg) return alert("Please provide a username to mute.");
-      muteUser(arg);
-      break;
-    case "ban":
-      if (!arg) return alert("Please provide a username to ban.");
-      banUser(arg);
-      break;
-    case "help":
-      alert("Available commands:\n/mute username\n/ban username\n/help");
-      break;
-    default:
-      alert("Unknown command: " + command);
+  if (command === "help") {
+    let msg = "Available commands: \n";
+    for (const key in commands) {
+      msg += `/${key} ${commands[key].description ? "(arg if needed)" : ""}\n`;
+    }
+    alert(msg.trim());
+    return;
   }
-}
 
+  if (!commands[command]) {
+    alert("Unknown command: " + command);
+    return;
+  }
+
+  if (!arg && command !== "help") {
+    alert(`Please provide a username for /${command}`);
+    return;
+  }
+
+  // Execute command
+  commands[command].action(arg);
+}
+    
 // ==============================
 // Command Functions
 // ==============================
