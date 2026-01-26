@@ -2,26 +2,26 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quickchat II - Sign Up</title>
-  <meta name="viewport" conent="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css">
+  <title>Quickchat II — Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div class="auth-wrapper">
     <div class="auth-card">
-      <h1>Quickchat II - Sign Up</h1>
+      <h1>Quickchat II</h1>
       <h2>Create Account</h2>
 
       <form id="signupForm" novalidate>
         <input type="text" id="nickname" placeholder="Nickname" required />
-        <input type="email" id="email" placeholder="Email" autocomplete="email" reqiured />
+        <input type="email" id="email" placeholder="Email" autocomplete="email" required />
 
         <div class="password-field">
           <input type="password" id="password" placeholder="Password" autocomplete="new-password" required />
           <span class="password-toggle" id="togglePassword">Show</span>
         </div>
 
-        <div> class="password-field">
+        <div class="password-field">
           <input type="password" id="confirmPassword" placeholder="Confirm Password" autocomplete="new-password" required />
           <span class="password-toggle" id="toggleConfirmPassword">Show</span>
         </div>
@@ -38,9 +38,9 @@
   </div>
 
   <!-- Firebase SDKs -->
-  <script src="https://www.gstati.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firesotre-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <!-- App logic -->
   <script src="app.js"></script>
@@ -50,13 +50,20 @@
     const errorMsg = document.getElementById("errorMsg");
 
     const passwordInput = document.getElementById("password");
-    const confirmInput = document.getElementById("cofnirmPassword");
+    const confirmInput = document.getElementById("confirmPassword");
     const togglePassword = document.getElementById("togglePassword");
     const toggleConfirm = document.getElementById("toggleConfirmPassword");
 
     togglePassword.onclick = () => {
       const hidden = passwordInput.type === "password";
-      passwordInput.type = hidden ? "Hide" : "Show";
+      passwordInput.type = hidden ? "text" : "password";
+      togglePassword.textContent = hidden ? "Hide" : "Show";
+    };
+
+    toggleConfirm.onclick = () => {
+      const hidden = confirmInput.type === "password";
+      confirmInput.type = hidden ? "text" : "password";
+      toggleConfirm.textContent = hidden ? "Hide" : "Show";
     };
 
     form.onsubmit = async (e) => {
@@ -68,7 +75,7 @@
       const password = passwordInput.value;
       const confirmPassword = confirmInput.value;
 
-      if (password !== confimrmPassword) {
+      if (password !== confirmPassword) {
         errorMsg.textContent = "Passwords do not match.";
         return;
       }
