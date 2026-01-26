@@ -1,123 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
+  <meta charset="UTF-8" />
   <title>Quickchat II — Profile</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="stylesheet" href="style.css" />
-  <style>
-    .nickname-row {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-top: 10px;
-      font-size: 16px;
-    }
-
-    .nickname-value {
-      font-weight: 600;
-      color: #e5e7eb;
-    }
-
-    .edit-btn {
-      background: transparent;
-      border: 1px solid #334155;
-      color: #cbd5f5;
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .edit-btn:hover {
-      background: #1e293b;
-      border-color: #3b82f6;
-      color: white;
-    }
-
-    .edit-container {
-      display: none;
-      margin-top: 10px;
-      gap: 6px;
-    }
-
-    .edit-container input {
-      padding: 6px 8px;
-      border-radius: 6px;
-      border: none;
-      background: #020617;
-      color: white;
-      width: 160px;
-    }
-
-    .save-btn {
-      background: #2563eb;
-      border: none;
-      color: white;
-      padding: 6px 12px;
-      border-radius: 6px;
-      font-size: 13px;
-      cursor: pointer;
-      transition: background 0.15s ease;
-    }
-
-    .save-btn:hover {
-      background: #1d4ed8;
-    }
-
-    #statusMsg {
-      margin-top: 8px;
-      font-size: 13px;
-    }
-  </style>
 </head>
 <body>
-  <div class="profile-wrapper">
-    <div class="profile-card">
-      <h1>My Profile</h1>
+  <div class="profile-card">
+    <h2 id="nicknameDisplay"></h2>
+    <p id="emailDisplay"></p>
 
-      <p id="userEmail">Email:</p>
-      <p id="userUID">UID:</p>
+    <input type="text" id="nicknameInput" placeholder="Nickname" />
+    <input type="email" id="emailInput" placeholder="Email" />
 
-      <div class="nickname-row">
-        <span>Nickname:</span>
-        <span id="userNickname" class="nickname-value"></span>
-        <button id="editNicknameBtn" class="edit-btn">Edit</button>
-      </div>
+    <button class="primary" id="saveBtn">Save</button>
+    <button class="secondary" id="editBtn">Edit</button>
+    <button class="danger" id="logoutBtn">Logout</button>
 
-      <div id="editNicknameContainer" class="edit-container">
-        <input type="text" id="newNickname" placeholder="New nickname" />
-        <button id="saveNicknameBtn" class="save-btn">Save</button>
-      </div>
-
-      <button id="chatBtn">Go to Chat</button>
-      <button id="logoutBtn">Logout</button>
-
-      <p id="statusMsg"></p>
-    </div>
+    <p id="errorMsg" class="error-text"></p>
   </div>
 
-  <!-- Firebase SDKs v9.23.0 (compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- App logic -->
-  <script src="app.js"></script>
-
   <script>
-    const userEmail = document.getElementById("userEmail");
-    const userUID = document.getElementById("userUID");
-    const userNicknameSpan = document.getElementById("userNickname");
-    const editBtn = document.getElementById("editNicknameBtn");
-    const editContainer = document.getElementById("editNicknameContainer");
-    const newNicknameInput = document.getElementById("newNickname");
-    const saveBtn = document.getElementById("saveNicknameBtn");
-    const statusMsg = document.getElementById("statusMsg");
-
-    const chatBtn = document.getElementById("chatBtn");
+    const nicknameDisplay = document.getElementById("nicknameDisplay");
+    const emailDisplay = document.getElementById("emailDisplay");
+    const nicknameInput = document.getElementById("nicknameInput");
+    const emailInput = document.getElementById("emailInput");
+    const saveBtn = document.getElementById("saveBtn");
     const logoutBtn = document.getElementById("logoutBtn");
+    const errorMsg = document.getElementById("errorMsg");
 
     firebase.auth().onAuthStateChanged(async (user) => {
       if (!user) {
@@ -125,59 +41,42 @@
         return;
       }
 
-      userEmail.textContent = "Email: " + user.email;
-      userUID.textContent = "UID: " + user.uid;
-      userNicknameSpan.textContent = user.displayName || "Anonymous";
+      const doc = await firebase.firestore().collection("users").doc(user.uid).get();
+      const data = doc.data();
 
-      if (!user.displayName) {
-        const doc = await db.collection("users").doc(user.uid).get();
-        if (doc.exists && doc.data().nickname) {
-          await user.updateProfile({ displayName: doc.data().nickname });
-          userNicknameSpan.textContent = doc.data().nickname;
-        }
-      }
+      nicknameDisplay.textContent = data.nickname || "Anonymous";
+      emailDisplay.textContent = data.email || "";
+      nicknameInput.value = data.nickname || "";
+      emailInput.value = data.email || "";
     });
 
-    editBtn.onclick = () => {
-      editContainer.style.display =
-        editContainer.style.display === "none" ? "flex" : "none";
-      newNicknameInput.value = userNicknameSpan.textContent;
-      statusMsg.textContent = "";
-      statusMsg.style.color = "";
-    };
-
     saveBtn.onclick = async () => {
-      const newNick = newNicknameInput.value.trim();
-      if (!newNick) {
-        statusMsg.style.color = "#f87171";
-        statusMsg.textContent = "Nickname cannot be empty.";
-        return;
-      }
-
+      errorMsg.textContent = "";
       const user = firebase.auth().currentUser;
       if (!user) return;
 
-      try {
-        await user.updateProfile({ displayName: newNick });
-        await db.collection("users").doc(user.uid).update({ nickname: newNick });
+      const newNickname = nicknameInput.value.trim();
+      const newEmail = emailInput.value.trim();
 
-        userNicknameSpan.textContent = newNick;
-        editContainer.style.display = "none";
-        statusMsg.style.color = "#4ade80";
-        statusMsg.textContent = "Nickname updated.";
+      try {
+        await firebase.firestore().collection("users").doc(user.uid).update({
+          nickname: newNickname,
+          email: newEmail
+        });
+
+        await user.updateProfile({ displayName: newNickname });
+
+        nicknameDisplay.textContent = newNickname;
+        emailDisplay.textContent = newEmail;
       } catch (err) {
         console.error(err);
-        statusMsg.style.color = "#f87171";
-        statusMsg.textContent = "Failed to update nickname.";
+        errorMsg.textContent = err.message;
       }
     };
 
-    chatBtn.onclick = () => window.location.href = "server.html";
-
-    logoutBtn.onclick = () => {
-      firebase.auth().signOut()
-        .then(() => window.location.href = "login.html")
-        .catch(err => console.error(err));
+    logoutBtn.onclick = async () => {
+      await firebase.auth().signOut();
+      window.location.href = "login.html";
     };
   </script>
 </body>
