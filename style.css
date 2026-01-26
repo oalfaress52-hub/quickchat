@@ -113,30 +113,32 @@ input {
   color: #9ca3af;
 }
 
-.password-wrapper {
+.password-field {
   position: relative;
   width: 100%;
 }
 
-.password-wrapper input {
-  width: 100%;
-  padding-right: 44px;
+.password-field input {
+  padding-right: 70px;
 }
 
-.toggle-password {
+.password-toggle {
   position: absolute;
   right: 10px;
-  top: 50%;
-  tramsform: translateY(-50%);
-  background: none;
+  top: 50px;
+  transform: translateY(-50%);
+  background: transparent;
   border: none;
-  color: #9ca3af;
-  font-size: 18px;
+  color: #60a5fa;
+  font-size: 14px;
   cursor: pointer;
+  padding: 0;
+  height: auto;
+  width: auto;
 }
 
-.toggle-password:hover {
-  color: white;
+.password-toggle:hover {
+  text-decoration: underline;
 }
 
 /* ============================= */
