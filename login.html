@@ -7,22 +7,26 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Quickchat II</h1>
-      <h2>Welcome back</h2>
+      <h2>Log In</h2>
 
-      <form id="loginForm">
-        <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <button type="submit">Log In</button>
-      </form>
+      <input type="email" id="email" placeholder="Email" />
+      
+      <div class="password-wrapper">
+        <input type="password" id="password" placeholder="Password" />
+        <button type="button" class="toggle-password" onclick="togglePassword('password', this)">👁</button>
+      </div>
+
+      <button id="loginBtn">Log In</button>
 
       <p class="switch">
-        Don’t have an account? <a href="signup.html">Create one</a>
+        Don't have an account? <a href="signup.html">Sign up</a>
       </p>
 
-      <p id="errorMsg" style="color:#f87171; margin-top:10px;"></p>
+      <p id="errorMsg" style="color:#f87171;margin-top:10px;"></p>
     </div>
   </div>
 
@@ -34,31 +38,13 @@
   <script src="app.js"></script>
 
   <script>
-    (function waitForFirebase() {
-      if (!window.firebase || !firebase.auth) {
-        setTimeout(waitForFirebase, 30);
-        return;
-      }
-
-      const form = document.getElementById("loginForm");
-      const errorMsg = document.getElementById("errorMsg");
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        errorMsg.textContent = "";
-
-        const email = document.getElementById("email").value.trim();
-        const password = document.getElementById("password").value;
-
-        try {
-          await firebase.auth().signInWithEmailAndPassword(email, password);
-          window.location.href = "profile.html";
-        } catch (err) {
-          console.error(err);
-          errorMsg.textContent = err.message;
-        }
-      });
-    })();
+    function togglePassword(inputId, btn) {
+      const input = document.getElementById(inputId);
+      const isHidden = input.type === "password";
+      input.type = isHidden ? "text" : "password";
+      btn.textContent = isHidden ? "🙈" : "👁";
+    }
   </script>
+
 </body>
 </html>
