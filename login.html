@@ -7,47 +7,38 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="auth-page">
+  <div class="auth-wrapper">
     <div class="auth-card">
-      <div class="auth-header">
-        <h1>Quickchat II</h1>
-        <p>Welcome back</p>
-      </div>
+      <h1>Quickchat II</h1>
+      <h2>Welcome back</h2>
 
-      <form id="loginForm" class="auth-form">
-        <div class="field">
-          <label for="email">Email</label>
-          <input type="email" id="email" autocomplete="email" required />
-        </div>
-
-        <div class="field">
-          <label for="password">Password</label>
-          <input type="password" id="password" autocomplete="current-password" required />
-        </div>
-
-        <button type="submit" class="primary-btn">Login</button>
+      <form id="loginForm" autocomplete="on">
+        <input type="email" id="email" placeholder="Email" required autocomplete="email" />
+        <input type="password" id="password" placeholder="Password" required autocomplete="current-password" />
+        <button type="submit">Log In</button>
       </form>
 
-      <p class="auth-switch">
+      <p class="switch">
         Don’t have an account? <a href="signup.html">Create one</a>
       </p>
 
-      <p id="errorMsg" class="error-text"></p>
+      <p id="errorMsg" style="color:#f87171; margin-top:10px;"></p>
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
+  <!-- Firebase SDKs (v9 compat) -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+  <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
     const form = document.getElementById("loginForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    form.onsubmit = async e => {
+    form.onsubmit = async function(e) {
       e.preventDefault();
       errorMsg.textContent = "";
 
@@ -55,7 +46,16 @@
       const password = document.getElementById("password").value;
 
       try {
-        await firebase.auth().signInWithEmailAndPassword(email, password);
+        const userCredential = await firebase.auth().signInWithEmailAndPassword(email, password);
+        const user = userCredential.user;
+
+        // Optional: fetch nickname for profile display
+        const userDoc = await db.collection("users").doc(user.uid).get();
+        if (userDoc.exists) {
+          const data = userDoc.data();
+          localStorage.setItem("nickname", data.nickname || "");
+        }
+
         window.location.href = "profile.html";
       } catch (err) {
         console.error(err);
