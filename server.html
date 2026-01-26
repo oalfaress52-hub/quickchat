@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Quickchat II — Server</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<link rel="stylesheet" href="style.css" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="style.css">
 <style>
   body {
     margin: 0;
@@ -22,9 +22,7 @@
     text-align: center;
   }
 
-  /* ============================= */
-  /* Chat Container */
-  /* ============================= */
+  /* Chat */
   .chat-container {
     width: 90%;
     max-width: 600px;
@@ -88,7 +86,6 @@
     background: #1d4ed8;
   }
 
-  /* GIFs in chat */
   .chat-gif {
     max-width: 220px;
     border-radius: 12px;
@@ -96,9 +93,7 @@
     box-shadow: 0 6px 16px rgba(0,0,0,0.35);
   }
 
-  /* ============================= */
   /* Fossil Clicker */
-  /* ============================= */
   .fossil-game {
     margin-top: 20px;
     padding: 15px;
@@ -106,6 +101,7 @@
     border-radius: 12px;
     width: 300px;
     text-align: center;
+    display: none; /* hidden initially */
   }
 
   .fossil-game button {
@@ -124,9 +120,7 @@
     background: #1d4ed8;
   }
 
-  /* ============================= */
   /* Games Section */
-  /* ============================= */
   .games-section {
     width: 90%;
     max-width: 900px;
@@ -218,12 +212,13 @@
 <div class="chat-container" id="chatContainer"></div>
 
 <div class="chat-input-container">
-  <input type="text" id="chatInput" placeholder="Type a message or paste GIF URL..." />
+  <input type="text" id="chatInput" placeholder="Type a message or paste GIF URL...">
   <button id="sendBtn">Send</button>
   <button id="gifBtn">GIF</button>
 </div>
 
-<div class="fossil-game">
+<!-- Fossil Clicker hidden initially -->
+<div class="fossil-game" id="fossilGame">
   <h3>Fossil Clicker</h3>
   <p id="fossilCounter">Fossils: 0</p>
   <button id="digBtn">Dig Fossil</button>
@@ -232,11 +227,10 @@
 
 <div class="games-section">
   <div class="game-controls">
-    <input type="text" class="game-search" id="gameSearch" placeholder="Search games..." />
-    <button class="game-close-btn" id="closeGames">Close</button>
+    <input type="text" class="game-search" id="gameSearch" placeholder="Search games...">
+    <button class="game-close-btn" id="closeGames">Toggle Games</button>
   </div>
   <div class="games-grid" id="gamesGrid">
-    <!-- Example game card -->
     <div class="game-card">
       <h3>Fossil Clicker</h3>
       <p>Dig and collect fossils!</p>
@@ -263,6 +257,7 @@ let clickPower = 1;
 const fossilCounter = document.getElementById("fossilCounter");
 const digBtn = document.getElementById("digBtn");
 const upgradeBtn = document.getElementById("upgradeClickPower");
+const fossilGame = document.getElementById("fossilGame");
 
 // ==============================
 // Fossil Clicker Logic
@@ -296,7 +291,7 @@ firebase.auth().onAuthStateChanged(currentUser => {
   }
 
   const uid = currentUser.uid;
-  const serverId = "demoServer"; // Example server ID
+  const serverId = "demoServer"; 
 
   const dbRef = firebase.firestore().collection("messages")
     .where("serverId", "==", serverId)
@@ -353,7 +348,7 @@ firebase.auth().onAuthStateChanged(currentUser => {
 });
 
 // ==============================
-// Games Search + Close
+// Games Search + Toggle
 // ==============================
 const gameSearch = document.getElementById("gameSearch");
 const closeGames = document.getElementById("closeGames");
@@ -369,7 +364,16 @@ gameSearch.oninput = () => {
 };
 
 closeGames.onclick = () => {
-  document.querySelector(".games-section").style.display = "none";
+  const gamesSection = document.querySelector(".games-section");
+  gamesSection.style.display = gamesSection.style.display === "none" ? "block" : "none";
+};
+
+// ==============================
+// Play buttons (Fossil Clicker toggle)
+// ==============================
+const fossilPlayBtn = document.querySelector(".game-card button.playBtn");
+fossilPlayBtn.onclick = () => {
+  fossilGame.style.display = fossilGame.style.display === "none" ? "block" : "none";
 };
 </script>
 
