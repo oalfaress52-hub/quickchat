@@ -3,204 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <title>Quickchat II — Server</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="style.css">
-<style>
-  body {
-    margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
-    background: #0f172a;
-    color: white;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    min-height: 100vh;
-  }
-
-  .server-header {
-    margin-top: 20px;
-    text-align: center;
-  }
-
-  /* Chat */
-  .chat-container {
-    width: 90%;
-    max-width: 600px;
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    border: 1px solid #444;
-    border-radius: 8px;
-    padding: 10px;
-    background-color: #020617;
-    margin-top: 20px;
-    overflow-y: auto;
-  }
-
-  .chat-message {
-    margin-bottom: 6px;
-    padding: 4px 8px;
-    border-radius: 6px;
-    background-color: #111827;
-    word-wrap: break-word;
-    display: flex;
-    flex-direction: column;
-  }
-
-  .chat-message strong {
-    font-weight: 600;
-    margin-bottom: 2px;
-  }
-
-  .chat-input-container {
-    width: 90%;
-    max-width: 600px;
-    display: flex;
-    gap: 8px;
-    margin-top: 10px;
-  }
-
-  .chat-input-container input {
-    flex: 1;
-    padding: 10px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
-    background-color: #020617;
-    color: white;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
-  }
-
-  .chat-input-container button {
-    padding: 10px 16px;
-    border-radius: 6px;
-    border: none;
-    background: #2563eb;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.12s ease;
-  }
-
-  .chat-input-container button:hover {
-    background: #1d4ed8;
-  }
-
-  .chat-gif {
-    max-width: 220px;
-    border-radius: 12px;
-    margin-top: 4px;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-  }
-
-  /* Fossil Clicker */
-  .fossil-game {
-    margin-top: 20px;
-    padding: 15px;
-    background-color: #020617;
-    border-radius: 12px;
-    width: 300px;
-    text-align: center;
-    display: none; /* hidden initially */
-  }
-
-  .fossil-game button {
-    margin-top: 8px;
-    width: 100%;
-    border-radius: 8px;
-    border: none;
-    padding: 10px;
-    background: #2563eb;
-    color: white;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .fossil-game button:hover {
-    background: #1d4ed8;
-  }
-
-  /* Games Section */
-  .games-section {
-    width: 90%;
-    max-width: 900px;
-    margin: 20px auto;
-  }
-
-  .game-controls {
-    display: flex;
-    gap: 12px;
-    margin-bottom: 18px;
-  }
-
-  .game-search {
-    flex: 1;
-    padding: 12px 14px;
-    border-radius: 10px;
-    border: none;
-    background: #020617;
-    color: white;
-    font-size: 14px;
-    outline: none;
-    box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
-  }
-
-  .game-close-btn {
-    padding: 12px 16px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #dc2626, #b91c1c);
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .games-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-    gap: 16px;
-  }
-
-  .game-card {
-    background: #020617;
-    border-radius: 14px;
-    padding: 16px;
-    box-shadow: 0 10px 24px rgba(0,0,0,0.45);
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-    border: 1px solid rgba(255,255,255,0.05);
-  }
-
-  .game-card h3 {
-    margin: 0 0 6px 0;
-    font-size: 16px;
-    font-weight: 600;
-  }
-
-  .game-card p {
-    margin: 0 0 14px 0;
-    font-size: 13px;
-    opacity: 0.75;
-  }
-
-  .game-card button {
-    width: 100%;
-    padding: 10px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(135deg, #2563eb, #1d4ed8);
-    color: white;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  .game-card button:hover {
-    background: linear-gradient(135deg, #3b82f6, #2563eb);
-  }
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
@@ -209,32 +13,51 @@
   <p id="serverInfo">Server: Demo Server</p>
 </div>
 
-<div class="chat-container" id="chatContainer"></div>
+<div class="server-layout">
 
-<div class="chat-input-container">
-  <input type="text" id="chatInput" placeholder="Type a message or paste GIF URL...">
-  <button id="sendBtn">Send</button>
-  <button id="gifBtn">GIF</button>
-</div>
+  <!-- CHAT SECTION -->
+  <div class="chat-section">
+    <div class="chat-container" id="chatContainer"></div>
 
-<!-- Fossil Clicker hidden initially -->
-<div class="fossil-game" id="fossilGame">
-  <h3>Fossil Clicker</h3>
-  <p id="fossilCounter">Fossils: 0</p>
-  <button id="digBtn">Dig Fossil</button>
-  <button id="upgradeClickPower">Upgrade Click Power</button>
-</div>
-
-<div class="games-section">
-  <div class="game-controls">
-    <input type="text" class="game-search" id="gameSearch" placeholder="Search games...">
-    <button class="game-close-btn" id="closeGames">Toggle Games</button>
+    <div class="chat-input-container">
+      <input type="text" id="chatInput" placeholder="Type a message or paste GIF URL..." />
+      <button id="sendBtn">Send</button>
+      <button id="gifBtn">GIF</button>
+    </div>
   </div>
-  <div class="games-grid" id="gamesGrid">
-    <div class="game-card">
+
+  <!-- GAMES PANEL -->
+  <div class="games-panel">
+    <div class="game-controls">
+      <input type="text" class="game-search" id="gameSearch" placeholder="Search games..." />
+      <button class="game-close-btn" id="toggleGames">Close</button>
+    </div>
+    <div class="games-grid" id="gamesGrid">
+      <!-- Example Game Card -->
+      <div class="game-card">
+        <div class="game-info">
+          <h3>Fossil Clicker</h3>
+          <p>Dig and collect fossils!</p>
+        </div>
+        <button class="playBtn" data-game="fossil">Play</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ACTIVE GAME CONTAINER (Hidden by default) -->
+<div class="game-container hidden" id="activeGame">
+  <div class="game-header">
+    <h3 id="activeGameTitle">Game</h3>
+    <button class="game-close-btn" id="closeActiveGame">Close</button>
+  </div>
+  <div class="game-body" id="activeGameBody">
+    <!-- Fossil Clicker will be injected here -->
+    <div class="fossil-game hidden" id="fossilGame">
       <h3>Fossil Clicker</h3>
-      <p>Dig and collect fossils!</p>
-      <button class="playBtn">Play</button>
+      <p id="fossilCounter">Fossils: 0</p>
+      <button id="digBtn">Dig Fossil</button>
+      <button id="upgradeClickPower">Upgrade Click Power</button>
     </div>
   </div>
 </div>
@@ -251,17 +74,26 @@ const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const gifBtn = document.getElementById("gifBtn");
 
-let fossils = 0;
-let clickPower = 1;
+const gameSearch = document.getElementById("gameSearch");
+const toggleGamesBtn = document.getElementById("toggleGames");
+const gamesGrid = document.getElementById("gamesGrid");
 
+const activeGameContainer = document.getElementById("activeGame");
+const activeGameTitle = document.getElementById("activeGameTitle");
+const activeGameBody = document.getElementById("activeGameBody");
+const closeActiveGame = document.getElementById("closeActiveGame");
+
+const fossilGame = document.getElementById("fossilGame");
 const fossilCounter = document.getElementById("fossilCounter");
 const digBtn = document.getElementById("digBtn");
 const upgradeBtn = document.getElementById("upgradeClickPower");
-const fossilGame = document.getElementById("fossilGame");
 
-// ==============================
-// Fossil Clicker Logic
-// ==============================
+let fossils = 0;
+let clickPower = 1;
+
+/* ============================== */
+/* Fossil Clicker Logic            */
+/* ============================== */
 function updateFossilDisplay() {
   fossilCounter.textContent = `Fossils: ${fossils}`;
 }
@@ -281,9 +113,9 @@ upgradeBtn.onclick = () => {
   }
 };
 
-// ==============================
-// Firebase Chat
-// ==============================
+/* ============================== */
+/* Firebase Chat                   */
+/* ============================== */
 firebase.auth().onAuthStateChanged(currentUser => {
   if(!currentUser) {
     window.location.href = "login.html";
@@ -291,7 +123,7 @@ firebase.auth().onAuthStateChanged(currentUser => {
   }
 
   const uid = currentUser.uid;
-  const serverId = "demoServer"; 
+  const serverId = "demoServer";
 
   const dbRef = firebase.firestore().collection("messages")
     .where("serverId", "==", serverId)
@@ -302,7 +134,7 @@ firebase.auth().onAuthStateChanged(currentUser => {
     snapshot.forEach(doc => {
       const data = doc.data();
       const div = document.createElement("div");
-      div.className = "chat-message";
+      div.className = "chat-message " + (data.uid === uid ? "you" : "other");
 
       const name = document.createElement("strong");
       name.textContent = (data.uid === uid ? "You" : data.nickname || "Anonymous") + ": ";
@@ -347,13 +179,9 @@ firebase.auth().onAuthStateChanged(currentUser => {
   };
 });
 
-// ==============================
-// Games Search + Toggle
-// ==============================
-const gameSearch = document.getElementById("gameSearch");
-const closeGames = document.getElementById("closeGames");
-const gamesGrid = document.getElementById("gamesGrid");
-
+/* ============================== */
+/* Games Search + Toggle           */
+/* ============================== */
 gameSearch.oninput = () => {
   const filter = gameSearch.value.toLowerCase();
   const cards = gamesGrid.getElementsByClassName("game-card");
@@ -363,17 +191,28 @@ gameSearch.oninput = () => {
   });
 };
 
-closeGames.onclick = () => {
-  const gamesSection = document.querySelector(".games-section");
-  gamesSection.style.display = gamesSection.style.display === "none" ? "block" : "none";
+toggleGamesBtn.onclick = () => {
+  const panel = document.querySelector(".games-panel");
+  panel.style.display = panel.style.display === "none" ? "flex" : "none";
 };
 
-// ==============================
-// Play buttons (Fossil Clicker toggle)
-// ==============================
-const fossilPlayBtn = document.querySelector(".game-card button.playBtn");
-fossilPlayBtn.onclick = () => {
-  fossilGame.style.display = fossilGame.style.display === "none" ? "block" : "none";
+/* ============================== */
+/* Play Game Buttons               */
+/* ============================== */
+document.querySelectorAll(".playBtn").forEach(btn => {
+  btn.onclick = () => {
+    const game = btn.dataset.game;
+    activeGameContainer.classList.remove("hidden");
+    if(game === "fossil") {
+      activeGameTitle.textContent = "Fossil Clicker";
+      fossilGame.classList.remove("hidden");
+    }
+  };
+});
+
+closeActiveGame.onclick = () => {
+  activeGameContainer.classList.add("hidden");
+  fossilGame.classList.add("hidden");
 };
 </script>
 
