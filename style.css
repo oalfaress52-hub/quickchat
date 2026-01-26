@@ -1,313 +1,360 @@
-/* ================================================== */
-/* GLOBAL RESET */
-/* ================================================== */
-* {
+/* ===================================================== */
+/* RESET + BASE                                           */
+/* ===================================================== */
+
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
 }
 
 body {
   margin: 0;
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    Roboto, Oxygen, Ubuntu, Cantarell, "Helvetica Neue", Arial, sans-serif;
-  background: radial-gradient(circle at top, #020617, #0f172a);
+  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, #020617, #0f172a);
   color: #e5e7eb;
-  min-height: 100vh;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* ================================================== */
-/* AUTH PAGES */
-/* ================================================== */
-.auth-page {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-}
+/* ===================================================== */
+/* LINKS + TEXT                                           */
+/* ===================================================== */
 
-.auth-card {
-  background: #020617;
-  border-radius: 16px;
-  padding: 32px 28px;
-  width: 100%;
-  max-width: 380px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-}
-
-.auth-header {
-  text-align: center;
-  margin-bottom: 24px;
-}
-
-.auth-header h1 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 700;
-  letter-spacing: 0.3px;
-}
-
-.auth-header p {
-  margin-top: 6px;
-  font-size: 14px;
-  color: #9ca3af;
-}
-
-/* Form layout */
-.auth-form {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.field label {
-  font-size: 13px;
-  color: #cbd5f5;
-  font-weight: 500;
-}
-
-.field input {
-  padding: 11px 12px;
-  border-radius: 10px;
-  border: 1px solid #1e293b;
-  background: #020617;
-  color: #f9fafb;
-  font-size: 15px;
-  outline: none;
-  transition: border 0.15s ease, box-shadow 0.15s ease,
-    background 0.15s ease;
-}
-
-.field input::placeholder {
-  color: #64748b;
-}
-
-.field input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-  background: #020617;
-}
-
-/* Primary action button */
-.primary-btn {
-  margin-top: 8px;
-  padding: 12px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  font-size: 15px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.12s ease,
-    background 0.15s ease;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
-}
-
-.primary-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.45);
-}
-
-.primary-btn:active {
-  transform: translateY(0);
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.3);
-}
-
-/* Switch text */
-.auth-switch {
-  margin-top: 16px;
-  text-align: center;
-  font-size: 14px;
-  color: #9ca3af;
-}
-
-.auth-switch a {
+a {
   color: #60a5fa;
   text-decoration: none;
-  font-weight: 500;
 }
 
-.auth-switch a:hover {
+a:hover {
   text-decoration: underline;
 }
 
-/* Errors */
-.error-text {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #f87171;
-  text-align: center;
-  min-height: 18px;
+h1, h2, h3, h4 {
+  margin: 0;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
-/* ================================================== */
-/* PROFILE PAGE */
-/* ================================================== */
-.profile-wrapper {
+p {
+  margin: 0;
+}
+
+/* ===================================================== */
+/* BUTTON RESET                                           */
+/* ===================================================== */
+
+button {
+  font-family: inherit;
+  outline: none;
+}
+
+button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* ===================================================== */
+/* INPUT RESET                                            */
+/* ===================================================== */
+
+input {
+  font-family: inherit;
+  outline: none;
+}
+
+/* ===================================================== */
+/* AUTH PAGES (LOGIN / SIGNUP)                            */
+/* ===================================================== */
+
+.auth-wrapper {
   min-height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 20px;
+  padding: 24px;
 }
 
-.profile-card {
-  background: #020617;
-  border-radius: 16px;
-  padding: 30px 28px;
-  width: 100%;
-  max-width: 360px;
-  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.6);
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
+.auth-card {
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(14px);
+  padding: 36px 34px;
+  border-radius: 18px;
+  width: 360px;
+  max-width: 100%;
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.75),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
   text-align: center;
+  animation: authFade 0.35s ease-out;
 }
 
-.profile-card h1 {
-  margin-top: 0;
+@keyframes authFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.auth-card h1 {
   margin-bottom: 6px;
   font-size: 24px;
+  font-weight: 700;
+  color: #f9fafb;
 }
 
-.profile-card p {
-  margin: 0;
+.auth-card h2 {
+  margin-top: 0;
+  margin-bottom: 18px;
+  font-weight: 400;
   font-size: 14px;
-  color: #cbd5f5;
-  word-break: break-all;
+  color: #9ca3af;
 }
 
-/* Nickname edit row */
-.nickname-row {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 8px;
+/* ============================= */
+/* Auth Inputs                   */
+/* ============================= */
+
+.auth-card input {
+  width: 100%;
+  padding: 12px 14px;
+  margin: 10px 0;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #f9fafb;
   font-size: 15px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
 }
 
-.nickname-value {
+.auth-card input::placeholder {
+  color: #6b7280;
+}
+
+.auth-card input:hover {
+  border-color: #334155;
+}
+
+.auth-card input:focus {
+  border-color: #3b82f6;
+  background: #020617;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+}
+
+/* ============================= */
+/* Auth Buttons                  */
+/* ============================= */
+
+.auth-card button {
+  width: 100%;
+  padding: 12px;
+  margin-top: 14px;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    transform 0.05s ease,
+    box-shadow 0.15s ease,
+    background 0.15s ease,
+    filter 0.15s ease;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.45);
+}
+
+.auth-card button:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 10px 28px rgba(37,99,235,0.55);
+  filter: brightness(1.05);
+}
+
+.auth-card button:active {
+  transform: translateY(1px);
+}
+
+.auth-card button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* ============================= */
+/* Auth Switch Links             */
+/* ============================= */
+
+.switch {
+  margin-top: 16px;
+  font-size: 13px;
+  color: #9ca3af;
+}
+
+.switch a {
+  color: #60a5fa;
+  font-weight: 500;
+}
+
+.switch a:hover {
+  text-decoration: underline;
+}
+
+/* ===================================================== */
+/* PROFILE PAGE                                           */
+/* ===================================================== */
+
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 12px;
+  padding: 34px;
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  width: 360px;
+  max-width: 100%;
+  box-shadow:
+    0 30px 60px rgba(0,0,0,0.75),
+    inset 0 0 0 1px rgba(255,255,255,0.06);
+  margin: 60px auto;
+  text-align: center;
+  animation: profileFade 0.35s ease-out;
+}
+
+@keyframes profileFade {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.profile-card h2 {
+  margin-bottom: 4px;
+  font-size: 20px;
   font-weight: 600;
   color: #f9fafb;
 }
 
-.edit-btn {
-  background: transparent;
-  border: 1px solid #334155;
-  color: #cbd5f5;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
+.profile-card p {
+  margin-bottom: 14px;
+  font-size: 14px;
+  color: #9ca3af;
 }
 
-.edit-btn:hover {
-  background: #1e293b;
-  border-color: #3b82f6;
-  color: white;
-}
+/* ============================= */
+/* Profile Inputs                */
+/* ============================= */
 
-.edit-container {
-  display: none;
-  margin-top: 8px;
-  gap: 6px;
-  justify-content: center;
-}
-
-.edit-container input {
-  padding: 7px 9px;
-  border-radius: 8px;
+.profile-card input {
+  width: 100%;
+  padding: 11px 13px;
+  border-radius: 10px;
   border: 1px solid #1e293b;
   background: #020617;
-  color: white;
-  width: 160px;
-  outline: none;
+  color: #f9fafb;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.edit-container input:focus {
+.profile-card input::placeholder {
+  color: #6b7280;
+}
+
+.profile-card input:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
 }
 
-.save-btn {
-  background: #2563eb;
-  border: none;
-  color: white;
-  padding: 7px 12px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.08s ease;
-}
+/* ============================= */
+/* Profile Buttons (Legacy IDs)  */
+/* ============================= */
 
-.save-btn:hover {
-  background: #1d4ed8;
-}
-
-/* Profile buttons */
-.profile-card button {
+.profile-card button,
+.profile-card button#chatBtn,
+.profile-card button#editBtn,
+.profile-card button#saveBtn,
+.profile-card button#cancelBtn {
   width: 100%;
-  padding: 11px;
+  padding: 12px;
   border-radius: 10px;
   border: none;
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.12s ease,
-    background 0.15s ease;
+  transition:
+    background 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.05s ease,
+    color 0.15s ease,
+    border 0.15s ease;
 }
 
-.profile-card button#chatBtn {
+/* Primary (Chat / Save) */
+.profile-card button.primary,
+.profile-card button#chatBtn,
+.profile-card button#saveBtn {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   color: white;
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.35);
+  box-shadow: 0 6px 18px rgba(37,99,235,0.45);
 }
 
-.profile-card button#chatBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(37, 99, 235, 0.45);
+.profile-card button.primary:hover,
+.profile-card button#chatBtn:hover,
+.profile-card button#saveBtn:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 10px 28px rgba(37,99,235,0.55);
 }
 
+.profile-card button.primary:active,
+.profile-card button#chatBtn:active,
+.profile-card button#saveBtn:active {
+  transform: translateY(1px);
+}
+
+/* Secondary (Edit / Cancel) */
+.profile-card button.secondary,
+.profile-card button#editBtn,
+.profile-card button#cancelBtn {
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: #e5e7eb;
+}
+
+.profile-card button.secondary:hover,
+.profile-card button#editBtn:hover,
+.profile-card button#cancelBtn:hover {
+  border-color: #3b82f6;
+  color: #f9fafb;
+}
+
+/* Danger (Logout) */
+.profile-card button.danger,
 .profile-card button#logoutBtn {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
-  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.35);
+  background: #020617;
+  border: 1px solid #7f1d1d;
+  color: #fecaca;
 }
 
+.profile-card button.danger:hover,
 .profile-card button#logoutBtn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 12px 26px rgba(220, 38, 38, 0.45);
+  background: #7f1d1d;
+  border-color: #b91c1c;
+  color: white;
 }
 
-/* ================================================== */
-/* SERVER PAGE LAYOUT */
-/* ================================================== */
-.server-page {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px;
-  gap: 14px;
-}
+/* ===================================================== */
+/* SERVER / CHAT PAGE                                    */
+/* ===================================================== */
 
 .server-header {
+  margin-top: 20px;
   text-align: center;
 }
 
 .server-header h1 {
-  margin: 0;
   font-size: 22px;
+  font-weight: 600;
 }
 
 .server-header p {
@@ -316,81 +363,291 @@ body {
   color: #9ca3af;
 }
 
-/* Chat wrapper stays flexed */
-.chat-wrapper {
-  width: 100%;
-  max-width: 680px;
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  background: #020617;
-  border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  overflow: hidden;
-}
+/* ============================= */
+/* Chat Layout (Flex Preserved)  */
+/* ============================= */
 
-/* Messages scroll here */
 .chat-container {
+  width: 90%;
+  max-width: 600px;
   flex: 1;
-  padding: 12px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  border: 1px solid #1e293b;
+  border-radius: 14px;
+  padding: 12px;
+  background: #020617;
+  margin-top: 20px;
+  overflow-y: auto;
+  scroll-behavior: smooth;
 }
 
-/* Message bubbles */
+/* Scrollbar polish (safe) */
+.chat-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.chat-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.chat-container::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 10px;
+}
+
+.chat-container::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* ============================= */
+/* Chat Messages                 */
+/* ============================= */
+
 .chat-message {
-  max-width: 85%;
+  margin-bottom: 6px;
   padding: 7px 10px;
-  border-radius: 8px;
-  background: #0f172a;
+  border-radius: 10px;
+  background-color: #111827;
   font-size: 14px;
   line-height: 1.35;
+  max-width: 90%;
   word-wrap: break-word;
-  align-self: flex-start;
-  color: #e5e7eb;
 }
 
 .chat-message.you {
-  background: #1e293b;
   align-self: flex-end;
-  color: #f9fafb;
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  color: white;
 }
 
-/* Input bar pinned bottom */
+.chat-message.other {
+  align-self: flex-start;
+  background-color: #111827;
+}
+
+/* ============================= */
+/* Chat Input Row                */
+/* ============================= */
+
 .chat-input-container {
+  width: 90%;
+  max-width: 600px;
   display: flex;
-  gap: 8px;
-  padding: 10px;
-  border-top: 1px solid #1e293b;
-  background: #020617;
+  gap: 10px;
+  margin: 12px 0 20px;
 }
 
 .chat-input-container input {
   flex: 1;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #f9fafb;
+  font-size: 14px;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.chat-input-container input::placeholder {
+  color: #6b7280;
+}
+
+.chat-input-container input:hover {
+  border-color: #334155;
+}
+
+.chat-input-container input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
+}
+
+/* ============================= */
+/* Chat Send Button              */
+/* ============================= */
+
+.chat-input-container button {
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: none;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.45);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
+}
+
+.chat-input-container button:hover {
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 10px 28px rgba(37,99,235,0.55);
+}
+
+.chat-input-container button:active {
+  transform: translateY(1px);
+}
+
+/* ===================================================== */
+/* GAMES / FOSSIL CLICKER PANEL                           */
+/* ===================================================== */
+
+.games-panel {
+  margin-top: 20px;
+  width: 320px;
+  max-width: 90%;
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow:
+    0 24px 50px rgba(0,0,0,0.7),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
+  text-align: center;
+}
+
+.games-panel h3 {
+  margin-bottom: 10px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.games-search {
+  width: 100%;
   padding: 10px 12px;
   border-radius: 10px;
   border: 1px solid #1e293b;
   background: #020617;
   color: #f9fafb;
   font-size: 14px;
-  outline: none;
-  transition: border 0.15s ease, box-shadow 0.15s ease;
+  margin-bottom: 12px;
 }
 
-.chat-input-container input::placeholder {
-  color: #64748b;
+.games-search::placeholder {
+  color: #6b7280;
 }
 
-.chat-input-container input:focus {
+.games-search:focus {
   border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
 }
 
-.chat-input-container button {
-  padding: 10px 16px;
+/* ============================= */
+/* Game List                      */
+/* ============================= */
+
+.game-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.game-card {
+  background: #020617;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 10px 12px;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.15s ease, border 0.15s ease, transform 0.05s ease;
+}
+
+.game-card:hover {
+  border-color: #3b82f6;
+  background: #020617;
+  transform: translateY(-1px);
+}
+
+.game-card h4 {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 2px;
+  color: #f9fafb;
+}
+
+.game-card p {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+/* ============================= */
+/* Active Game Container          */
+/* ============================= */
+
+.game-container {
+  margin-top: 18px;
+  width: 320px;
+  max-width: 90%;
+  background: rgba(2, 6, 23, 0.88);
+  backdrop-filter: blur(14px);
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow:
+    0 24px 50px rgba(0,0,0,0.7),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
+  text-align: center;
+}
+
+.game-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.game-header h3 {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.game-close-btn {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid #1e293b;
+  background: #020617;
+  color: #e5e7eb;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.15s ease, border 0.15s ease;
+}
+
+.game-close-btn:hover {
+  border-color: #ef4444;
+  color: #fecaca;
+}
+
+/* ============================= */
+/* Fossil Clicker (Legacy)       */
+/* ============================= */
+
+.fossil-game {
+  margin-top: 20px;
+  padding: 18px;
+  background: rgba(2, 6, 23, 0.88);
+  border-radius: 18px;
+  width: 320px;
+  max-width: 90%;
+  text-align: center;
+  box-shadow:
+    0 24px 50px rgba(0,0,0,0.7),
+    inset 0 0 0 1px rgba(255,255,255,0.05);
+}
+
+.fossil-game h3 {
+  margin-bottom: 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.fossil-game p {
+  margin: 6px 0 12px;
+  font-size: 14px;
+  color: #9ca3af;
+}
+
+.fossil-game button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 8px;
   border-radius: 10px;
   border: none;
   background: linear-gradient(135deg, #3b82f6, #2563eb);
@@ -398,144 +655,79 @@ body {
   font-size: 14px;
   font-weight: 600;
   cursor: pointer;
-  transition: transform 0.08s ease, box-shadow 0.12s ease,
-    background 0.15s ease;
-  box-shadow: 0 6px 14px rgba(37, 99, 235, 0.35);
-}
-
-.chat-input-container button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 10px 22px rgba(37, 99, 235, 0.45);
-}
-
-/* ================================================== */
-/* GAMES PANEL */
-/* ================================================== */
-.games-wrapper {
-  width: 100%;
-  max-width: 680px;
-  background: #020617;
-  border-radius: 14px;
-  padding: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.04);
-  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.game-search {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #1e293b;
-  background: #020617;
-  color: #f9fafb;
-  font-size: 14px;
-  outline: none;
-  transition: border 0.15s ease, box-shadow 0.15s ease;
-}
-
-.game-search::placeholder {
-  color: #64748b;
-}
-
-.game-search:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
-}
-
-.games-list {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.game-item {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: #0f172a;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background 0.15s ease, transform 0.08s ease;
-}
-
-.game-item:hover {
-  background: #1e293b;
-  transform: translateY(-1px);
-}
-
-.game-container {
-  margin-top: 8px;
-  background: #020617;
-  border-radius: 12px;
-  padding: 12px;
-  border: 1px solid #1e293b;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.game-container.hidden {
-  display: none;
-}
-
-/* Game header */
-.game-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.game-header h3 {
-  margin: 0;
-  font-size: 15px;
-}
-
-.close-game-btn {
-  background: transparent;
-  border: 1px solid #334155;
-  color: #cbd5f5;
-  padding: 4px 10px;
-  border-radius: 8px;
-  font-size: 12px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.close-game-btn:hover {
-  background: #1e293b;
-  border-color: #ef4444;
-  color: white;
-}
-
-/* Fossil Clicker */
-.fossil-game {
-  text-align: center;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.fossil-game p {
-  margin: 0;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.fossil-game button {
-  padding: 8px 12px;
-  border-radius: 10px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  font-size: 13px;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.08s ease;
+  box-shadow: 0 6px 18px rgba(37,99,235,0.45);
+  transition: background 0.15s ease, box-shadow 0.15s ease, transform 0.05s ease;
 }
 
 .fossil-game button:hover {
-  background: #1d4ed8;
-  transform: translateY(-1px);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8);
+  box-shadow: 0 10px 28px rgba(37,99,235,0.55);
+}
+
+.fossil-game button:active {
+  transform: translateY(1px);
+}
+
+/* ===================================================== */
+/* UTILITY CLASSES                                       */
+/* ===================================================== */
+
+.hidden {
+  display: none !important;
+}
+
+.center {
+  text-align: center;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mt-4 { margin-top: 4px; }
+.mt-8 { margin-top: 8px; }
+.mt-12 { margin-top: 12px; }
+.mt-16 { margin-top: 16px; }
+.mt-20 { margin-top: 20px; }
+
+.mb-4 { margin-bottom: 4px; }
+.mb-8 { margin-bottom: 8px; }
+.mb-12 { margin-bottom: 12px; }
+.mb-16 { margin-bottom: 16px; }
+.mb-20 { margin-bottom: 20px; }
+
+/* ===================================================== */
+/* MOBILE RESPONSIVENESS                                 */
+/* ===================================================== */
+
+@media (max-width: 480px) {
+  .auth-card,
+  .profile-card,
+  .games-panel,
+  .game-container,
+  .fossil-game {
+    width: 100%;
+    padding: 26px 22px;
+    border-radius: 16px;
+  }
+
+  .chat-container,
+  .chat-input-container {
+    width: 95%;
+  }
+
+  .chat-message {
+    max-width: 100%;
+  }
 }
