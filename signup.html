@@ -7,40 +7,57 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="auth-wrapper">
+  <div class="auth-page">
     <div class="auth-card">
-      <h1>Quickchat II</h1>
-      <h2>Create Account</h2>
+      <div class="auth-header">
+        <h1>Quickchat II</h1>
+        <p>Create your account</p>
+      </div>
 
-      <form id="signupForm">
-        <input type="text" id="nickname" placeholder="Nickname" required />
-        <input type="email" id="email" placeholder="Email" required />
-        <input type="password" id="password" placeholder="Password" required />
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
-        <button type="submit">Sign Up</button>
+      <form id="signupForm" class="auth-form">
+        <div class="field">
+          <label for="nickname">Nickname</label>
+          <input type="text" id="nickname" maxlength="20" required />
+        </div>
+
+        <div class="field">
+          <label for="email">Email</label>
+          <input type="email" id="email" autocomplete="email" required />
+        </div>
+
+        <div class="field">
+          <label for="password">Password</label>
+          <input type="password" id="password" autocomplete="new-password" required />
+        </div>
+
+        <div class="field">
+          <label for="confirmPassword">Confirm Password</label>
+          <input type="password" id="confirmPassword" autocomplete="new-password" required />
+        </div>
+
+        <button type="submit" class="primary-btn">Create Account</button>
       </form>
 
-      <p class="switch">
+      <p class="auth-switch">
         Already have an account? <a href="login.html">Login</a>
       </p>
 
-      <p id="errorMsg" style="color:red;"></p>
+      <p id="errorMsg" class="error-text"></p>
     </div>
   </div>
 
-  <!-- Firebase SDKs (v9 compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    form.onsubmit = async function(e) {
+    form.onsubmit = async e => {
       e.preventDefault();
       errorMsg.textContent = "";
 
@@ -49,32 +66,21 @@
       const password = document.getElementById("password").value;
       const confirmPassword = document.getElementById("confirmPassword").value;
 
-      if (!nickname) {
-        errorMsg.textContent = "Nickname cannot be empty.";
-        return;
-      }
-
       if (password !== confirmPassword) {
         errorMsg.textContent = "Passwords do not match.";
         return;
       }
 
       try {
-        // Create user in Firebase Auth
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+        const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        await cred.user.updateProfile({ displayName: nickname });
 
-        // Set displayName on Auth user (used for chat nickname)
-        await user.updateProfile({ displayName: nickname });
-
-        // Save user info in Firestore
-        await db.collection("users").doc(user.uid).set({
-          nickname: nickname,
-          email: email,
+        await db.collection("users").doc(cred.user.uid).set({
+          nickname,
+          email,
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
         });
 
-        // Redirect to profile or chat page
         window.location.href = "profile.html";
       } catch (err) {
         console.error(err);
