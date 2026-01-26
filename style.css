@@ -1,418 +1,190 @@
-/* ===================================================== */
-/* RESET + BASE STYLES                                   */
-/* ===================================================== */
-*,
-*::before,
-*::after {
+/* ================================
+   GLOBAL RESET (SAFE)
+================================ */
+* {
   box-sizing: border-box;
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+    Roboto, Ubuntu, sans-serif;
 }
 
-html, body {
+body {
   margin: 0;
-  height: 100%;
-  font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, Arial, Helvetica, sans-serif;
-  background: linear-gradient(135deg, #020617, #0f172a);
+  background: #020617;
+  color: white;
+}
+
+/* ================================
+   AUTH / PROFILE PAGES ONLY
+   (Does NOT affect server.html)
+================================ */
+.auth-wrapper,
+.profile-wrapper {
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: radial-gradient(circle at top, #0f172a, #020617);
+}
+
+.auth-card,
+.profile-card {
+  width: 100%;
+  max-width: 420px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 28px 26px 30px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+}
+
+.auth-card h1,
+.profile-card h1 {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 700;
+}
+
+.auth-card h2,
+.profile-card h2 {
+  margin: 6px 0 18px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+/* ---------------- INPUTS ---------------- */
+.auth-card input,
+.profile-card input {
+  width: 100%;
+  background: #020617;
+  border: 1px solid #1e293b;
+  color: white;
+  padding: 11px 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  outline: none;
+}
+
+.auth-card input::placeholder,
+.profile-card input::placeholder {
+  color: #64748b;
+}
+
+.auth-card input:focus,
+.profile-card input:focus {
+  border-color: #38bdf8;
+  box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.35);
+}
+
+/* ---------------- FORMS ---------------- */
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* ---------------- PASSWORD TOGGLE ---------------- */
+.password-field {
+  position: relative;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  color: #38bdf8;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* ---------------- BUTTONS ---------------- */
+.primary-btn {
+  background: linear-gradient(135deg, #38bdf8, #0ea5e9);
+  color: #020617;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-btn:hover {
+  background: linear-gradient(135deg, #60d3ff, #38bdf8);
+}
+
+.secondary-btn {
+  background: #020617;
+  border: 1px solid #1e293b;
   color: #e5e7eb;
-  line-height: 1.45;
-  -webkit-font-smoothing: antialiased;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-/* ===================================================== */
-/* LINKS + HEADINGS                                      */
-/* ===================================================== */
-a {
-  color: #60a5fa;
+.secondary-btn:hover {
+  border-color: #38bdf8;
+}
+
+.danger-btn {
+  background: #7f1d1d;
+  color: #fee2e2;
+  border: none;
+  border-radius: 8px;
+  padding: 11px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger-btn:hover {
+  background: #991b1b;
+}
+
+/* ---------------- LINKS ---------------- */
+.switch {
+  margin-top: 14px;
+  text-align: center;
+  font-size: 13px;
+  color: #94a3b8;
+}
+
+.switch a {
+  color: #38bdf8;
   text-decoration: none;
+  font-weight: 600;
 }
 
-a:hover {
+.switch a:hover {
   text-decoration: underline;
 }
 
-h1, h2, h3, h4 {
-  margin: 0;
-  font-weight: 600;
-  letter-spacing: 0.2px;
-}
-
-p {
-  margin: 0;
-}
-
-/* ===================================================== */
-/* BUTTON RESET                                          */
-/* ===================================================== */
-button {
-  font-family: inherit;
-  outline: none;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-button:focus-visible {
-  outline: 2px solid #3b82f6;
-  outline-offset: 2px;
-}
-
-/* ===================================================== */
-/* INPUT RESET                                           */
-/* ===================================================== */
-input {
-  font-family: inherit;
-  outline: none;
-}
-
-/* ===================================================== */
-/* SERVER HEADER                                         */
-/* ===================================================== */
-.server-header {
-  text-align: center;
-  padding: 20px 0;
-}
-
-.server-header h1 {
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.server-header p {
-  margin-top: 4px;
+/* ---------------- ERRORS ---------------- */
+.error-text {
+  margin-top: 10px;
   font-size: 13px;
-  color: #9ca3af;
+  color: #f87171;
+  min-height: 16px;
 }
 
-/* ===================================================== */
-/* SERVER LAYOUT                                         */
-/* ===================================================== */
-.server-layout {
+/* ---------------- PROFILE PAGE ---------------- */
+.profile-fields {
   display: flex;
-  gap: 20px;
-  width: 95%;
-  max-width: 1200px;
-  margin: 0 auto 30px;
-  flex-wrap: wrap;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 6px;
 }
 
-/* ===================================================== */
-/* CHAT SECTION                                          */
-/* ===================================================== */
-.chat-section {
+.profile-buttons {
+  display: flex;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.profile-buttons button {
   flex: 1;
-  display: flex;
-  flex-direction: column;
-  min-width: 280px;
-}
-
-.chat-container {
-  flex: 1;
-  background: #020617;
-  border-radius: 12px;
-  padding: 12px;
-  overflow-y: auto;
-  box-shadow: 0 0 15px rgba(0,0,0,0.6);
-  scroll-behavior: smooth;
-}
-
-.chat-message {
-  margin-bottom: 8px;
-  padding: 8px 12px;
-  border-radius: 10px;
-  font-size: 14px;
-  line-height: 1.35;
-  max-width: 90%;
-  word-wrap: break-word;
-  background-color: #111827;
-}
-
-.chat-message.you {
-  align-self: flex-end;
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  color: white;
-}
-
-.chat-message.other {
-  align-self: flex-start;
-  background-color: #111827;
-}
-
-/* ============================= */
-/* Chat Input Row                */
-/* ============================= */
-.chat-input-container {
-  margin-top: 12px;
-  display: flex;
-  gap: 10px;
-}
-
-.chat-input-container input {
-  flex: 1;
-  padding: 12px 14px;
-  border-radius: 10px;
-  border: 1px solid #1e293b;
-  background: #020617;
-  color: #f9fafb;
-  font-size: 14px;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease;
-}
-
-.chat-input-container input::placeholder {
-  color: #6b7280;
-}
-
-.chat-input-container input:hover {
-  border-color: #334155;
-}
-
-.chat-input-container input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
-}
-
-.chat-input-container button {
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: none;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  font-weight: 600;
-  box-shadow: 0 6px 18px rgba(37,99,235,0.45);
-}
-
-.chat-input-container button:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 10px 28px rgba(37,99,235,0.55);
-}
-
-.chat-input-container button:active {
-  transform: translateY(1px);
-}
-
-/* ============================= */
-/* GIFS                          */
-/* ============================= */
-.chat-gif {
-  max-width: 220px;
-  border-radius: 12px;
-  margin-top: 4px;
-  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
-}
-
-/* ===================================================== */
-/* GAMES PANEL                                           */
-/* ===================================================== */
-.games-panel {
-  width: 320px;
-  max-width: 100%;
-  background: rgba(2,6,23,0.88);
-  backdrop-filter: blur(14px);
-  border-radius: 18px;
-  padding: 16px;
-  box-shadow:
-    0 24px 50px rgba(0,0,0,0.7),
-    inset 0 0 0 1px rgba(255,255,255,0.05);
-  display: flex;
-  flex-direction: column;
-  text-align: center;
-}
-
-.games-panel h2 {
-  margin-bottom: 10px;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.games-search {
-  width: 100%;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid #1e293b;
-  background: #020617;
-  color: #f9fafb;
-  font-size: 14px;
-  margin-bottom: 12px;
-}
-
-.games-search::placeholder {
-  color: #6b7280;
-}
-
-.games-search:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59,130,246,0.25);
-}
-
-/* ============================= */
-/* Game List & Cards             */
-/* ============================= */
-.game-list {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.game-card {
-  background: #020617;
-  border: 1px solid #1e293b;
-  border-radius: 12px;
-  padding: 12px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 10px;
-  transition: transform 0.15s ease, border 0.15s ease;
-}
-
-.game-card:hover {
-  border-color: #3b82f6;
-  transform: translateY(-2px);
-}
-
-.game-card h4 {
-  font-size: 14px;
-  font-weight: 600;
-  color: #f9fafb;
-}
-
-.game-card p {
-  font-size: 12px;
-  color: #9ca3af;
-}
-
-.open-game-btn {
-  background: #22c55e;
-  border: none;
-  border-radius: 8px;
-  padding: 6px 12px;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: background 0.15s ease, transform 0.12s ease;
-}
-
-.open-game-btn:hover {
-  background: #16a34a;
-  transform: translateY(-1px);
-}
-
-/* ===================================================== */
-/* GAME MODAL                                             */
-/* ===================================================== */
-.game-modal {
-  position: fixed;
-  inset: 0;
-  background: rgba(2,6,23,0.75);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 999;
-}
-
-.game-modal.hidden {
-  display: none;
-}
-
-.game-modal-card {
-  background: #020617;
-  width: 340px;
-  border-radius: 16px;
-  box-shadow: 0 0 25px rgba(0,0,0,0.7);
-  overflow: hidden;
-}
-
-.game-modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 16px;
-  border-bottom: 1px solid #1f2933;
-}
-
-.close-game-btn {
-  background: transparent;
-  border: none;
-  font-size: 20px;
-  color: #9ca3af;
-}
-
-.close-game-btn:hover {
-  color: #ef4444;
-}
-
-/* ============================= */
-/* Fossil Clicker Modal          */
-/* ============================= */
-.fossil-game {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  text-align: center;
-  padding: 16px;
-  background: rgba(2,6,23,0.88);
-  border-radius: 14px;
-  box-shadow: 0 16px 36px rgba(0,0,0,0.6);
-}
-
-.fossil-game.hidden {
-  display: none;
-}
-
-.fossil-game h3 {
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.fossil-game p {
-  font-size: 14px;
-  color: #9ca3af;
-  margin: 4px 0 10px;
-}
-
-.fossil-game button {
-  padding: 10px;
-  border-radius: 10px;
-  border: none;
-  font-weight: 600;
-  background: linear-gradient(135deg, #3b82f6, #2563eb);
-  color: white;
-  box-shadow: 0 6px 18px rgba(37,99,235,0.45);
-}
-
-.fossil-game button:hover {
-  background: linear-gradient(135deg, #2563eb, #1d4ed8);
-  box-shadow: 0 10px 28px rgba(37,99,235,0.55);
-}
-
-.fossil-game button:active {
-  transform: translateY(1px);
-}
-
-/* ===================================================== */
-/* UTILITY CLASSES                                       */
-/* ===================================================== */
-.hidden { display: none !important; }
-.center { text-align: center; }
-.flex { display: flex; }
-.flex-col { display: flex; flex-direction: column; }
-.flex-center { display: flex; align-items: center; justify-content: center; }
-.mt-4 { margin-top: 4px; } .mt-8 { margin-top: 8px; } .mt-12 { margin-top: 12px; } .mt-16 { margin-top: 16px; } .mt-20 { margin-top: 20px; }
-.mb-4 { margin-bottom: 4px; } .mb-8 { margin-bottom: 8px; } .mb-12 { margin-bottom: 12px; } .mb-16 { margin-bottom: 16px; } .mb-20 { margin-bottom: 20px; }
-
-/* ===================================================== */
-/* RESPONSIVE                                           */
-/* ===================================================== */
-@media (max-width: 768px) {
-  .server-layout {
-    flex-direction: column;
-    gap: 20px;
-    align-items: center;
-  }
-  .games-panel, .chat-section {
-    width: 95%;
-  }
-}
-
-@media (max-width: 480px) {
-  .chat-container, .chat-input-container, .games-panel, .game-modal-card {
-    width: 100%;
-  }
 }
