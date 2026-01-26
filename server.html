@@ -121,46 +121,33 @@ upgradeBtn.onclick = () => {
 // ==============================
 // Command Handler (Dynamic Helper)
 // ==============================
-const commands = {
-  mute: {
-    description: "Mute a user",
-    action: muteUser
-  },
-  ban: {
-    description: "Ban a user",
-    action: banUser
-  },
-  // future commands can be added here
-};
+function handleCommand(input) {
+  const parts = input.slice(1).trim().split(/\s+/);
+  const command = parts[0]?.toLowerCase();
+  const arg = parts.slice(1).join(" ");
 
-function handleCommand(cmd) {
-  const parts = cmd.slice(1).split(" "); // remove "/" and split
-  const commadn = parts[0].toLowerCase();
-  const arg = parts.slice(1).join(" "0;
+  if (!command) return;
 
-  if (command === "help") {
-    let msg = "Available commands: \n";
-    for (const key in commands) {
-      msg += `/${key} ${commands[key].description ? "(arg if needed)" : ""}\n`;
-    }
-    alert(msg.trim());
-    return;
+  switch (command) {
+    case "mute":
+      if (!arg) return systemMessage("Usage: /mute username");
+      systemMessage(`Muted ${arg}`);
+      break;
+
+    case "ban":
+      if (!arg) return systemMessage("Usage: /ban username");
+      systemMessage(`Banned ${arg}`);
+      break;
+
+    case "help":
+      systemMessage("Commands: /mute <user>, /ban <user>, /help");
+      break;
+
+    default:
+      systemMessage(`Unknown command: /${command}`);
   }
-
-  if (!commands[command]) {
-    alert("Unknown command: " + command);
-    return;
-  }
-
-  if (!arg && command !== "help") {
-    alert(`Please provide a username for /${command}`);
-    return;
-  }
-
-  // Execute command
-  commands[command].action(arg);
 }
-    
+
 // ==============================
 // Command Functions
 // ==============================
