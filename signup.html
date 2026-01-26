@@ -10,25 +10,25 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Quickchat II</h1>
-      <h2>Create your account</h2>
+      <h2>Create Account</h2>
 
-      <form id="signupForm" autocomplete="on">
-        <input type="text" id="nickname" placeholder="Nickname" required autocomplete="nickname" />
-        <input type="email" id="email" placeholder="Email" required autocomplete="email" />
-        <input type="password" id="password" placeholder="Password" required autocomplete="new-password" />
-        <input type="password" id="confirmPassword" placeholder="Confirm Password" required autocomplete="new-password" />
-        <button type="submit">Create Account</button>
+      <form id="signupForm" novalidate>
+        <input type="text" id="nickname" placeholder="Nickname" required />
+        <input type="email" id="email" placeholder="Email" required />
+        <input type="password" id="password" placeholder="Password" required />
+        <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+        <button type="submit">Sign Up</button>
       </form>
 
       <p class="switch">
-        Already have an account? <a href="login.html">Log in</a>
+        Already have an account? <a href="login.html">Login</a>
       </p>
 
       <p id="errorMsg" style="color:#f87171; margin-top:10px;"></p>
     </div>
   </div>
 
-  <!-- Firebase SDKs (v9 compat) -->
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
@@ -37,39 +37,41 @@
   <script src="app.js"></script>
 
   <script>
-    const form = document.getElementById("signupForm");
-    const errorMsg = document.getElementById("errorMsg");
+    (function () {
+      const form = document.getElementById("signupForm");
+      const errorMsg = document.getElementById("errorMsg");
 
-    form.onsubmit = async function(e) {
-      e.preventDefault();
-      errorMsg.textContent = "";
+      form.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        errorMsg.textContent = "";
 
-      const nickname = document.getElementById("nickname").value.trim();
-      const email = document.getElementById("email").value.trim();
-      const password = document.getElementById("password").value;
-      const confirmPassword = document.getElementById("confirmPassword").value;
+        const nickname = document.getElementById("nickname").value.trim();
+        const email = document.getElementById("email").value.trim();
+        const password = document.getElementById("password").value;
+        const confirmPassword = document.getElementById("confirmPassword").value;
 
-      if (password !== confirmPassword) {
-        errorMsg.textContent = "Passwords do not match.";
-        return;
-      }
+        if (password !== confirmPassword) {
+          errorMsg.textContent = "Passwords do not match.";
+          return;
+        }
 
-      try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+        try {
+          const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+          const user = userCredential.user;
 
-        // Save nickname in Firestore
-        await db.collection("users").doc(user.uid).set({
-          nickname: nickname,
-          email: email
-        });
+          // Preserve original behavior
+          await db.collection("users").doc(user.uid).set({
+            nickname: nickname,
+            email: email
+          });
 
-        window.location.href = "profile.html";
-      } catch (err) {
-        console.error(err);
-        errorMsg.textContent = err.message;
-      }
-    };
+          window.location.href = "profile.html";
+        } catch (err) {
+          console.error(err);
+          errorMsg.textContent = err.message;
+        }
+      });
+    })();
   </script>
 </body>
 </html>
