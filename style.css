@@ -1084,3 +1084,10 @@ input {
   background: linear-gradient(135deg, #3b82f6, #2563eb);
   box-shadow: 0 8px 18px rgba(0,0,0,0.45);
 }
+
+.chat-gif {
+  max-width: 220px;
+  border-radius: 12px;
+  margin-top: 4px;
+  box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+}
