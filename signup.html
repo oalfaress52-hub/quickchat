@@ -26,7 +26,8 @@
           <span class="password-toggle" id="toggleConfirmPassword">Show</span>
         </div>
 
-        <button type="submit">Sign Up</button>
+        <!-- DO NOT add classes — your CSS targets .auth-card button -->
+        <button type="submit">Create Account</button>
       </form>
 
       <p class="switch">
@@ -42,7 +43,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
-  <!-- App logic -->
   <script src="app.js"></script>
 
   <script>
@@ -81,11 +81,10 @@
       }
 
       try {
-        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = userCredential.user;
+        const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = cred.user;
 
         await user.updateProfile({ displayName: nickname });
-
         await firebase.firestore().collection("users").doc(user.uid).set({
           nickname,
           email
