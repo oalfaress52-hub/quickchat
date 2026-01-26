@@ -13,13 +13,11 @@
       <h2>Sign In</h2>
 
       <form id="loginForm" novalidate>
-        <div class="input-group">
-          <input type="email" id="email" placeholder="Email" required />
-        </div>
+        <input type="email" id="email" placeholder="Email" required />
 
-        <div class="input-group password-group">
+        <div class="password-field">
           <input type="password" id="password" placeholder="Password" required />
-          <button type="button" class="toggle-password" id="togglePassword">Show</button>
+          <button type="button" class="password-toggle" id="togglePassword">Show</button>
         </div>
 
         <button type="submit" class="primary-btn">Login</button>
@@ -45,15 +43,15 @@
     const form = document.getElementById("loginForm");
     const errorMsg = document.getElementById("errorMsg");
     const passwordInput = document.getElementById("password");
-    const togglePasswordBtn = document.getElementById("togglePassword");
+    const toggleBtn = document.getElementById("togglePassword");
 
-    togglePasswordBtn.onclick = () => {
-      const isHidden = passwordInput.type === "password";
-      passwordInput.type = isHidden ? "text" : "password";
-      togglePasswordBtn.textContent = isHidden ? "Hide" : "Show";
+    toggleBtn.onclick = () => {
+      const hidden = passwordInput.type === "password";
+      passwordInput.type = hidden ? "text" : "password";
+      toggleBtn.textContent = hidden ? "Hide" : "Show";
     };
 
-    form.onsubmit = async function (e) {
+    form.onsubmit = async (e) => {
       e.preventDefault();
       errorMsg.textContent = "";
 
@@ -66,8 +64,7 @@
 
         const userDoc = await db.collection("users").doc(user.uid).get();
         if (userDoc.exists) {
-          const data = userDoc.data();
-          localStorage.setItem("nickname", data.nickname || "");
+          localStorage.setItem("nickname", userDoc.data().nickname || "");
         }
 
         window.location.href = "profile.html";
