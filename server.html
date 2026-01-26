@@ -85,18 +85,16 @@ const sendBtn = document.getElementById("sendBtn");
 const gifBtn = document.getElementById("gifBtn");
 
 const gameSearch = document.getElementById("gameSearch");
-const gameList = document.getElementById("gameList");
-const gameModal = document.getElementById("gameModal");
-const gameContainer = document.getElementById("gameContainer");
-const closeGameModal = document.getElementById("closeGameModal");
-
-const fossilGame = document.getElementById("fossilGame");
-const fossilCounter = document.getElementById("fossilCounter");
-const digBtn = document.getElementById("digBtn");
-const upgradeBtn = document.getElementById("upgradeClickPower");
+const closeGames = document.getElementById("closeGames");
+const gamesGrid = document.getElementById("gamesGrid");
 
 let fossils = 0;
 let clickPower = 1;
+let mutedUsers = []; // store muted user UIDs locally
+
+const fossilCounter = document.getElementById("fossilCounter");
+const digBtn = document.getElementById("digBtn");
+const upgradeBtn = document.getElementById("upgradeClickPower");
 
 // ==============================
 // Fossil Clicker Logic
@@ -111,7 +109,7 @@ digBtn.onclick = () => {
 };
 
 upgradeBtn.onclick = () => {
-  if(fossils >= 10) {
+  if (fossils >= 10) {
     fossils -= 10;
     clickPower++;
     updateFossilDisplay();
@@ -121,10 +119,64 @@ upgradeBtn.onclick = () => {
 };
 
 // ==============================
+// Command Handler
+// ==============================
+function handleCommand(cmd) {
+  const parts = cmd.slice(1).split(" "); // remove "/" and split
+  const command = parts[0].toLowerCase();
+  const arg = parts.slice(1).join(" ");
+
+  switch (command) {
+    case "mute":
+      if (!arg) return alert("Please provide a username to mute.");
+      muteUser(arg);
+      break;
+    case "ban":
+      if (!arg) return alert("Please provide a username to ban.");
+      banUser(arg);
+      break;
+    case "help":
+      alert("Available commands:\n/mute username\n/ban username\n/help");
+      break;
+    default:
+      alert("Unknown command: " + command);
+  }
+}
+
+// ==============================
+// Command Functions
+// ==============================
+function muteUser(username) {
+  firebase.firestore().collection("users").where("displayName", "==", username)
+    .get()
+    .then(snapshot => {
+      if (snapshot.empty) return alert("User not found.");
+      snapshot.forEach(doc => {
+        const uid = doc.id;
+        if (!mutedUsers.includes(uid)) mutedUsers.push(uid);
+        alert(username + " has been muted.");
+      });
+    });
+}
+
+function banUser(username) {
+  firebase.firestore().collection("users").where("displayName", "==", username)
+    .get()
+    .then(snapshot => {
+      if (snapshot.empty) return alert("User not found.");
+      snapshot.forEach(doc => {
+        doc.ref.update({ banned: true }).then(() => {
+          alert(username + " has been banned.");
+        });
+      });
+    });
+}
+
+// ==============================
 // Firebase Chat
 // ==============================
 firebase.auth().onAuthStateChanged(currentUser => {
-  if(!currentUser) {
+  if (!currentUser) {
     window.location.href = "login.html";
     return;
   }
@@ -140,6 +192,9 @@ firebase.auth().onAuthStateChanged(currentUser => {
     chatContainer.innerHTML = "";
     snapshot.forEach(doc => {
       const data = doc.data();
+      
+      if (mutedUsers.includes(data.uid)) return;
+
       const div = document.createElement("div");
       div.className = "chat-message " + (data.uid === uid ? "you" : "other");
 
@@ -147,7 +202,7 @@ firebase.auth().onAuthStateChanged(currentUser => {
       name.textContent = (data.uid === uid ? "You" : data.nickname || "Anonymous") + ": ";
       div.appendChild(name);
 
-      if(data.type === "gif" && data.url) {
+      if (data.type === "gif" && data.url) {
         const img = document.createElement("img");
         img.src = data.url;
         img.className = "chat-gif";
@@ -161,9 +216,18 @@ firebase.auth().onAuthStateChanged(currentUser => {
     chatContainer.scrollTop = chatContainer.scrollHeight;
   });
 
+  // ==============================
+  // Send Button
+  // ==============================
   sendBtn.onclick = async () => {
     const input = chatInput.value.trim();
-    if(!input) return;
+    if (!input) return;
+
+    if (input.startsWith("/")) {
+      handleCommand(input);
+      chatInput.value = "";
+      return;
+    }
 
     const isGif = input.match(/\.gif(\?.*)?$/i);
 
@@ -187,40 +251,36 @@ firebase.auth().onAuthStateChanged(currentUser => {
 });
 
 // ==============================
-// Game Search
+// Games Section
 // ==============================
 gameSearch.oninput = () => {
   const filter = gameSearch.value.toLowerCase();
-  Array.from(gameList.getElementsByClassName("game-card")).forEach(card => {
-    const name = card.querySelector("h4").textContent.toLowerCase();
+  const cards = gamesGrid.getElementsByClassName("game-card");
+  Array.from(cards).forEach(card => {
+    const name = card.querySelector("h3").textContent.toLowerCase();
     card.style.display = name.includes(filter) ? "flex" : "none";
   });
 };
 
-// ==============================
-// Open Game Modal
-// ==============================
-document.querySelectorAll(".open-game-btn").forEach(btn => {
-  btn.onclick = () => {
-    const game = btn.dataset.game;
-    gameModal.classList.remove("hidden");
-    // Render Fossil Clicker only
-    if(game === "fossil") {
-      fossilGame.classList.remove("hidden");
-    } else {
-      fossilGame.classList.add("hidden");
+closeGames.onclick = () => {
+  const section = document.querySelector(".games-section");
+  section.style.display = section.style.display === "none" ? "block" : "none";
+};
+
+gamesGrid.addEventListener("click", e => {
+  if (e.target.tagName === "BUTTON" && e.target.classList.contains("playBtn")) {
+    const gameCard = e.target.closest(".game-card");
+    const gameName = gameCard.querySelector("h3").textContent;
+
+    if (gameName === "Fossil Clicker") {
+      document.querySelector(".fossil-game").classList.remove("hidden");
     }
-  };
+  }
 });
 
-// ==============================
-// Close Game Modal
-// ==============================
-closeGameModal.onclick = () => {
-  gameModal.classList.add("hidden");
-  fossilGame.classList.add("hidden");
-};
+document.querySelector(".fossil-game .close-game-btn")?.addEventListener("click", () => {
+  document.querySelector(".fossil-game").classList.add("hidden");
+});
 </script>
-
 </body>
 </html>
