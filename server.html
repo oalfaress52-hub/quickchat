@@ -96,26 +96,42 @@
       dbRef.onSnapshot(snapshot => {
         chatContainer.innerHTML = "";
         snapshot.forEach(doc => {
-          const msg = doc.data();
+          const data = doc.data();
           const div = document.createElement("div");
           div.className = "chat-message";
-          const displayName = msg.uid === uid ? "You" : msg.nickname || "Anonymous";
-          div.textContent = `${displayName}: ${msg.text}`;
+
+          const name = document.createElement("strong");
+          name.textContent = (data.uid === uid ? "You" : data.nickname || "Anonymous") + ": ";
+          div.appendChild(name);
+
+          if (data.type === "gif" && data.url) {
+            const img = document.createElement("img");
+            img.src = data.url;
+            img.className = "chat-gif";
+            div.appendChild(img);
+          } else {
+            div.appendChild(document.createTextNode(data.text));
+          }
+
           chatContainer.appendChild(div);
         });
         chatContainer.scrollTop = chatContainer.scrollHeight;
       });
 
       sendBtn.onclick = async () => {
-        const text = chatInput.value.trim();
-        if (!text) return;
+        const input = chatInput.value.trim();
+        if (!input) return;
+
+        const isGif = input.match(/\.gif(\?*)?$/i);
 
         await firebase.firestore().collection("messages").add({
-          text,
+          type: isGif ? "gif" : "text",
+          text: isGif ? null : input,
+          url: isGif ? input : null,
           serverId,
-          uid,
+          uid: uid,
           nickname: currentUser.displayName || null,
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+          createdAt: firebase.firestore.FieldValue.serverTimeStamp()
         });
 
         chatInput.value = "";
