@@ -2,94 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Quickchat II — Profile</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <link rel="stylesheet" href="style.css" />
+  <title>Quickchat II - Sign Up</title>
+  <meta name="viewport" conent="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="profile-wrapper">
-    <div class="profile-card">
-      <h1>Quickchat II</h1>
-      <h2>Your Profile</h2>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+      <h1>Quickchat II - Sign Up</h1>
+      <h2>Create Account</h2>
 
-      <div class="profile-fields">
-        <input type="text" id="nicknameInput" placeholder="Nickname" />
-        <input type="email" id="emailInput" placeholder="Email" autocomplete="email" />
-      </div>
+      <form id="signupForm" novalidate>
+        <input type="text" id="nickname" placeholder="Nickname" required />
+        <input type="email" id="email" placeholder="Email" autocomplete="email" reqiured />
 
-      <div class="profile-buttons">
-        <button class="primary-btn" id="saveBtn">Save</button>
-        <button class="secondary-btn" id="refreshBtn">Refresh</button>
-        <button class="danger-btn" id="logoutBtn">Logout</button>
-      </div>
+        <div class="password-field">
+          <input type="password" id="password" placeholder="Password" autocomplete="new-password" required />
+          <span class="password-toggle" id="togglePassword">Show</span>
+        </div>
+
+        <div> class="password-field">
+          <input type="password" id="confirmPassword" placeholder="Confirm Password" autocomplete="new-password" required />
+          <span class="password-toggle" id="toggleConfirmPassword">Show</span>
+        </div>
+
+        <button type="submit">Sign Up</button>
+      </form>
+
+      <p class="switch">
+        Already have an account? <a href="login.html">Login</a>
+      </p>
 
       <p id="errorMsg" class="error-text"></p>
     </div>
   </div>
 
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstati.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  <script src="firebase-init.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firesotre-compat.js"></script>
+
+  <!-- App logic -->
+  <script src="app.js"></script>
 
   <script>
-    const nicknameInput = document.getElementById("nicknameInput");
-    const emailInput = document.getElementById("emailInput");
-    const saveBtn = document.getElementById("saveBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
+    const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
-    firebase.auth().onAuthStateChanged(loadProfile);
+    const passwordInput = document.getElementById("password");
+    const confirmInput = document.getElementById("cofnirmPassword");
+    const togglePassword = document.getElementById("togglePassword");
+    const toggleConfirm = document.getElementById("toggleConfirmPassword");
 
-    async function loadProfile(user) {
-      if (!user) {
-        window.location.href = "login.html";
+    togglePassword.onclick = () => {
+      const hidden = passwordInput.type === "password";
+      passwordInput.type = hidden ? "Hide" : "Show";
+    };
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      errorMsg.textContent = "";
+
+      const nickname = document.getElementById("nickname").value.trim();
+      const email = document.getElementById("email").value.trim();
+      const password = passwordInput.value;
+      const confirmPassword = confirmInput.value;
+
+      if (password !== confimrmPassword) {
+        errorMsg.textContent = "Passwords do not match.";
         return;
       }
 
       try {
-        const doc = await firebase.firestore().collection("users").doc(user.uid).get();
-        const data = doc.data();
+        const userCredential = await firebase.auth().createUserWithEmailAndPassword(email, password);
+        const user = userCredential.user;
 
-        nicknameInput.value = data?.nickname || "";
-        emailInput.value = data?.email || user.email || "";
-      } catch (err) {
-        console.error(err);
-        errorMsg.textContent = err.message;
-      }
-    }
+        await user.updateProfile({ displayName: nickname });
 
-    saveBtn.onclick = async () => {
-      errorMsg.textContent = "";
-      const user = firebase.auth().currentUser;
-      if (!user) return;
-
-      const nickname = nicknameInput.value.trim();
-      const email = emailInput.value.trim();
-
-      try {
-        await firebase.firestore().collection("users").doc(user.uid).update({
+        await firebase.firestore().collection("users").doc(user.uid).set({
           nickname,
-          email,
+          email
         });
 
-        if (email !== user.email) {
-          await user.updateEmail(email);
-        }
+        window.location.href = "profile.html";
       } catch (err) {
         console.error(err);
         errorMsg.textContent = err.message;
       }
-    };
-
-    refreshBtn.onclick = () => {
-      loadProfile(firebase.auth().currentUser);
-    };
-
-    logoutBtn.onclick = async () => {
-      await firebase.auth().signOut();
-      window.location.href = "login.html";
     };
   </script>
 </body>
