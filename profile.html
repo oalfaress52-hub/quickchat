@@ -7,89 +7,101 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="profile-wrapper">
+  <div class="auth-wrapper">
     <div class="profile-card">
       <h1>Quickchat II</h1>
       <h2>Your Profile</h2>
 
-      <div class="profile-fields">
-        <input type="text" id="nicknameInput" placeholder="Nickname" />
-        <input type="email" id="emailInput" placeholder="Email" autocomplete="email" />
-      </div>
+      <input type="text" id="nicknameInput" placeholder="Nickname" disabled />
+      <input type="email" id="emailInput" placeholder="Email" disabled />
 
-      <div class="profile-buttons">
-        <button class="primary-btn" id="saveBtn">Save</button>
-        <button class="secondary-btn" id="refreshBtn">Refresh</button>
-        <button class="danger-btn" id="logoutBtn">Logout</button>
-      </div>
+      <button id="editBtn" class="secondary">Edit</button>
+      <button id="saveBtn" class="primary hidden">Save</button>
+      <button id="cancelBtn" class="secondary hidden">Cancel</button>
 
-      <p id="errorMsg" class="error-text"></p>
+      <button id="chatBtn" class="primary">Enter Chat</button>
+      <button id="logoutBtn" class="danger">Logout</button>
+
+      <p id="profileMsg" class="switch hidden"></p>
     </div>
   </div>
 
+  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+  <!-- App logic -->
+  <script src="app.js"></script>
+
   <script>
     const nicknameInput = document.getElementById("nicknameInput");
     const emailInput = document.getElementById("emailInput");
+    const editBtn = document.getElementById("editBtn");
     const saveBtn = document.getElementById("saveBtn");
-    const refreshBtn = document.getElementById("refreshBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const chatBtn = document.getElementById("chatBtn");
     const logoutBtn = document.getElementById("logoutBtn");
-    const errorMsg = document.getElementById("errorMsg");
+    const profileMsg = document.getElementById("profileMsg");
 
-    firebase.auth().onAuthStateChanged(loadProfile);
-
-    async function loadProfile(user) {
+    firebase.auth().onAuthStateChanged(async user => {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
 
-      try {
-        const doc = await firebase.firestore().collection("users").doc(user.uid).get();
-        const data = doc.data();
+      emailInput.value = user.email || "";
+      nicknameInput.value = user.displayName || "";
 
-        nicknameInput.value = data?.nickname || "";
-        emailInput.value = data?.email || user.email || "";
-      } catch (err) {
-        console.error(err);
-        errorMsg.textContent = err.message;
+      const db = firebase.firestore();
+      const userRef = db.collection("users").doc(user.uid);
+
+      const snap = await userRef.get();
+      if (snap.exists && snap.data().nickname) {
+        nicknameInput.value = snap.data().nickname;
       }
-    }
 
-    saveBtn.onclick = async () => {
-      errorMsg.textContent = "";
-      const user = firebase.auth().currentUser;
-      if (!user) return;
+      editBtn.onclick = () => {
+        nicknameInput.disabled = false;
+        editBtn.classList.add("hidden");
+        saveBtn.classList.remove("hidden");
+        cancelBtn.classList.remove("hidden");
+      };
 
-      const nickname = nicknameInput.value.trim();
-      const email = emailInput.value.trim();
+      cancelBtn.onclick = () => {
+        nicknameInput.value = user.displayName || "";
+        nicknameInput.disabled = true;
+        saveBtn.classList.add("hidden");
+        cancelBtn.classList.add("hidden");
+        editBtn.classList.remove("hidden");
+      };
 
-      try {
-        await firebase.firestore().collection("users").doc(user.uid).update({
-          nickname,
-          email,
-        });
+      saveBtn.onclick = async () => {
+        const newNick = nicknameInput.value.trim();
+        if (!newNick) return;
 
-        if (email !== user.email) {
-          await user.updateEmail(email);
-        }
-      } catch (err) {
-        console.error(err);
-        errorMsg.textContent = err.message;
-      }
-    };
+        await user.updateProfile({ displayName: newNick });
+        await userRef.set({ nickname: newNick }, { merge: true });
 
-    refreshBtn.onclick = () => {
-      loadProfile(firebase.auth().currentUser);
-    };
+        nicknameInput.disabled = true;
+        saveBtn.classList.add("hidden");
+        cancelBtn.classList.add("hidden");
+        editBtn.classList.remove("hidden");
 
-    logoutBtn.onclick = async () => {
-      await firebase.auth().signOut();
-      window.location.href = "login.html";
-    };
+        profileMsg.textContent = "Profile updated.";
+        profileMsg.classList.remove("hidden");
+        setTimeout(() => profileMsg.classList.add("hidden"), 2000);
+      };
+
+      chatBtn.onclick = () => {
+        window.location.href = "server.html";
+      };
+
+      logoutBtn.onclick = async () => {
+        await firebase.auth().signOut();
+        window.location.href = "login.html";
+      };
+    });
   </script>
 </body>
 </html>
