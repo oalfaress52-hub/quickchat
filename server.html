@@ -1,13 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
+<meta charset="UTF-8" />
 <title>Quickchat II — Server</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
 
+<!-- ===================== -->
+<!-- Header -->
+<!-- ===================== -->
 <div class="server-header">
   <h1>Quickchat II — Server</h1>
   <p id="serverInfo">Server: The Main Server</p>
@@ -22,7 +25,12 @@
     <div class="chat-container" id="chatContainer"></div>
 
     <div class="chat-input-container">
-      <input type="text" id="chatInput" placeholder="Type a message or paste GIF URL..." />
+      <input
+        type="text"
+        id="chatInput"
+        placeholder="Type a message or paste GIF URL..."
+        autocomplete="off"
+      />
       <button id="sendBtn">Send</button>
       <button id="gifBtn">GIF</button>
     </div>
@@ -34,25 +42,29 @@
   <div class="games-panel" id="gamesPanel">
     <div class="games-header">
       <h2>Games</h2>
-      <input type="text" class="games-search" id="gameSearch" placeholder="Search games..." />
+      <input
+        type="text"
+        class="games-search"
+        id="gameSearch"
+        placeholder="Search games..."
+      />
     </div>
+
     <div class="game-list" id="gameList">
-      <!-- Example Game Card -->
-      <div class="game-card">
+      <div class="game-card" data-game="fossil">
         <div class="game-info">
           <h4>Fossil Clicker</h4>
           <p>Dig and collect fossils!</p>
         </div>
-        <button class="open-game-btn" data-game="fossil">Play</button>
+        <button class="open-game-btn">Play</button>
       </div>
-      <!-- Add more game cards here -->
     </div>
   </div>
 
 </div>
 
 <!-- ===================== -->
-<!-- Game Modal (Hidden by default) -->
+<!-- Game Modal -->
 <!-- ===================== -->
 <div class="game-modal hidden" id="gameModal">
   <div class="game-modal-card">
@@ -60,8 +72,8 @@
       <h3 id="gameTitle">Game</h3>
       <button class="close-game-btn" id="closeGameModal">×</button>
     </div>
+
     <div class="game-modal-body" id="gameContainer">
-      <!-- Game will render here dynamically -->
       <div class="fossil-game hidden" id="fossilGame">
         <h3>Fossil Clicker</h3>
         <p id="fossilCounter">Fossils: 0</p>
@@ -72,43 +84,50 @@
   </div>
 </div>
 
+<!-- ===================== -->
 <!-- Firebase SDKs -->
+<!-- ===================== -->
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 <script src="app.js"></script>
 
 <script>
+/* =====================================================
+   DOM REFERENCES
+===================================================== */
 const chatContainer = document.getElementById("chatContainer");
 const chatInput = document.getElementById("chatInput");
 const sendBtn = document.getElementById("sendBtn");
 const gifBtn = document.getElementById("gifBtn");
 
 const gameSearch = document.getElementById("gameSearch");
-const closeGames = document.getElementById("closeGames");
-const gamesGrid = document.getElementById("gamesGrid");
+const gameList = document.getElementById("gameList");
 
-let fossils = 0;
-let clickPower = 1;
-let mutedUsers = []; // store muted user UIDs locally
+const gameModal = document.getElementById("gameModal");
+const closeGameModal = document.getElementById("closeGameModal");
+const fossilGame = document.getElementById("fossilGame");
 
 const fossilCounter = document.getElementById("fossilCounter");
 const digBtn = document.getElementById("digBtn");
 const upgradeBtn = document.getElementById("upgradeClickPower");
 
-// ==============================
-// Fossil Clicker Logic
-// ==============================
+/* =====================================================
+   Fossil Clicker Logic
+===================================================== */
+let fossils = 0;
+let clickPower = 1;
+
 function updateFossilDisplay() {
   fossilCounter.textContent = `Fossils: ${fossils}`;
 }
 
-digBtn.onclick = () => {
+digBtn.addEventListener("click", () => {
   fossils += clickPower;
   updateFossilDisplay();
-};
+});
 
-upgradeBtn.onclick = () => {
+upgradeBtn.addEventListener("click", () => {
   if (fossils >= 10) {
     fossils -= 10;
     clickPower++;
@@ -116,11 +135,24 @@ upgradeBtn.onclick = () => {
   } else {
     alert("Not enough fossils!");
   }
-};
+});
 
-// ==============================
-// Command Handler (Dynamic Helper)
-// ==============================
+/* =====================================================
+   System Message Helper
+===================================================== */
+function systemMessage(text) {
+  const div = document.createElement("div");
+  div.className = "chat-message system";
+  div.textContent = text;
+  chatContainer.appendChild(div);
+  chatContainer.scrollTop = chatContainer.scrollHeight;
+}
+
+/* =====================================================
+   Command Handler
+===================================================== */
+let mutedUsers = [];
+
 function handleCommand(input) {
   const parts = input.slice(1).trim().split(/\s+/);
   const command = parts[0]?.toLowerCase();
@@ -131,12 +163,12 @@ function handleCommand(input) {
   switch (command) {
     case "mute":
       if (!arg) return systemMessage("Usage: /mute username");
-      systemMessage(`Muted ${arg}`);
+      muteUser(arg);
       break;
 
     case "ban":
       if (!arg) return systemMessage("Usage: /ban username");
-      systemMessage(`Banned ${arg}`);
+      banUser(arg);
       break;
 
     case "help":
@@ -148,38 +180,40 @@ function handleCommand(input) {
   }
 }
 
-// ==============================
-// Command Functions
-// ==============================
+/* =====================================================
+   Command Functions
+===================================================== */
 function muteUser(username) {
-  firebase.firestore().collection("users").where("displayName", "==", username)
+  firebase.firestore().collection("users")
+    .where("displayName", "==", username)
     .get()
     .then(snapshot => {
-      if (snapshot.empty) return alert("User not found.");
+      if (snapshot.empty) return systemMessage("User not found.");
       snapshot.forEach(doc => {
         const uid = doc.id;
         if (!mutedUsers.includes(uid)) mutedUsers.push(uid);
-        alert(username + " has been muted.");
+        systemMessage(`${username} has been muted.`);
       });
     });
 }
 
 function banUser(username) {
-  firebase.firestore().collection("users").where("displayName", "==", username)
+  firebase.firestore().collection("users")
+    .where("displayName", "==", username)
     .get()
     .then(snapshot => {
-      if (snapshot.empty) return alert("User not found.");
+      if (snapshot.empty) return systemMessage("User not found.");
       snapshot.forEach(doc => {
         doc.ref.update({ banned: true }).then(() => {
-          alert(username + " has been banned.");
+          systemMessage(`${username} has been banned.`);
         });
       });
     });
 }
 
-// ==============================
-// Firebase Chat
-// ==============================
+/* =====================================================
+   Firebase Chat
+===================================================== */
 firebase.auth().onAuthStateChanged(currentUser => {
   if (!currentUser) {
     window.location.href = "login.html";
@@ -189,7 +223,8 @@ firebase.auth().onAuthStateChanged(currentUser => {
   const uid = currentUser.uid;
   const serverId = "demoServer";
 
-  const dbRef = firebase.firestore().collection("messages")
+  const dbRef = firebase.firestore()
+    .collection("messages")
     .where("serverId", "==", serverId)
     .orderBy("createdAt");
 
@@ -197,7 +232,6 @@ firebase.auth().onAuthStateChanged(currentUser => {
     chatContainer.innerHTML = "";
     snapshot.forEach(doc => {
       const data = doc.data();
-      
       if (mutedUsers.includes(data.uid)) return;
 
       const div = document.createElement("div");
@@ -221,10 +255,10 @@ firebase.auth().onAuthStateChanged(currentUser => {
     chatContainer.scrollTop = chatContainer.scrollHeight;
   });
 
-  // ==============================
-  // Send Button
-  // ==============================
-  sendBtn.onclick = async () => {
+  /* ==========================
+     Send Button
+  ========================== */
+  sendBtn.addEventListener("click", async () => {
     const input = chatInput.value.trim();
     if (!input) return;
 
@@ -247,48 +281,52 @@ firebase.auth().onAuthStateChanged(currentUser => {
     });
 
     chatInput.value = "";
-  };
+  });
 
-  gifBtn.onclick = () => {
+  /* ==========================
+     GIF Button
+  ========================== */
+  gifBtn.addEventListener("click", () => {
     chatInput.value = "https://media.tenor.com/0G9B5kEo9XkAAAAC/cat.gif";
     chatInput.focus();
-  };
+  });
 });
 
-// ==============================
-// Games Section
-// ==============================
-gameSearch.oninput = () => {
+/* =====================================================
+   Games System
+===================================================== */
+
+/* Search */
+gameSearch.addEventListener("input", () => {
   const filter = gameSearch.value.toLowerCase();
-  const cards = gamesGrid.getElementsByClassName("game-card");
-  Array.from(cards).forEach(card => {
-    const name = card.querySelector("h3").textContent.toLowerCase();
+  const cards = gameList.querySelectorAll(".game-card");
+  cards.forEach(card => {
+    const name = card.querySelector("h4").textContent.toLowerCase();
     card.style.display = name.includes(filter) ? "flex" : "none";
   });
-};
+});
 
-closeGames.onclick = () => {
-  const section = document.querySelector(".games-section");
-  section.style.display = section.style.display === "none" ? "block" : "none";
-};
+/* Open Game */
+gameList.addEventListener("click", e => {
+  const btn = e.target.closest(".open-game-btn");
+  if (!btn) return;
 
-gamesGrid.addEventListener("click", e => {
-  if (e.target.tagName === "BUTTON" && e.target.classList.contains("playBtn")) {
-    const gameCard = e.target.closest(".game-card");
-    const gameName = gameCard.querySelector("h3").textContent;
+  const card = btn.closest(".game-card");
+  const game = card.dataset.game;
 
-    if (gameName === "Fossil Clicker") {
-      document.querySelector(".fossil-game").classList.remove("hidden");
-    }
+  if (game === "fossil") {
+    fossilGame.classList.remove("hidden");
+    gameModal.classList.remove("hidden");
   }
 });
 
-const closeGameBtn = document.querySelector(".fossil-game .close-game-btn");
-  if (closeGameBtn) {
-  closeGameBtn.onclick = () => {
-      document.querySelector(".fossil-game")?.classList.add("hidden");
-  };
-}
+/* Close Game */
+closeGameModal.addEventListener("click", () => {
+  fossilGame.classList.add("hidden");
+  gameModal.classList.add("hidden");
+});
 </script>
+
 </body>
 </html>
+
