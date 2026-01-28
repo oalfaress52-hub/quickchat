@@ -283,9 +283,12 @@ gamesGrid.addEventListener("click", e => {
   }
 });
 
-document.querySelector(".fossil-game .close-game-btn")?.addEventListener("click", () => {
-  document.querySelector(".fossil-game").classList.add("hidden");
-});
+const closeGameBtn = document.querySelector(".fossil-game .close-game-btn");
+  if (closeGameBtn) {
+  closeGameBtn.onclick = () => {
+      document.querySelector(".fossil-game")?.classList.add("hidden");
+  };
+}
 </script>
 </body>
 </html>
