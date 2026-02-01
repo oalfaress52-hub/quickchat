@@ -112,6 +112,42 @@ const fossilCounter = document.getElementById("fossilCounter");
 const digBtn = document.getElementById("digBtn");
 const upgradeBtn = document.getElementById("upgradeClickPower");
 
+const bannedWords = [
+  "fuck",
+  "shit",
+  "bitch",
+  "nigger",
+  "cunt",
+  "faggot",
+  "bastard",
+  "nigga",
+  "ballsack",
+  "6 gorillas",
+  "6 bananas",
+  "porn",
+  "egg cell",
+  "ovary",
+  "child porn",
+  "cum",
+  "ovaries",
+  "motherfucker",
+  "mf",
+  "wtf",
+  "apeshit",
+  "boner",
+  "peacock",
+  "cock",
+  "dick",
+  "dickhead",
+];
+
+function containsProfanity(text) {
+  const lower = text.toLowerCase();
+  return bannedWords.some(word =>
+    new RegExp(`\\b${word}\\b`, "i").test(lower)
+  );
+}
+  
 /* =====================================================
    Fossil Clicker Logic
 ===================================================== */
@@ -258,17 +294,41 @@ firebase.auth().onAuthStateChanged(currentUser => {
   /* ==========================
      Send Button
   ========================== */
-  sendBtn.addEventListener("click", async () => {
+  function systemMessage(text) {
+    const div = document.createElement("div");
+    div.className = "chat-message system";
+    div.textContent = text;
+    chatContent.appendChild(div);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  const bannedWords = ["fuck", "shit", "bitch", "nigger", "cunt", "faggot", "bastard", "nigga", "ballsack", "6 gorillas", "6 bananas", "porn", "egg cell", "ovary", "child porn", "cum", "ovaries", "motherfucker", "mf", "wtf", "apeshit", "boner", "peacock", "cock", "dick", "dickhead"];
+
+  function containsProfanity(text) {
+    return bannedWords.some(word =>
+      new RegExp(`\\b${word}\\b`, "i").test(text)
+    );
+  }
+  
+  sendBtn.onclick = async () => {
     const input = chatInput.value.trim();
     if (!input) return;
 
+    // Commands
     if (input.startsWith("/")) {
       handleCommand(input);
       chatInput.value = "";
       return;
     }
 
-    const isGif = input.match(/\.gif(\?.*)?$/i);
+    // Profanity filter
+    if (containsProfanity(input)) {
+      systemMessage("⚠️ Message blocked: inappropriate language.");
+      chatInput.value = "";
+      return;
+    }
+
+    const isGif = /\.gif(\?.*)?$/i.test(input);
 
     await firebase.firestore().collection("messages").add({
       type: isGif ? "gif" : "text",
@@ -276,12 +336,12 @@ firebase.auth().onAuthStateChanged(currentUser => {
       url: isGif ? input : null,
       serverId,
       uid,
-      nickname: currentUser.displayName || null,
+      nickname: firebase.auth().currentUser.displayName || null,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     });
 
     chatInput.value = "";
-  });
+  };
 
   /* ==========================
      GIF Button
