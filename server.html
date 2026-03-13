@@ -41,9 +41,8 @@
     const feedNotice = document.getElementById("feedNotice");
 
     const MAX_WIND_LENGTH = 60;
-    const SERVER_ID = "demoServer";
-    let activeSource = "winds";
     let unsubscribeFeed = null;
+    const commentUnsubscribers = new Map();
 
     function showNotice(text) {
       feedNotice.textContent = text;
@@ -55,11 +54,46 @@
       feedNotice.classList.add("hidden");
     }
 
-    function isPermissionDenied(error) {
-      return error && (error.code === "permission-denied" || String(error.message || "").includes("Missing or insufficient permissions"));
+    function clearCommentListeners() {
+      commentUnsubscribers.forEach((unsubscribe) => unsubscribe());
+      commentUnsubscribers.clear();
     }
 
-    function renderWind(wind, currentUid) {
+    function renderComment(comment, currentUserLabel) {
+      const row = document.createElement("div");
+      row.className = "comment-row";
+
+      const header = document.createElement("div");
+      header.className = "comment-header";
+
+      const author = document.createElement("strong");
+      author.textContent = comment.user === currentUserLabel ? "You" : (comment.user || "Anonymous");
+
+      const time = document.createElement("span");
+      time.textContent = window.formatTimestamp ? window.formatTimestamp(comment.time) : "now";
+
+      const text = document.createElement("p");
+      text.textContent = comment.text || "";
+
+      const actions = document.createElement("div");
+      actions.className = "comment-actions";
+
+      const likeBtn = document.createElement("button");
+      likeBtn.className = "secondary-btn feed-action-btn";
+      likeBtn.textContent = `♥ ${Number(comment.likes) || 0}`;
+
+      actions.appendChild(likeBtn);
+      header.appendChild(author);
+      header.appendChild(time);
+      row.appendChild(header);
+      row.appendChild(text);
+      row.appendChild(actions);
+
+      return { row, likeBtn };
+    }
+
+    function renderWind(windDoc, currentUserLabel) {
+      const wind = windDoc.data();
       const card = document.createElement("article");
       card.className = "wind-card";
 
@@ -67,11 +101,11 @@
       header.className = "wind-meta";
 
       const name = document.createElement("strong");
-      const isYou = wind.uid === currentUid;
-      name.textContent = isYou ? "You" : (wind.nickname || "Anonymous");
+      const isYou = wind.user === currentUserLabel;
+      name.textContent = isYou ? "You" : (wind.user || "Anonymous");
 
       const time = document.createElement("span");
-      time.textContent = window.formatTimestamp ? window.formatTimestamp(wind.createdAt) : "now";
+      time.textContent = window.formatTimestamp ? window.formatTimestamp(wind.time) : "now";
 
       const text = document.createElement("p");
       text.className = "wind-text";
@@ -81,6 +115,111 @@
       header.appendChild(time);
       card.appendChild(header);
       card.appendChild(text);
+
+      const actions = document.createElement("div");
+      actions.className = "wind-actions";
+
+      const likeBtn = document.createElement("button");
+      likeBtn.className = "secondary-btn feed-action-btn";
+      likeBtn.textContent = `♥ ${Number(wind.likes) || 0}`;
+
+      const commentToggleBtn = document.createElement("button");
+      commentToggleBtn.className = "secondary-btn feed-action-btn";
+      commentToggleBtn.textContent = "Reply";
+
+      actions.appendChild(likeBtn);
+      actions.appendChild(commentToggleBtn);
+      card.appendChild(actions);
+
+      const commentsWrap = document.createElement("div");
+      commentsWrap.className = "comments-wrap hidden";
+
+      const commentsList = document.createElement("div");
+      commentsList.className = "comments-list";
+
+      const composer = document.createElement("div");
+      composer.className = "comment-compose";
+
+      const commentInput = document.createElement("input");
+      commentInput.type = "text";
+      commentInput.maxLength = 120;
+      commentInput.placeholder = "Write a response...";
+
+      const postCommentBtn = document.createElement("button");
+      postCommentBtn.className = "chat-send-btn";
+      postCommentBtn.textContent = "Post";
+
+      composer.appendChild(commentInput);
+      composer.appendChild(postCommentBtn);
+      commentsWrap.appendChild(commentsList);
+      commentsWrap.appendChild(composer);
+      card.appendChild(commentsWrap);
+
+      const windRef = firebase.firestore().collection("winds").doc(windDoc.id);
+
+      likeBtn.addEventListener("click", async () => {
+        try {
+          await firebase.firestore().runTransaction(async (transaction) => {
+            const snap = await transaction.get(windRef);
+            const nextLikes = (Number(snap.data().likes) || 0) + 1;
+            transaction.update(windRef, { likes: nextLikes });
+          });
+        } catch (error) {
+          showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
+        }
+      });
+
+      commentToggleBtn.addEventListener("click", () => {
+        commentsWrap.classList.toggle("hidden");
+      });
+
+      postCommentBtn.addEventListener("click", async () => {
+        const text = commentInput.value.trim();
+        if (!text) return;
+        if (window.containsBannedWords && window.containsBannedWords(text)) {
+          alert("That response contains blocked words.");
+          return;
+        }
+
+        try {
+          await windRef.collection("comments").add({
+            likes: 0,
+            text,
+            time: firebase.firestore.FieldValue.serverTimestamp(),
+            user: currentUserLabel
+          });
+          commentInput.value = "";
+        } catch (error) {
+          showNotice(`Unable to post response: ${error.message || "unknown error"}`);
+        }
+      });
+
+      if (!commentUnsubscribers.has(windDoc.id)) {
+        const unsubscribeComments = windRef
+          .collection("comments")
+          .orderBy("time", "asc")
+          .onSnapshot((snapshot) => {
+            commentsList.innerHTML = "";
+            snapshot.forEach((commentDoc) => {
+              const rendered = renderComment(commentDoc.data(), currentUserLabel);
+              commentsList.appendChild(rendered.row);
+
+              rendered.likeBtn.addEventListener("click", async () => {
+                try {
+                  await firebase.firestore().runTransaction(async (transaction) => {
+                    const snap = await transaction.get(commentDoc.ref);
+                    const nextLikes = (Number(snap.data().likes) || 0) + 1;
+                    transaction.update(commentDoc.ref, { likes: nextLikes });
+                  });
+                } catch (error) {
+                  showNotice(`Unable to like response: ${error.message || "unknown error"}`);
+                }
+              });
+            });
+          });
+
+        commentUnsubscribers.set(windDoc.id, unsubscribeComments);
+      }
 
       return card;
     }
@@ -98,35 +237,21 @@
       }
 
       clearNotice();
-      let query;
-
-      if (activeSource === "winds") {
-        query = firebase.firestore().collection("winds").orderBy("createdAt", "desc").limit(100);
-      } else {
-        query = firebase.firestore()
-          .collection("messages")
-          .where("serverId", "==", SERVER_ID)
-          .orderBy("createdAt", "desc")
-          .limit(100);
-      }
+      clearCommentListeners();
+      const query = firebase.firestore().collection("winds").orderBy("likes", "desc").limit(100);
 
       unsubscribeFeed = query.onSnapshot(
         (snapshot) => {
           chatContainer.innerHTML = "";
           snapshot.forEach((doc) => {
-            chatContainer.appendChild(renderWind(doc.data(), user.uid));
+            const currentUserLabel = user.displayName || user.email || "Anonymous";
+            chatContainer.appendChild(renderWind(doc, currentUserLabel));
           });
           if (snapshot.empty) {
             showNotice("No winds yet. Be the first to post.");
           }
         },
         (error) => {
-          if (activeSource === "winds" && isPermissionDenied(error)) {
-            activeSource = "messages";
-            showNotice("Winds collection is locked by rules. Using fallback feed source.");
-            attachFeedListener(user);
-            return;
-          }
           showNotice(`Feed unavailable: ${error.message || "permission denied"}`);
           console.error("Feed listener failed:", error);
         }
@@ -135,36 +260,13 @@
 
     async function postWind(user, text) {
       const payload = {
+        likes: 0,
         text,
-        uid: user.uid,
-        nickname: user.displayName || "Anonymous",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        user: user.displayName || user.email || "Anonymous",
+        time: firebase.firestore.FieldValue.serverTimestamp()
       };
 
-      try {
-        if (activeSource === "winds") {
-          await firebase.firestore().collection("winds").add(payload);
-        } else {
-          await firebase.firestore().collection("messages").add({
-            ...payload,
-            serverId: SERVER_ID,
-            type: "text"
-          });
-        }
-      } catch (error) {
-        if (activeSource === "winds" && isPermissionDenied(error)) {
-          activeSource = "messages";
-          showNotice("Write to winds is blocked. Posting to fallback feed source.");
-          attachFeedListener(user);
-          await firebase.firestore().collection("messages").add({
-            ...payload,
-            serverId: SERVER_ID,
-            type: "text"
-          });
-          return;
-        }
-        throw error;
-      }
+      await firebase.firestore().collection("winds").add(payload);
     }
 
     firebase.auth().onAuthStateChanged((user) => {

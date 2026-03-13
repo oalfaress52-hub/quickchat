@@ -851,3 +851,66 @@ textarea {
   margin: 8px 0 0;
   font-size: 0.95rem;
 }
+
+
+.wind-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.feed-action-btn {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.comments-wrap {
+  margin-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-row {
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.comment-row p {
+  margin: 6px 0;
+  font-size: 0.85rem;
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comment-compose {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.comment-compose input {
+  flex: 1;
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--text);
+}
