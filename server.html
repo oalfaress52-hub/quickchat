@@ -21,6 +21,7 @@
         <span id="charCounter">0/60</span>
         <button id="sendBtn" class="chat-send-btn">Post Wind</button>
       </div>
+      <p id="feedNotice" class="feed-notice hidden"></p>
     </section>
 
     <section id="chatContainer" class="wind-feed" aria-live="polite"></section>
@@ -37,7 +38,26 @@
     const sendBtn = document.getElementById("sendBtn");
     const charCounter = document.getElementById("charCounter");
     const logoutBtn = document.getElementById("logoutBtn");
+    const feedNotice = document.getElementById("feedNotice");
+
     const MAX_WIND_LENGTH = 60;
+    const SERVER_ID = "demoServer";
+    let activeSource = "winds";
+    let unsubscribeFeed = null;
+
+    function showNotice(text) {
+      feedNotice.textContent = text;
+      feedNotice.classList.remove("hidden");
+    }
+
+    function clearNotice() {
+      feedNotice.textContent = "";
+      feedNotice.classList.add("hidden");
+    }
+
+    function isPermissionDenied(error) {
+      return error && (error.code === "permission-denied" || String(error.message || "").includes("Missing or insufficient permissions"));
+    }
 
     function renderWind(wind, currentUid) {
       const card = document.createElement("article");
@@ -71,23 +91,89 @@
       charCounter.classList.toggle("limit-hit", count >= MAX_WIND_LENGTH);
     }
 
+    function attachFeedListener(user) {
+      if (unsubscribeFeed) {
+        unsubscribeFeed();
+        unsubscribeFeed = null;
+      }
+
+      clearNotice();
+      let query;
+
+      if (activeSource === "winds") {
+        query = firebase.firestore().collection("winds").orderBy("createdAt", "desc").limit(100);
+      } else {
+        query = firebase.firestore()
+          .collection("messages")
+          .where("serverId", "==", SERVER_ID)
+          .orderBy("createdAt", "desc")
+          .limit(100);
+      }
+
+      unsubscribeFeed = query.onSnapshot(
+        (snapshot) => {
+          chatContainer.innerHTML = "";
+          snapshot.forEach((doc) => {
+            chatContainer.appendChild(renderWind(doc.data(), user.uid));
+          });
+          if (snapshot.empty) {
+            showNotice("No winds yet. Be the first to post.");
+          }
+        },
+        (error) => {
+          if (activeSource === "winds" && isPermissionDenied(error)) {
+            activeSource = "messages";
+            showNotice("Winds collection is locked by rules. Using fallback feed source.");
+            attachFeedListener(user);
+            return;
+          }
+          showNotice(`Feed unavailable: ${error.message || "permission denied"}`);
+          console.error("Feed listener failed:", error);
+        }
+      );
+    }
+
+    async function postWind(user, text) {
+      const payload = {
+        text,
+        uid: user.uid,
+        nickname: user.displayName || "Anonymous",
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+
+      try {
+        if (activeSource === "winds") {
+          await firebase.firestore().collection("winds").add(payload);
+        } else {
+          await firebase.firestore().collection("messages").add({
+            ...payload,
+            serverId: SERVER_ID,
+            type: "text"
+          });
+        }
+      } catch (error) {
+        if (activeSource === "winds" && isPermissionDenied(error)) {
+          activeSource = "messages";
+          showNotice("Write to winds is blocked. Posting to fallback feed source.");
+          attachFeedListener(user);
+          await firebase.firestore().collection("messages").add({
+            ...payload,
+            serverId: SERVER_ID,
+            type: "text"
+          });
+          return;
+        }
+        throw error;
+      }
+    }
+
     firebase.auth().onAuthStateChanged((user) => {
       if (!user) {
         window.location.href = "login.html";
         return;
       }
 
-      const windsRef = firebase.firestore()
-        .collection("winds")
-        .orderBy("createdAt", "desc")
-        .limit(100);
-
-      windsRef.onSnapshot((snapshot) => {
-        chatContainer.innerHTML = "";
-        snapshot.forEach((doc) => {
-          chatContainer.appendChild(renderWind(doc.data(), user.uid));
-        });
-      });
+      attachFeedListener(user);
 
       sendBtn.addEventListener("click", async () => {
         const text = chatInput.value.trim();
@@ -103,15 +189,15 @@
           return;
         }
 
-        await firebase.firestore().collection("winds").add({
-          text,
-          uid: user.uid,
-          nickname: user.displayName || "Anonymous",
-          createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
-
-        chatInput.value = "";
-        updateCounter();
+        try {
+          await postWind(user, text);
+          chatInput.value = "";
+          updateCounter();
+          clearNotice();
+        } catch (error) {
+          console.error("Post failed:", error);
+          showNotice(`Unable to post wind: ${error.message || "unknown error"}`);
+        }
       });
 
       chatInput.addEventListener("input", updateCounter);
