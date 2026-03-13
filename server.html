@@ -338,6 +338,111 @@
         commentUnsubscribers.set(windDoc.id, unsubscribeComments);
       }
 
+      const actions = document.createElement("div");
+      actions.className = "wind-actions";
+
+      const likeBtn = document.createElement("button");
+      likeBtn.className = "secondary-btn feed-action-btn";
+      likeBtn.textContent = `♥ ${Number(wind.likes) || 0}`;
+
+      const commentToggleBtn = document.createElement("button");
+      commentToggleBtn.className = "secondary-btn feed-action-btn";
+      commentToggleBtn.textContent = "Reply";
+
+      actions.appendChild(likeBtn);
+      actions.appendChild(commentToggleBtn);
+      card.appendChild(actions);
+
+      const commentsWrap = document.createElement("div");
+      commentsWrap.className = "comments-wrap hidden";
+
+      const commentsList = document.createElement("div");
+      commentsList.className = "comments-list";
+
+      const composer = document.createElement("div");
+      composer.className = "comment-compose";
+
+      const commentInput = document.createElement("input");
+      commentInput.type = "text";
+      commentInput.maxLength = 120;
+      commentInput.placeholder = "Write a response...";
+
+      const postCommentBtn = document.createElement("button");
+      postCommentBtn.className = "chat-send-btn";
+      postCommentBtn.textContent = "Post";
+
+      composer.appendChild(commentInput);
+      composer.appendChild(postCommentBtn);
+      commentsWrap.appendChild(commentsList);
+      commentsWrap.appendChild(composer);
+      card.appendChild(commentsWrap);
+
+      const windRef = firebase.firestore().collection("winds").doc(windDoc.id);
+
+      likeBtn.addEventListener("click", async () => {
+        try {
+          await firebase.firestore().runTransaction(async (transaction) => {
+            const snap = await transaction.get(windRef);
+            const nextLikes = (Number(snap.data().likes) || 0) + 1;
+            transaction.update(windRef, { likes: nextLikes });
+          });
+        } catch (error) {
+          showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
+        }
+      });
+
+      commentToggleBtn.addEventListener("click", () => {
+        commentsWrap.classList.toggle("hidden");
+      });
+
+      postCommentBtn.addEventListener("click", async () => {
+        const text = commentInput.value.trim();
+        if (!text) return;
+        if (window.containsBannedWords && window.containsBannedWords(text)) {
+          alert("That response contains blocked words.");
+          return;
+        }
+
+        try {
+          await windRef.collection("comments").add({
+            likes: 0,
+            text,
+            time: firebase.firestore.FieldValue.serverTimestamp(),
+            user: currentUserLabel
+          });
+          commentInput.value = "";
+        } catch (error) {
+          showNotice(`Unable to post response: ${error.message || "unknown error"}`);
+        }
+      });
+
+      if (!commentUnsubscribers.has(windDoc.id)) {
+        const unsubscribeComments = windRef
+          .collection("comments")
+          .orderBy("time", "asc")
+          .onSnapshot((snapshot) => {
+            commentsList.innerHTML = "";
+            snapshot.forEach((commentDoc) => {
+              const rendered = renderComment(commentDoc.data(), currentUserLabel);
+              commentsList.appendChild(rendered.row);
+
+              rendered.likeBtn.addEventListener("click", async () => {
+                try {
+                  await firebase.firestore().runTransaction(async (transaction) => {
+                    const snap = await transaction.get(commentDoc.ref);
+                    const nextLikes = (Number(snap.data().likes) || 0) + 1;
+                    transaction.update(commentDoc.ref, { likes: nextLikes });
+                  });
+                } catch (error) {
+                  showNotice(`Unable to like response: ${error.message || "unknown error"}`);
+                }
+              });
+            });
+          });
+
+        commentUnsubscribers.set(windDoc.id, unsubscribeComments);
+      }
+
       return card;
     }
 
