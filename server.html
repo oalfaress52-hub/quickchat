@@ -2,391 +2,132 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8" />
-<title>Kite — Server</title>
+<title>Kite — Wind Feed</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
+  <main class="feed-page">
+    <header class="feed-header">
+      <h1>Kite</h1>
+      <p>Wind Feed · old Twitter style</p>
+      <button id="logoutBtn" class="secondary-btn">Logout</button>
+    </header>
 
-<!-- ===================== -->
-<!-- Header -->
-<!-- ===================== -->
-<div class="server-header">
-  <h1>Kite — Server</h1>
-  <p id="serverInfo">Server: The Main Server</p>
-</div>
-
-<div class="server-layout">
-
-  <!-- ===================== -->
-  <!-- Chat Section -->
-  <!-- ===================== -->
-  <div class="chat-section">
-    <div class="chat-container" id="chatContainer"></div>
-
-    <div class="chat-input-container">
-      <input
-        type="text"
-        id="chatInput"
-        placeholder="Type a message or paste GIF URL..."
-        autocomplete="off"
-      />
-      <button id="sendBtn">Send</button>
-      <button id="gifBtn">GIF</button>
-    </div>
-  </div>
-
-  <!-- ===================== -->
-  <!-- Games Panel -->
-  <!-- ===================== -->
-  <div class="games-panel" id="gamesPanel">
-    <div class="games-header">
-      <h2>Games</h2>
-      <input
-        type="text"
-        class="games-search"
-        id="gameSearch"
-        placeholder="Search games..."
-      />
-    </div>
-
-    <div class="game-list" id="gameList">
-      <div class="game-card" data-game="fossil">
-        <div class="game-info">
-          <h4>Fossil Clicker</h4>
-          <p>Dig and collect fossils!</p>
-        </div>
-        <button class="open-game-btn">Play</button>
+    <section class="wind-compose">
+      <label for="chatInput">Drop a wind (max 60 chars)</label>
+      <textarea id="chatInput" maxlength="60" placeholder="What's blowing through your head?"></textarea>
+      <div class="wind-compose-footer">
+        <span id="charCounter">0/60</span>
+        <button id="sendBtn" class="chat-send-btn">Post Wind</button>
       </div>
-    </div>
-  </div>
+    </section>
 
-</div>
+    <section id="chatContainer" class="wind-feed" aria-live="polite"></section>
+  </main>
 
-<!-- ===================== -->
-<!-- Game Modal -->
-<!-- ===================== -->
-<div class="game-modal hidden" id="gameModal">
-  <div class="game-modal-card">
-    <div class="game-modal-header">
-      <h3 id="gameTitle">Game</h3>
-      <button class="close-game-btn" id="closeGameModal">×</button>
-    </div>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="app.js"></script>
 
-    <div class="game-modal-body" id="gameContainer">
-      <div class="fossil-game hidden" id="fossilGame">
-        <h3>Fossil Clicker</h3>
-        <p id="fossilCounter">Fossils: 0</p>
-        <button id="digBtn">Dig Fossil</button>
-        <button id="upgradeClickPower">Upgrade Click Power</button>
-      </div>
-    </div>
-  </div>
-</div>
+  <script>
+    const chatContainer = document.getElementById("chatContainer");
+    const chatInput = document.getElementById("chatInput");
+    const sendBtn = document.getElementById("sendBtn");
+    const charCounter = document.getElementById("charCounter");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const MAX_WIND_LENGTH = 60;
 
-<!-- ===================== -->
-<!-- Firebase SDKs -->
-<!-- ===================== -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-<script src="app.js"></script>
+    function renderWind(wind, currentUid) {
+      const card = document.createElement("article");
+      card.className = "wind-card";
 
-<script>
-/* =====================================================
-   DOM REFERENCES
-===================================================== */
-const chatContainer = document.getElementById("chatContainer");
-const chatInput = document.getElementById("chatInput");
-const sendBtn = document.getElementById("sendBtn");
-const gifBtn = document.getElementById("gifBtn");
-
-const gameSearch = document.getElementById("gameSearch");
-const gameList = document.getElementById("gameList");
-
-const gameModal = document.getElementById("gameModal");
-const closeGameModal = document.getElementById("closeGameModal");
-const fossilGame = document.getElementById("fossilGame");
-
-const fossilCounter = document.getElementById("fossilCounter");
-const digBtn = document.getElementById("digBtn");
-const upgradeBtn = document.getElementById("upgradeClickPower");
-
-const bannedWords = [
-  "fuck",
-  "shit",
-  "bitch",
-  "nigger",
-  "cunt",
-  "faggot",
-  "bastard",
-  "nigga",
-  "ballsack",
-  "6 gorillas",
-  "6 bananas",
-  "porn",
-  "egg cell",
-  "ovary",
-  "child porn",
-  "cum",
-  "ovaries",
-  "motherfucker",
-  "mf",
-  "wtf",
-  "apeshit",
-  "boner",
-  "peacock",
-  "cock",
-  "dick",
-  "dickhead",
-];
-
-function containsProfanity(text) {
-  const lower = text.toLowerCase();
-  return bannedWords.some(word =>
-    new RegExp(`\\b${word}\\b`, "i").test(lower)
-  );
-}
-  
-/* =====================================================
-   Fossil Clicker Logic
-===================================================== */
-let fossils = 0;
-let clickPower = 1;
-
-function updateFossilDisplay() {
-  fossilCounter.textContent = `Fossils: ${fossils}`;
-}
-
-digBtn.addEventListener("click", () => {
-  fossils += clickPower;
-  updateFossilDisplay();
-});
-
-upgradeBtn.addEventListener("click", () => {
-  if (fossils >= 10) {
-    fossils -= 10;
-    clickPower++;
-    updateFossilDisplay();
-  } else {
-    alert("Not enough fossils!");
-  }
-});
-
-/* =====================================================
-   System Message Helper
-===================================================== */
-function systemMessage(text) {
-  const div = document.createElement("div");
-  div.className = "chat-message system";
-  div.textContent = text;
-  chatContainer.appendChild(div);
-  chatContainer.scrollTop = chatContainer.scrollHeight;
-}
-
-/* =====================================================
-   Command Handler
-===================================================== */
-let mutedUsers = [];
-
-function handleCommand(input) {
-  const parts = input.slice(1).trim().split(/\s+/);
-  const command = parts[0]?.toLowerCase();
-  const arg = parts.slice(1).join(" ");
-
-  if (!command) return;
-
-  switch (command) {
-    case "mute":
-      if (!arg) return systemMessage("Usage: /mute username");
-      muteUser(arg);
-      break;
-
-    case "ban":
-      if (!arg) return systemMessage("Usage: /ban username");
-      banUser(arg);
-      break;
-
-    case "help":
-      systemMessage("Commands: /mute <user>, /ban <user>, /help");
-      break;
-
-    default:
-      systemMessage(`Unknown command: /${command}`);
-  }
-}
-
-/* =====================================================
-   Command Functions
-===================================================== */
-function muteUser(username) {
-  firebase.firestore().collection("users")
-    .where("displayName", "==", username)
-    .get()
-    .then(snapshot => {
-      if (snapshot.empty) return systemMessage("User not found.");
-      snapshot.forEach(doc => {
-        const uid = doc.id;
-        if (!mutedUsers.includes(uid)) mutedUsers.push(uid);
-        systemMessage(`${username} has been muted.`);
-      });
-    });
-}
-
-function banUser(username) {
-  firebase.firestore().collection("users")
-    .where("displayName", "==", username)
-    .get()
-    .then(snapshot => {
-      if (snapshot.empty) return systemMessage("User not found.");
-      snapshot.forEach(doc => {
-        doc.ref.update({ banned: true }).then(() => {
-          systemMessage(`${username} has been banned.`);
-        });
-      });
-    });
-}
-
-/* =====================================================
-   Firebase Chat
-===================================================== */
-firebase.auth().onAuthStateChanged(currentUser => {
-  if (!currentUser) {
-    window.location.href = "login.html";
-    return;
-  }
-
-  const uid = currentUser.uid;
-  const serverId = "demoServer";
-
-  const dbRef = firebase.firestore()
-    .collection("messages")
-    .where("serverId", "==", serverId)
-    .orderBy("createdAt");
-
-  dbRef.onSnapshot(snapshot => {
-    chatContainer.innerHTML = "";
-    snapshot.forEach(doc => {
-      const data = doc.data();
-      if (mutedUsers.includes(data.uid)) return;
-
-      const div = document.createElement("div");
-      div.className = "chat-message " + (data.uid === uid ? "you" : "other");
+      const header = document.createElement("div");
+      header.className = "wind-meta";
 
       const name = document.createElement("strong");
-      name.textContent = (data.uid === uid ? "You" : data.nickname || "Anonymous") + ": ";
-      div.appendChild(name);
+      const isYou = wind.uid === currentUid;
+      name.textContent = isYou ? "You" : (wind.nickname || "Anonymous");
 
-      if (data.type === "gif" && data.url) {
-        const img = document.createElement("img");
-        img.src = data.url;
-        img.className = "chat-gif";
-        div.appendChild(img);
-      } else {
-        div.appendChild(document.createTextNode(data.text));
+      const time = document.createElement("span");
+      time.textContent = window.formatTimestamp ? window.formatTimestamp(wind.createdAt) : "now";
+
+      const text = document.createElement("p");
+      text.className = "wind-text";
+      text.textContent = wind.text || "";
+
+      header.appendChild(name);
+      header.appendChild(time);
+      card.appendChild(header);
+      card.appendChild(text);
+
+      return card;
+    }
+
+    function updateCounter() {
+      const count = chatInput.value.length;
+      charCounter.textContent = `${count}/${MAX_WIND_LENGTH}`;
+      charCounter.classList.toggle("limit-hit", count >= MAX_WIND_LENGTH);
+    }
+
+    firebase.auth().onAuthStateChanged((user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
       }
 
-      chatContainer.appendChild(div);
+      const windsRef = firebase.firestore()
+        .collection("winds")
+        .orderBy("createdAt", "desc")
+        .limit(100);
+
+      windsRef.onSnapshot((snapshot) => {
+        chatContainer.innerHTML = "";
+        snapshot.forEach((doc) => {
+          chatContainer.appendChild(renderWind(doc.data(), user.uid));
+        });
+      });
+
+      sendBtn.addEventListener("click", async () => {
+        const text = chatInput.value.trim();
+        if (!text) return;
+
+        if (text.length > MAX_WIND_LENGTH) {
+          alert("Winds are limited to 60 characters.");
+          return;
+        }
+
+        if (window.containsBannedWords && window.containsBannedWords(text)) {
+          alert("That wind contains blocked words.");
+          return;
+        }
+
+        await firebase.firestore().collection("winds").add({
+          text,
+          uid: user.uid,
+          nickname: user.displayName || "Anonymous",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        chatInput.value = "";
+        updateCounter();
+      });
+
+      chatInput.addEventListener("input", updateCounter);
+      chatInput.addEventListener("keydown", (event) => {
+        if ((event.ctrlKey || event.metaKey) && event.key === "Enter") {
+          sendBtn.click();
+        }
+      });
+
+      logoutBtn.addEventListener("click", async () => {
+        await firebase.auth().signOut();
+        window.location.href = "login.html";
+      });
+
+      updateCounter();
     });
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  });
-
-  /* ==========================
-     Send Button
-  ========================== */
-  function systemMessage(text) {
-    const div = document.createElement("div");
-    div.className = "chat-message system";
-    div.textContent = text;
-    chatContent.appendChild(div);
-    chatContainer.scrollTop = chatContainer.scrollHeight;
-  }
-
-  const bannedWords = ["fuck", "shit", "bitch", "nigger", "cunt", "faggot", "bastard", "nigga", "ballsack", "6 gorillas", "6 bananas", "porn", "egg cell", "ovary", "child porn", "cum", "ovaries", "motherfucker", "mf", "wtf", "apeshit", "boner", "peacock", "cock", "dick", "dickhead"];
-
-  function containsProfanity(text) {
-    return bannedWords.some(word =>
-      new RegExp(`\\b${word}\\b`, "i").test(text)
-    );
-  }
-  
-  sendBtn.onclick = async () => {
-    const input = chatInput.value.trim();
-    if (!input) return;
-
-    // Commands
-    if (input.startsWith("/")) {
-      handleCommand(input);
-      chatInput.value = "";
-      return;
-    }
-
-    // Profanity filter
-    if (containsProfanity(input)) {
-      systemMessage("⚠️ Message blocked: inappropriate language.");
-      chatInput.value = "";
-      return;
-    }
-
-    const isGif = /\.gif(\?.*)?$/i.test(input);
-
-    await firebase.firestore().collection("messages").add({
-      type: isGif ? "gif" : "text",
-      text: isGif ? null : input,
-      url: isGif ? input : null,
-      serverId,
-      uid,
-      nickname: firebase.auth().currentUser.displayName || null,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-
-    chatInput.value = "";
-  };
-
-  /* ==========================
-     GIF Button
-  ========================== */
-  gifBtn.addEventListener("click", () => {
-    chatInput.value = "https://media.tenor.com/0G9B5kEo9XkAAAAC/cat.gif";
-    chatInput.focus();
-  });
-});
-
-/* =====================================================
-   Games System
-===================================================== */
-
-/* Search */
-gameSearch.addEventListener("input", () => {
-  const filter = gameSearch.value.toLowerCase();
-  const cards = gameList.querySelectorAll(".game-card");
-  cards.forEach(card => {
-    const name = card.querySelector("h4").textContent.toLowerCase();
-    card.style.display = name.includes(filter) ? "flex" : "none";
-  });
-});
-
-/* Open Game */
-gameList.addEventListener("click", e => {
-  const btn = e.target.closest(".open-game-btn");
-  if (!btn) return;
-
-  const card = btn.closest(".game-card");
-  const game = card.dataset.game;
-
-  if (game === "fossil") {
-    fossilGame.classList.remove("hidden");
-    gameModal.classList.remove("hidden");
-  }
-});
-
-/* Close Game */
-closeGameModal.addEventListener("click", () => {
-  fossilGame.classList.add("hidden");
-  gameModal.classList.add("hidden");
-});
-</script>
-
+  </script>
 </body>
 </html>
-

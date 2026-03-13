@@ -747,3 +747,101 @@ textarea {
     max-width: 88%;
   }
 }
+
+/* ==================================================
+   WIND FEED (OLD TWITTER STYLE)
+   ================================================== */
+.feed-page {
+  width: min(760px, 100%);
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 24px 16px 36px;
+}
+
+.feed-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.feed-header h1 {
+  margin: 0;
+  font-size: 1.5rem;
+}
+
+.feed-header p {
+  margin: 0;
+  color: var(--text-soft);
+}
+
+.feed-header button {
+  margin-left: auto;
+}
+
+.wind-compose {
+  background: #0b1220;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 14px;
+}
+
+.wind-compose label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+  color: var(--text-soft);
+}
+
+.wind-compose textarea {
+  width: 100%;
+  min-height: 84px;
+  resize: vertical;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-soft);
+  background: #020617;
+  color: var(--text);
+  padding: 10px;
+}
+
+.wind-compose-footer {
+  margin-top: 10px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+#charCounter {
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+#charCounter.limit-hit {
+  color: #f59e0b;
+}
+
+.wind-feed {
+  margin-top: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.wind-card {
+  background: #0b1220;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 12px;
+}
+
+.wind-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  color: var(--text-soft);
+}
+
+.wind-text {
+  margin: 8px 0 0;
+  font-size: 0.95rem;
+}
