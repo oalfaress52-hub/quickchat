@@ -576,6 +576,8 @@
       });
 
       homeTabBtn.addEventListener("click", () => {
+        hashtagFilter = "";
+        hashtagSearchInput.value = "";
         setActiveView("home");
         attachFeedListener(user);
       });

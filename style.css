@@ -1485,7 +1485,8 @@ body.light-mode .right-toolbar-note {
 }
 
 body:not(.light-mode) {
-  background: #020617;
+  /* Keep dark-mode text colors while allowing the global JPG background to show. */
+  color: #e5e7eb;
 }
 
 body:not(.light-mode) .feed-sidebar,
@@ -2047,4 +2048,22 @@ body {
   .profile-page-shell .right-toolbar {
     display: none;
   }
+}
+
+/* Home + Explore should feel like winds floating over the page background */
+.feed-main,
+.feed-main-inner,
+.wind-feed {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.wind-feed {
+  padding: 10px 6px 24px;
+}
+
+.wind-card {
+  background: rgba(8, 14, 30, 0.78);
 }
