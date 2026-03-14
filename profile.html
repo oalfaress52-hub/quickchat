@@ -7,101 +7,75 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div class="auth-wrapper">
-    <div class="profile-card">
-      <h1>Kite</h1>
-      <h2>Your Profile</h2>
+  <main class="profile-layout">
+    <aside class="profile-sidebar">
+      <div class="profile-sidebar-brand">🐦 Kite</div>
 
-      <input type="text" id="nicknameInput" placeholder="Nickname" disabled />
-      <input type="email" id="emailInput" placeholder="Email" disabled />
+      <nav class="profile-nav" aria-label="Main navigation">
+        <button id="goHomeBtn" class="profile-nav-btn" type="button">🏠 Home</button>
+        <button id="goExploreBtn" class="profile-nav-btn" type="button"># Explore</button>
+        <button class="profile-nav-btn active" type="button">👤 Profile</button>
+      </nav>
 
-      <button id="editBtn" class="secondary">Edit</button>
-      <button id="saveBtn" class="primary hidden">Save</button>
-      <button id="cancelBtn" class="secondary hidden">Cancel</button>
+      <div class="profile-sidebar-actions">
+        <button id="goFeedBtn" class="primary-btn" type="button">Open Wind Feed</button>
+        <button id="logoutBtn" class="secondary-btn danger" type="button">Logout</button>
+      </div>
+    </aside>
 
-      <button id="chatBtn" class="primary">Open Wind Feed</button>
-      <button id="logoutBtn" class="danger">Logout</button>
+    <section class="profile-main">
+      <header class="profile-banner"></header>
 
+      <section class="profile-identity-card">
+        <img id="profileAvatar" class="profile-avatar-large" alt="Profile picture" src="images/pfp/a.png" />
+
+        <div class="profile-headline">
+          <h1 id="nicknameValue">-</h1>
+          <p id="handleValue" class="profile-handle">@-</p>
+          <p id="descriptionValue" class="profile-description">-</p>
+          <p class="profile-meta">Kite account</p>
+        </div>
+
+        <button id="editProfileBtn" class="secondary-btn" type="button">Edit profile</button>
+      </section>
+
+      <section id="editPanel" class="profile-edit-panel hidden">
+        <h3>Edit profile</h3>
+        <div class="profile-edit-row">
+          <label>Nickname</label>
+          <input id="nicknameEditInput" type="text" maxlength="15" placeholder="Nickname" />
+          <small id="nicknameChangesLeft">Nickname changes left: 15</small>
+        </div>
+        <div class="profile-edit-row">
+          <label>@ handle</label>
+          <input id="handleEditInput" type="text" maxlength="24" placeholder="@yourhandle" />
+          <small id="handleChangesLeft">@ changes left: 15</small>
+        </div>
+        <div class="profile-edit-row">
+          <label>Description</label>
+          <textarea id="descriptionEditInput" maxlength="220" placeholder="About you..."></textarea>
+          <small id="descriptionChangesLeft">Description changes left: 15</small>
+        </div>
+        <div class="profile-edit-actions">
+          <button id="saveProfileBtn" class="primary-btn" type="button">Save profile</button>
+          <button id="cancelEditBtn" class="secondary-btn" type="button">Cancel</button>
+        </div>
+      </section>
+
+      <section class="profile-tabs">
+        <button id="windsTabBtn" class="profile-tab active" type="button">Winds</button>
+        <button id="repliesTabBtn" class="profile-tab" type="button">Replies</button>
+      </section>
+
+      <section id="profileFeed" class="profile-feed"></section>
       <p id="profileMsg" class="switch hidden"></p>
-    </div>
-  </div>
+    </section>
+  </main>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <!-- App logic -->
   <script src="app.js"></script>
-
-  <script>
-    const nicknameInput = document.getElementById("nicknameInput");
-    const emailInput = document.getElementById("emailInput");
-    const editBtn = document.getElementById("editBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const chatBtn = document.getElementById("chatBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const profileMsg = document.getElementById("profileMsg");
-
-    firebase.auth().onAuthStateChanged(async user => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      emailInput.value = user.email || "";
-      nicknameInput.value = user.displayName || "";
-
-      const db = firebase.firestore();
-      const userRef = db.collection("users").doc(user.uid);
-
-      const snap = await userRef.get();
-      if (snap.exists && snap.data().nickname) {
-        nicknameInput.value = snap.data().nickname;
-      }
-
-      editBtn.onclick = () => {
-        nicknameInput.disabled = false;
-        editBtn.classList.add("hidden");
-        saveBtn.classList.remove("hidden");
-        cancelBtn.classList.remove("hidden");
-      };
-
-      cancelBtn.onclick = () => {
-        nicknameInput.value = user.displayName || "";
-        nicknameInput.disabled = true;
-        saveBtn.classList.add("hidden");
-        cancelBtn.classList.add("hidden");
-        editBtn.classList.remove("hidden");
-      };
-
-      saveBtn.onclick = async () => {
-        const newNick = nicknameInput.value.trim();
-        if (!newNick) return;
-
-        await user.updateProfile({ displayName: newNick });
-        await userRef.set({ nickname: newNick }, { merge: true });
-
-        nicknameInput.disabled = true;
-        saveBtn.classList.add("hidden");
-        cancelBtn.classList.add("hidden");
-        editBtn.classList.remove("hidden");
-
-        profileMsg.textContent = "Profile updated.";
-        profileMsg.classList.remove("hidden");
-        setTimeout(() => profileMsg.classList.add("hidden"), 2000);
-      };
-
-      chatBtn.onclick = () => {
-        window.location.href = "server.html";
-      };
-
-      logoutBtn.onclick = async () => {
-        await firebase.auth().signOut();
-        window.location.href = "login.html";
-      };
-    });
-  </script>
+  <script src="profile.js"></script>
 </body>
 </html>
