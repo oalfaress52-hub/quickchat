@@ -18,8 +18,8 @@
       </div>
 
       <nav class="feed-nav" aria-label="Feed views">
-        <button id="homeTabBtn" class="sidebar-btn active" type="button">Home</button>
-        <button id="exploreTabBtn" class="sidebar-btn" type="button">Explore</button>
+        <button id="homeTabBtn" class="sidebar-btn active" type="button">🏠 Home</button>
+        <button id="exploreTabBtn" class="sidebar-btn" type="button">🌎 Explore</button>
       </nav>
 
       <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button">Logout</button>
@@ -129,6 +129,13 @@
       countEl.textContent = String(Number(likes) || 0);
     }
 
+
+    async function incrementLike(docRef) {
+      await docRef.update({
+        likes: firebase.firestore.FieldValue.increment(1)
+      });
+    }
+
     async function loadHomeAuthors(user) {
       const db = firebase.firestore();
       const authors = new Set();
@@ -192,21 +199,10 @@
       row.appendChild(commentLike.button);
 
       commentLike.button.addEventListener("click", async () => {
-        const currentlyLiked = likedCommentIds.has(commentKey);
-        const delta = currentlyLiked ? -1 : 1;
         try {
-          await firebase.firestore().runTransaction(async (transaction) => {
-            const snap = await transaction.get(commentDoc.ref);
-            const currentLikes = Number(snap.data()?.likes) || 0;
-            const nextLikes = Math.max(0, currentLikes + delta);
-            transaction.update(commentDoc.ref, { likes: nextLikes });
-          });
-          if (currentlyLiked) {
-            likedCommentIds.delete(commentKey);
-          } else {
-            likedCommentIds.add(commentKey);
-          }
-          updateLikeVisual(commentLike.icon, commentLike.count, !currentlyLiked, (Number(comment.likes) || 0) + delta);
+          await incrementLike(commentDoc.ref);
+          likedCommentIds.add(commentKey);
+          updateLikeVisual(commentLike.icon, commentLike.count, true, (Number(commentLike.count.textContent) || 0) + 1);
         } catch (error) {
           showNotice(`Unable to like response: ${error.message || "unknown error"}`);
         }
@@ -284,24 +280,10 @@
       });
 
       windLike.button.addEventListener("click", async () => {
-        const currentlyLiked = likedWindIds.has(windDoc.id);
-        const delta = currentlyLiked ? -1 : 1;
-
         try {
-          await firebase.firestore().runTransaction(async (transaction) => {
-            const snap = await transaction.get(windRef);
-            const currentLikes = Number(snap.data()?.likes) || 0;
-            const nextLikes = Math.max(0, currentLikes + delta);
-            transaction.update(windRef, { likes: nextLikes });
-          });
-
-          if (currentlyLiked) {
-            likedWindIds.delete(windDoc.id);
-          } else {
-            likedWindIds.add(windDoc.id);
-          }
-
-          updateLikeVisual(windLike.icon, windLike.count, !currentlyLiked, (Number(wind.likes) || 0) + delta);
+          await incrementLike(windRef);
+          likedWindIds.add(windDoc.id);
+          updateLikeVisual(windLike.icon, windLike.count, true, (Number(windLike.count.textContent) || 0) + 1);
         } catch (error) {
           showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
         }
