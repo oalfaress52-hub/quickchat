@@ -851,3 +851,285 @@ textarea {
   margin: 8px 0 0;
   font-size: 0.95rem;
 }
+
+
+.wind-actions {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.feed-action-btn {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+}
+
+.comments-wrap {
+  margin-top: 12px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-row {
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.comment-row p {
+  margin: 6px 0;
+  font-size: 0.85rem;
+}
+
+.comment-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.comment-compose {
+  margin-top: 10px;
+  display: flex;
+  gap: 8px;
+}
+
+.comment-compose input {
+  flex: 1;
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--text);
+}
+
+/* ==================================================
+   WIND FEED LAYOUT V2
+   ================================================== */
+.feed-page {
+  width: 100%;
+  max-width: 1180px;
+  margin: 0 auto;
+  min-height: 100vh;
+  padding: 16px;
+  display: grid;
+  grid-template-columns: 260px minmax(0, 1fr);
+  gap: 16px;
+}
+
+.feed-sidebar {
+  background: #0b1220;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-md);
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  position: sticky;
+  top: 16px;
+  align-self: start;
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+}
+
+.sidebar-logo {
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  object-fit: cover;
+  background: #1f2937;
+}
+
+.feed-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sidebar-logout {
+  margin-top: auto;
+}
+
+.feed-main {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.feed-header {
+  align-items: flex-start;
+  flex-direction: column;
+  margin-bottom: 0;
+}
+
+.feed-header h1 {
+  margin: 0;
+}
+
+.feed-header p {
+  font-size: 0.9rem;
+}
+
+.wind-actions {
+  margin-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.wind-comments-hint {
+  font-size: 0.76rem;
+  color: var(--text-soft);
+}
+
+.feed-action-btn {
+  padding: 6px 10px;
+  font-size: 0.75rem;
+  width: auto;
+}
+
+.comments-wrap {
+  margin-top: 10px;
+  border-top: 1px solid var(--border-soft);
+  padding-top: 10px;
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-row {
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.comment-header {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+.comment-row p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+
+.comment-compose {
+  margin-top: 8px;
+  display: flex;
+  gap: 8px;
+}
+
+.comment-compose input {
+  flex: 1;
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: 999px;
+  padding: 8px 12px;
+  color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .feed-page {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-sidebar {
+    position: static;
+  }
+
+  .feed-nav {
+    flex-direction: row;
+  }
+}
+
+/* ==================================================
+   WIND FEED LAYOUT V3 (SIMPLE SPLIT)
+   ================================================== */
+.feed-page {
+  width: 100%;
+  max-width: none;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 33.3333% 66.6667%;
+  gap: 0;
+}
+
+.feed-sidebar {
+  height: 100vh;
+  overflow-y: auto;
+  border-right: 1px solid var(--border-soft);
+  border-radius: 0;
+  padding: 20px;
+  background: #0b1220;
+}
+
+.feed-main {
+  height: 100vh;
+  overflow-y: auto;
+  padding: 20px;
+  background: radial-gradient(circle at top, #060b17, #020617);
+}
+
+.feed-main-inner {
+  width: min(740px, 100%);
+  margin: 0 auto;
+}
+
+.feed-header {
+  margin-bottom: 14px;
+}
+
+.wind-card {
+  cursor: pointer;
+}
+
+.wind-comments-hint {
+  font-size: 0.75rem;
+  color: var(--text-soft);
+}
+
+@media (max-width: 900px) {
+  .feed-page {
+    grid-template-columns: 1fr;
+  }
+
+  .feed-sidebar,
+  .feed-main {
+    height: auto;
+    max-height: none;
+  }
+
+  .feed-sidebar {
+    border-right: none;
+    border-bottom: 1px solid var(--border-soft);
+  }
+}
