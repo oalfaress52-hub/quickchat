@@ -1485,7 +1485,8 @@ body.light-mode .right-toolbar-note {
 }
 
 body:not(.light-mode) {
-  background: #020617;
+  /* Keep dark-mode text colors while allowing the global JPG background to show. */
+  color: #e5e7eb;
 }
 
 body:not(.light-mode) .feed-sidebar,
@@ -2047,4 +2048,37 @@ body {
   .profile-page-shell .right-toolbar {
     display: none;
   }
+}
+
+/* Home + Explore: keep winds floating over the background without affecting Profile */
+body.feed-view .feed-main {
+  background: rgba(8, 14, 30, 0.4);
+  border-left: none;
+  border-right: none;
+}
+
+body.feed-view .feed-main-inner {
+  background: transparent;
+}
+
+body.feed-view .wind-feed {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 10px 6px 24px;
+}
+
+body.feed-view .wind-card {
+  background: rgba(8, 14, 30, 0.78);
+}
+
+/* Keep Profile readable/solid and avoid accidental transparency regressions */
+body.profile-view .feed-main,
+body.profile-view .profile-main,
+body.profile-view .profile-feed-card,
+body.profile-view .profile-edit-panel,
+body.profile-view .profile-identity-card,
+body.profile-view .profile-tabs {
+  background: rgba(8, 14, 30, 0.72);
 }
