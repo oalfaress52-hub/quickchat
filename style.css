@@ -1485,7 +1485,8 @@ body.light-mode .right-toolbar-note {
 }
 
 body:not(.light-mode) {
-  background: #020617;
+  /* Keep dark-mode text colors while allowing the global JPG background to show. */
+  color: #e5e7eb;
 }
 
 body:not(.light-mode) .feed-sidebar,
@@ -2047,4 +2048,407 @@ body {
   .profile-page-shell .right-toolbar {
     display: none;
   }
+}
+
+/* Home + Explore: keep picture only inside wind cards (not under toolbars) */
+body.feed-view {
+  background-image: none;
+  background-color: #1a1a28;
+}
+
+body.feed-view .feed-main {
+  background-color: rgba(8, 14, 30, 0.44);
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.22), rgba(35, 12, 10, 0.2)),
+    url("images/background.jpg");
+  background-position: center;
+  background-size: cover;
+  border-left: none;
+  border-right: none;
+}
+
+body.feed-view .feed-main-inner {
+  background: transparent;
+}
+
+body.feed-view .wind-feed {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 10px 6px 24px;
+}
+
+body.feed-view .wind-card {
+  background: rgba(8, 14, 30, 0.78);
+}
+
+
+body.profile-view {
+  background-image: none;
+  background-color: #020617;
+}
+
+/* Keep Profile readable/solid and avoid accidental transparency regressions */
+body.profile-view .feed-main,
+body.profile-view .profile-main,
+body.profile-view .profile-feed-card,
+body.profile-view .profile-edit-panel,
+body.profile-view .profile-identity-card,
+body.profile-view .profile-tabs {
+  background: rgba(8, 14, 30, 0.72);
+}
+
+/* Twitter-like feed polish + like-state feedback */
+body.feed-view .feed-header h1 {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+body.feed-view .feed-header p {
+  font-size: 0.9rem;
+}
+
+body.feed-view .wind-compose {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  border-radius: 16px;
+}
+
+body.feed-view .wind-card {
+  border-radius: 16px;
+  border: 1px solid rgba(191, 219, 254, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+body.feed-view .wind-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+}
+
+.feed-like-btn.liked {
+  opacity: 0.92;
+  cursor: pointer;
+}
+
+.feed-like-btn.pending {
+  opacity: 0.65;
+  pointer-events: none;
+}
+
+/* Cloud composer: uses your provided images/question_cloud.png asset */
+body.feed-view .wind-compose {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  background: transparent;
+  background-image: url("images/question_cloud.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 100% 100%;
+  min-height: 250px;
+  padding: 42px 48px 40px;
+}
+
+body.feed-view .wind-compose label {
+  margin-bottom: 12px;
+  color: #0f172a;
+  font-weight: 700;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+body.feed-view .wind-compose textarea {
+  min-height: 96px;
+  background: rgba(255, 255, 255, 0.86);
+  color: #0f172a;
+  border: 1px solid rgba(148, 163, 184, 0.75);
+}
+
+body.feed-view .wind-compose-footer {
+  margin-top: 14px;
+}
+
+body.feed-view #charCounter {
+  color: #334155;
+  font-weight: 600;
+}
+
+body.feed-view #feedNotice {
+  color: #7c2d12;
+  font-weight: 600;
+}
+
+@media (max-width: 900px) {
+  body.feed-view .wind-compose {
+    min-height: 220px;
+    padding: 34px 26px 30px;
+    background-size: cover;
+  }
+}
+
+/* Compose cloud alignment fix: keep cloud behind controls, remove harsh white box */
+body.feed-view .wind-compose {
+  background: transparent;
+  background-image: none;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  min-height: auto;
+  padding: 18px 18px 64px;
+  position: sticky;
+  top: 12px;
+  overflow: visible;
+}
+
+body.feed-view .wind-compose::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: -8px;
+  transform: translateX(-50%);
+  width: min(680px, 94%);
+  height: 170px;
+  background-image: url("images/question_cloud.png");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: contain;
+  pointer-events: none;
+  z-index: 0;
+}
+
+body.feed-view .wind-compose > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.feed-view .wind-compose textarea {
+  min-height: 96px;
+  background: rgba(2, 6, 23, 0.58);
+  color: #e2e8f0;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+}
+
+body.feed-view .wind-compose textarea::placeholder {
+  color: #cbd5e1;
+}
+
+body.feed-view .wind-compose label,
+body.feed-view #charCounter,
+body.feed-view #feedNotice {
+  color: #e2e8f0;
+  text-shadow: none;
+}
+
+@media (max-width: 900px) {
+  body.feed-view .wind-compose {
+    padding: 14px 12px 56px;
+  }
+
+  body.feed-view .wind-compose::after {
+    width: 96%;
+    height: 130px;
+    bottom: -6px;
+  }
+}
+
+/* Final composer behavior: the full "What's happening?" box is the cloud texture */
+body.feed-view .wind-compose {
+  background-image: url("images/question_cloud.png") !important;
+  background-repeat: no-repeat !important;
+  background-position: center !important;
+  background-size: 100% 100% !important;
+  min-height: 300px !important;
+  padding: 44px 52px 54px !important;
+  overflow: hidden !important;
+}
+
+body.feed-view .wind-compose::after {
+  content: none !important;
+}
+
+body.feed-view .wind-compose > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.feed-view .wind-compose textarea {
+  background: rgba(15, 23, 42, 0.42) !important;
+  color: #e2e8f0 !important;
+  border: 1px solid rgba(148, 163, 184, 0.5) !important;
+}
+
+body.feed-view .wind-compose label,
+body.feed-view #charCounter,
+body.feed-view #feedNotice {
+  color: #e2e8f0 !important;
+}
+
+@media (max-width: 900px) {
+  body.feed-view .wind-compose {
+    min-height: 250px !important;
+    padding: 30px 22px 40px !important;
+  }
+}
+
+/* ==================================================
+   FINISHING PASS — COHESIVE APP LOOK
+   ================================================== */
+body.feed-view,
+body.profile-view {
+  color: #e2e8f0;
+}
+
+body.feed-view .feed-page,
+body.profile-view .feed-page {
+  gap: 14px;
+  padding: 14px;
+}
+
+body.feed-view .feed-sidebar,
+body.feed-view .right-toolbar,
+body.profile-view .feed-sidebar,
+body.profile-view .right-toolbar,
+body.profile-view .profile-main {
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  border-radius: 18px;
+  box-shadow: 0 12px 34px rgba(2, 6, 23, 0.38);
+}
+
+body.feed-view .feed-sidebar,
+body.feed-view .right-toolbar,
+body.profile-view .feed-sidebar,
+body.profile-view .right-toolbar {
+  padding: 18px;
+}
+
+body.feed-view .feed-main,
+body.profile-view .profile-main {
+  border-radius: 20px;
+}
+
+body.feed-view .feed-header {
+  padding: 8px 4px 0;
+  margin-bottom: 14px;
+}
+
+body.feed-view .feed-header h1,
+body.profile-view .profile-header h1 {
+  font-size: clamp(1.35rem, 1.9vw, 1.7rem);
+  font-weight: 800;
+}
+
+body.feed-view .feed-header p,
+body.profile-view .profile-handle,
+body.profile-view .profile-meta {
+  color: #b7c5d8;
+}
+
+body.feed-view .sidebar-btn,
+body.profile-view .sidebar-btn,
+body.profile-view .profile-tab,
+body.feed-view .secondary-btn,
+body.profile-view .secondary-btn {
+  border-radius: 12px;
+  transition: transform 0.14s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+}
+
+body.feed-view .sidebar-btn:hover,
+body.profile-view .sidebar-btn:hover,
+body.profile-view .profile-tab:hover,
+body.feed-view .secondary-btn:hover,
+body.profile-view .secondary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.35);
+}
+
+body.feed-view .wind-compose {
+  border-radius: 22px !important;
+}
+
+body.feed-view .wind-compose textarea,
+body.feed-view .discover-search input,
+body.feed-view .right-search,
+body.profile-view .profile-edit-row input,
+body.profile-view .profile-edit-row textarea {
+  border-radius: 12px;
+}
+
+body.feed-view .wind-card,
+body.profile-view .profile-feed-card,
+body.profile-view .profile-edit-panel,
+body.profile-view .profile-identity-card {
+  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 10px 24px rgba(2, 6, 23, 0.3);
+}
+
+body.feed-view .wind-text,
+body.profile-view .profile-feed-text {
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+body.feed-view .wind-meta,
+body.profile-view .profile-feed-meta {
+  color: #9fb1c7;
+}
+
+body.feed-view .chat-send-btn,
+body.profile-view .primary-btn {
+  border-radius: 999px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+body.feed-view .feed-like-btn {
+  border-radius: 999px;
+  min-width: 56px;
+}
+
+body.feed-view .feed-like-btn.liked {
+  border-color: rgba(99, 102, 241, 0.8);
+  box-shadow: inset 0 0 0 1px rgba(99, 102, 241, 0.35);
+}
+
+body.profile-view .profile-tabs {
+  border-radius: 14px;
+  overflow: hidden;
+}
+
+body.profile-view .profile-tab.active {
+  background: rgba(99, 102, 241, 0.12);
+}
+
+@media (max-width: 1000px) {
+  body.feed-view .feed-page,
+  body.profile-view .feed-page {
+    padding: 10px;
+    gap: 10px;
+  }
+}
+
+/* Own-wind delete action */
+body.feed-view .wind-delete-btn {
+  border: 1px solid rgba(248, 113, 113, 0.65);
+  background: rgba(127, 29, 29, 0.2);
+  color: #fecaca;
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+body.feed-view .wind-delete-btn:hover {
+  background: rgba(127, 29, 29, 0.34);
+  border-color: rgba(248, 113, 113, 0.85);
+}
+
+body.feed-view .wind-delete-btn.pending {
+  opacity: 0.65;
+  pointer-events: none;
 }
