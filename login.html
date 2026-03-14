@@ -50,16 +50,29 @@
   <script src="app.js"></script>
 
   <script>
+    const reportLoadStatus = window.reportLoadStatus || ((name, error) => {
+      if (error) {
+        console.error(`error "${name}" didnt load ❌`, error);
+      } else {
+        console.info(`"${name}" succesfully loaded ✔`);
+      }
+    });
+
     const form = document.getElementById("loginForm");
     const passwordInput = document.getElementById("password");
     const toggle = document.getElementById("togglePassword");
     const errorMsg = document.getElementById("errorMsg");
 
-    toggle.onclick = () => {
-      const hidden = passwordInput.type === "password";
-      passwordInput.type = hidden ? "text" : "password";
-      toggle.textContent = hidden ? "Hide" : "Show";
-    };
+    try {
+      toggle.onclick = () => {
+        const hidden = passwordInput.type === "password";
+        passwordInput.type = hidden ? "text" : "password";
+        toggle.textContent = hidden ? "Hide" : "Show";
+      };
+      reportLoadStatus("Login controls");
+    } catch (err) {
+      reportLoadStatus("Login controls", err);
+    }
 
     form.onsubmit = async (e) => {
       e.preventDefault();
@@ -70,9 +83,10 @@
 
       try {
         await firebase.auth().signInWithEmailAndPassword(email, password);
+        reportLoadStatus("Login authentication");
         window.location.href = "profile.html";
       } catch (err) {
-        console.error(err);
+        reportLoadStatus("Login authentication", err);
         errorMsg.textContent = err.message;
       }
     };
