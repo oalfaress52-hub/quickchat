@@ -23,22 +23,24 @@
     </aside>
 
     <section class="feed-main">
-      <header class="feed-header">
-        <h1 id="feedTitle">Home</h1>
-        <p id="feedSubtitle">Winds from people you follow + who they follow.</p>
-      </header>
+      <div class="feed-main-inner">
+        <header class="feed-header">
+          <h1 id="feedTitle">Home</h1>
+          <p id="feedSubtitle">Winds from people you follow and who they follow.</p>
+        </header>
 
-      <section class="wind-compose">
-        <label for="chatInput">Drop a wind (max 60 chars)</label>
-        <textarea id="chatInput" maxlength="60" placeholder="What's blowing through your head?"></textarea>
-        <div class="wind-compose-footer">
-          <span id="charCounter">0/60</span>
-          <button id="sendBtn" class="chat-send-btn" type="button">Post Wind</button>
-        </div>
-        <p id="feedNotice" class="feed-notice hidden"></p>
-      </section>
+        <section class="wind-compose">
+          <label for="chatInput">Drop a wind (max 60 chars)</label>
+          <textarea id="chatInput" maxlength="60" placeholder="What's blowing through your head?"></textarea>
+          <div class="wind-compose-footer">
+            <span id="charCounter">0/60</span>
+            <button id="sendBtn" class="chat-send-btn" type="button">Post Wind</button>
+          </div>
+          <p id="feedNotice" class="feed-notice hidden"></p>
+        </section>
 
-      <section id="chatContainer" class="wind-feed" aria-live="polite"></section>
+        <section id="chatContainer" class="wind-feed" aria-live="polite"></section>
+      </div>
     </section>
   </main>
 
@@ -75,103 +77,49 @@
       feedNotice.classList.add("hidden");
     }
 
+    function normalizeId(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
     function clearCommentListeners() {
       commentUnsubscribers.forEach((unsubscribe) => unsubscribe());
       commentUnsubscribers.clear();
     }
 
-    function normalizeIdentifier(value) {
-      return String(value || "").trim().toLowerCase();
-    }
-
-    function collectFromMaybeObject(value, bag) {
-      if (!value) return;
-      if (typeof value === "string") {
-        const id = normalizeIdentifier(value);
-        if (id) bag.add(id);
-        return;
-      }
-      if (typeof value === "object") {
-        ["uid", "id", "user", "username", "email", "displayName"].forEach((key) => {
-          const maybe = normalizeIdentifier(value[key]);
-          if (maybe) bag.add(maybe);
-        });
-      }
-    }
-
-    function collectUserIdentifiers(userData, uid) {
-      const ids = new Set();
-      collectFromMaybeObject(userData, ids);
-      [uid, userData?.user, userData?.username, userData?.displayName, userData?.email].forEach((v) => {
-        const id = normalizeIdentifier(v);
-        if (id) ids.add(id);
-      });
-      return ids;
-    }
-
-    function collectFollowingList(userData) {
-      const followingList = [];
-      ["following", "follows", "followingUsers", "followingIds"].forEach((field) => {
-        const value = userData?.[field];
-        if (Array.isArray(value)) {
-          followingList.push(...value);
-        }
-      });
-      return followingList;
-    }
-
     async function loadHomeAuthors(user) {
       const db = firebase.firestore();
-      const collected = new Set();
-      const directFollowing = [];
-
-      const addSelf = () => {
-        [user.uid, user.email, user.displayName].forEach((v) => {
-          const id = normalizeIdentifier(v);
-          if (id) collected.add(id);
-        });
-      };
-
-      addSelf();
+      const authors = new Set();
+      const selfIds = [user.uid, user.email, user.displayName].map(normalizeId).filter(Boolean);
+      selfIds.forEach((id) => authors.add(id));
 
       try {
-        const userSnap = await db.collection("users").doc(user.uid).get();
-        const userData = userSnap.exists ? userSnap.data() : {};
-        collectUserIdentifiers(userData, user.uid).forEach((id) => collected.add(id));
-        directFollowing.push(...collectFollowingList(userData));
-      } catch (error) {
-        console.warn("Unable to read your user profile for follows:", error);
-      }
+        const meSnap = await db.collection("users").doc(user.uid).get();
+        const me = meSnap.exists ? meSnap.data() : {};
+        const myFollowing = Array.isArray(me.following) ? me.following : [];
+        const followingIds = myFollowing.map(normalizeId).filter(Boolean);
 
-      const uniqueDirect = new Set();
-      directFollowing.forEach((entry) => {
-        collectFromMaybeObject(entry, uniqueDirect);
-      });
+        followingIds.forEach((id) => authors.add(id));
 
-      uniqueDirect.forEach((id) => collected.add(id));
-
-      for (const followedId of uniqueDirect) {
-        try {
-          const followedSnap = await db.collection("users").doc(followedId).get();
-          if (!followedSnap.exists) continue;
-
-          const followedData = followedSnap.data();
-          collectUserIdentifiers(followedData, followedId).forEach((id) => collected.add(id));
-
-          collectFollowingList(followedData).forEach((entry) => {
-            collectFromMaybeObject(entry, collected);
-          });
-        } catch (error) {
-          console.warn(`Unable to read followed profile (${followedId}):`, error);
+        for (const followedId of followingIds) {
+          try {
+            const followedSnap = await db.collection("users").doc(followedId).get();
+            if (!followedSnap.exists) continue;
+            const followed = followedSnap.data();
+            const secondHop = Array.isArray(followed.following) ? followed.following : [];
+            secondHop.map(normalizeId).filter(Boolean).forEach((id) => authors.add(id));
+          } catch (error) {
+            console.warn("Could not load followed user:", followedId, error);
+          }
         }
+      } catch (error) {
+        console.warn("Could not load following list:", error);
       }
 
-      return collected;
+      return authors;
     }
 
     function matchesHomeFeed(wind) {
-      const authorId = normalizeIdentifier(wind.user);
-      return homeAuthors.has(authorId);
+      return homeAuthors.has(normalizeId(wind.user));
     }
 
     function renderComment(comment, currentUserLabel) {
@@ -182,7 +130,7 @@
       header.className = "comment-header";
 
       const author = document.createElement("strong");
-      author.textContent = normalizeIdentifier(comment.user) === normalizeIdentifier(currentUserLabel) ? "You" : (comment.user || "Anonymous");
+      author.textContent = normalizeId(comment.user) === normalizeId(currentUserLabel) ? "You" : (comment.user || "Anonymous");
 
       const time = document.createElement("span");
       time.textContent = window.formatTimestamp ? window.formatTimestamp(comment.time) : "now";
@@ -213,8 +161,7 @@
       header.className = "wind-meta";
 
       const name = document.createElement("strong");
-      const isYou = normalizeIdentifier(wind.user) === normalizeIdentifier(currentUserLabel);
-      name.textContent = isYou ? "You" : (wind.user || "Anonymous");
+      name.textContent = normalizeId(wind.user) === normalizeId(currentUserLabel) ? "You" : (wind.user || "Anonymous");
 
       const time = document.createElement("span");
       time.textContent = window.formatTimestamp ? window.formatTimestamp(wind.time) : "now";
@@ -223,20 +170,20 @@
       text.className = "wind-text";
       text.textContent = wind.text || "";
 
-      const actions = document.createElement("div");
-      actions.className = "wind-actions";
+      const actionBar = document.createElement("div");
+      actionBar.className = "wind-actions";
 
       const likeBtn = document.createElement("button");
       likeBtn.className = "secondary-btn feed-action-btn";
       likeBtn.type = "button";
       likeBtn.textContent = `♥ ${Number(wind.likes) || 0}`;
 
-      const commentsHint = document.createElement("span");
-      commentsHint.className = "wind-comments-hint";
-      commentsHint.textContent = "Click wind to open replies";
+      const hint = document.createElement("span");
+      hint.className = "wind-comments-hint";
+      hint.textContent = "click wind to open comments";
 
-      actions.appendChild(likeBtn);
-      actions.appendChild(commentsHint);
+      actionBar.appendChild(likeBtn);
+      actionBar.appendChild(hint);
 
       const commentsWrap = document.createElement("div");
       commentsWrap.className = "comments-wrap hidden";
@@ -266,15 +213,13 @@
       header.appendChild(time);
       card.appendChild(header);
       card.appendChild(text);
-      card.appendChild(actions);
+      card.appendChild(actionBar);
       card.appendChild(commentsWrap);
 
       const windRef = firebase.firestore().collection("winds").doc(windDoc.id);
 
       card.addEventListener("click", (event) => {
-        if (event.target.closest("button") || event.target.closest("input") || event.target.closest("textarea")) {
-          return;
-        }
+        if (event.target.closest("button") || event.target.closest("input")) return;
         commentsWrap.classList.toggle("hidden");
       });
 
@@ -338,111 +283,6 @@
         commentUnsubscribers.set(windDoc.id, unsubscribeComments);
       }
 
-      const actions = document.createElement("div");
-      actions.className = "wind-actions";
-
-      const likeBtn = document.createElement("button");
-      likeBtn.className = "secondary-btn feed-action-btn";
-      likeBtn.textContent = `♥ ${Number(wind.likes) || 0}`;
-
-      const commentToggleBtn = document.createElement("button");
-      commentToggleBtn.className = "secondary-btn feed-action-btn";
-      commentToggleBtn.textContent = "Reply";
-
-      actions.appendChild(likeBtn);
-      actions.appendChild(commentToggleBtn);
-      card.appendChild(actions);
-
-      const commentsWrap = document.createElement("div");
-      commentsWrap.className = "comments-wrap hidden";
-
-      const commentsList = document.createElement("div");
-      commentsList.className = "comments-list";
-
-      const composer = document.createElement("div");
-      composer.className = "comment-compose";
-
-      const commentInput = document.createElement("input");
-      commentInput.type = "text";
-      commentInput.maxLength = 120;
-      commentInput.placeholder = "Write a response...";
-
-      const postCommentBtn = document.createElement("button");
-      postCommentBtn.className = "chat-send-btn";
-      postCommentBtn.textContent = "Post";
-
-      composer.appendChild(commentInput);
-      composer.appendChild(postCommentBtn);
-      commentsWrap.appendChild(commentsList);
-      commentsWrap.appendChild(composer);
-      card.appendChild(commentsWrap);
-
-      const windRef = firebase.firestore().collection("winds").doc(windDoc.id);
-
-      likeBtn.addEventListener("click", async () => {
-        try {
-          await firebase.firestore().runTransaction(async (transaction) => {
-            const snap = await transaction.get(windRef);
-            const nextLikes = (Number(snap.data().likes) || 0) + 1;
-            transaction.update(windRef, { likes: nextLikes });
-          });
-        } catch (error) {
-          showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
-        }
-      });
-
-      commentToggleBtn.addEventListener("click", () => {
-        commentsWrap.classList.toggle("hidden");
-      });
-
-      postCommentBtn.addEventListener("click", async () => {
-        const text = commentInput.value.trim();
-        if (!text) return;
-        if (window.containsBannedWords && window.containsBannedWords(text)) {
-          alert("That response contains blocked words.");
-          return;
-        }
-
-        try {
-          await windRef.collection("comments").add({
-            likes: 0,
-            text,
-            time: firebase.firestore.FieldValue.serverTimestamp(),
-            user: currentUserLabel
-          });
-          commentInput.value = "";
-        } catch (error) {
-          showNotice(`Unable to post response: ${error.message || "unknown error"}`);
-        }
-      });
-
-      if (!commentUnsubscribers.has(windDoc.id)) {
-        const unsubscribeComments = windRef
-          .collection("comments")
-          .orderBy("time", "asc")
-          .onSnapshot((snapshot) => {
-            commentsList.innerHTML = "";
-            snapshot.forEach((commentDoc) => {
-              const rendered = renderComment(commentDoc.data(), currentUserLabel);
-              commentsList.appendChild(rendered.row);
-
-              rendered.likeBtn.addEventListener("click", async () => {
-                try {
-                  await firebase.firestore().runTransaction(async (transaction) => {
-                    const snap = await transaction.get(commentDoc.ref);
-                    const nextLikes = (Number(snap.data().likes) || 0) + 1;
-                    transaction.update(commentDoc.ref, { likes: nextLikes });
-                  });
-                } catch (error) {
-                  showNotice(`Unable to like response: ${error.message || "unknown error"}`);
-                }
-              });
-            });
-          });
-
-        commentUnsubscribers.set(windDoc.id, unsubscribeComments);
-      }
-
       return card;
     }
 
@@ -456,13 +296,12 @@
       activeFeedView = view;
       homeTabBtn.classList.toggle("active", view === "home");
       exploreTabBtn.classList.toggle("active", view === "explore");
-
       if (view === "home") {
         feedTitle.textContent = "Home";
-        feedSubtitle.textContent = "Winds from people you follow + who they follow.";
+        feedSubtitle.textContent = "Winds from people you follow and who they follow.";
       } else {
         feedTitle.textContent = "Explore";
-        feedSubtitle.textContent = "All public winds.";
+        feedSubtitle.textContent = "All winds.";
       }
     }
 
@@ -474,8 +313,8 @@
 
       clearNotice();
       clearCommentListeners();
-      const query = firebase.firestore().collection("winds").orderBy("likes", "desc").limit(150);
 
+      const query = firebase.firestore().collection("winds").orderBy("likes", "desc").limit(150);
       unsubscribeFeed = query.onSnapshot(
         (snapshot) => {
           chatContainer.innerHTML = "";
@@ -484,16 +323,14 @@
 
           snapshot.forEach((doc) => {
             const wind = doc.data();
-            if (activeFeedView === "home" && !matchesHomeFeed(wind)) {
-              return;
-            }
+            if (activeFeedView === "home" && !matchesHomeFeed(wind)) return;
             chatContainer.appendChild(renderWind(doc, currentUserLabel));
             renderedCount += 1;
           });
 
           if (renderedCount === 0) {
             showNotice(activeFeedView === "home"
-              ? "No winds in Home yet. Follow people to populate this feed."
+              ? "No winds in Home yet."
               : "No winds yet. Be the first to post.");
           }
         },
@@ -536,12 +373,10 @@
       sendBtn.addEventListener("click", async () => {
         const text = chatInput.value.trim();
         if (!text) return;
-
         if (text.length > MAX_WIND_LENGTH) {
           alert("Winds are limited to 60 characters.");
           return;
         }
-
         if (window.containsBannedWords && window.containsBannedWords(text)) {
           alert("That wind contains blocked words.");
           return;
@@ -553,7 +388,6 @@
           updateCounter();
           clearNotice();
         } catch (error) {
-          console.error("Post failed:", error);
           showNotice(`Unable to post wind: ${error.message || "unknown error"}`);
         }
       });
