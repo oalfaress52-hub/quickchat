@@ -8,100 +8,40 @@
 </head>
 <body>
   <div class="auth-wrapper">
-    <div class="profile-card">
+    <div class="profile-card profile-card-updated">
       <h1>Kite</h1>
       <h2>Your Profile</h2>
 
-      <input type="text" id="nicknameInput" placeholder="Nickname" disabled />
-      <input type="email" id="emailInput" placeholder="Email" disabled />
+      <div class="profile-avatar-wrap">
+        <img id="profileAvatar" class="profile-avatar" alt="Profile picture" src="images/pfp/a.png" />
+      </div>
 
-      <button id="editBtn" class="secondary">Edit</button>
-      <button id="saveBtn" class="primary hidden">Save</button>
-      <button id="cancelBtn" class="secondary hidden">Cancel</button>
+      <div class="profile-row"><span>Nickname</span><strong id="nicknameValue">-</strong></div>
+      <div class="profile-row"><span>Email</span><strong id="emailValue">-</strong></div>
+      <div class="profile-row"><span>Description</span><strong id="descriptionValue">-</strong></div>
 
-      <button id="chatBtn" class="primary">Open Wind Feed</button>
-      <button id="logoutBtn" class="danger">Logout</button>
+      <section class="profile-edit-box">
+        <h3>Edit nickname</h3>
+        <p id="nicknameChangesLeft" class="profile-small-text">Changes left: 15</p>
+        <div class="profile-edit-controls">
+          <input id="nicknameEditInput" type="text" maxlength="15" placeholder="New nickname (max 15 chars)" />
+          <button id="saveNicknameBtn" type="button" class="secondary-btn">Save Nickname</button>
+        </div>
+      </section>
+
+      <div class="profile-actions">
+        <button id="chatBtn" class="primary-btn" type="button">Open Wind Feed</button>
+        <button id="logoutBtn" class="secondary-btn danger" type="button">Logout</button>
+      </div>
 
       <p id="profileMsg" class="switch hidden"></p>
     </div>
   </div>
 
-  <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-
-  <!-- App logic -->
   <script src="app.js"></script>
-
-  <script>
-    const nicknameInput = document.getElementById("nicknameInput");
-    const emailInput = document.getElementById("emailInput");
-    const editBtn = document.getElementById("editBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const cancelBtn = document.getElementById("cancelBtn");
-    const chatBtn = document.getElementById("chatBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const profileMsg = document.getElementById("profileMsg");
-
-    firebase.auth().onAuthStateChanged(async user => {
-      if (!user) {
-        window.location.href = "login.html";
-        return;
-      }
-
-      emailInput.value = user.email || "";
-      nicknameInput.value = user.displayName || "";
-
-      const db = firebase.firestore();
-      const userRef = db.collection("users").doc(user.uid);
-
-      const snap = await userRef.get();
-      if (snap.exists && snap.data().nickname) {
-        nicknameInput.value = snap.data().nickname;
-      }
-
-      editBtn.onclick = () => {
-        nicknameInput.disabled = false;
-        editBtn.classList.add("hidden");
-        saveBtn.classList.remove("hidden");
-        cancelBtn.classList.remove("hidden");
-      };
-
-      cancelBtn.onclick = () => {
-        nicknameInput.value = user.displayName || "";
-        nicknameInput.disabled = true;
-        saveBtn.classList.add("hidden");
-        cancelBtn.classList.add("hidden");
-        editBtn.classList.remove("hidden");
-      };
-
-      saveBtn.onclick = async () => {
-        const newNick = nicknameInput.value.trim();
-        if (!newNick) return;
-
-        await user.updateProfile({ displayName: newNick });
-        await userRef.set({ nickname: newNick }, { merge: true });
-
-        nicknameInput.disabled = true;
-        saveBtn.classList.add("hidden");
-        cancelBtn.classList.add("hidden");
-        editBtn.classList.remove("hidden");
-
-        profileMsg.textContent = "Profile updated.";
-        profileMsg.classList.remove("hidden");
-        setTimeout(() => profileMsg.classList.add("hidden"), 2000);
-      };
-
-      chatBtn.onclick = () => {
-        window.location.href = "server.html";
-      };
-
-      logoutBtn.onclick = async () => {
-        await firebase.auth().signOut();
-        window.location.href = "login.html";
-      };
-    });
-  </script>
+  <script src="profile.js"></script>
 </body>
 </html>

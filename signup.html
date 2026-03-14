@@ -13,6 +13,7 @@
       <h2>Create Account</h2>
 
       <form id="signupForm" novalidate>
+        <div id="signupStepOne">
         <input type="text" id="nickname" placeholder="Nickname" required />
         <input type="email" id="email" placeholder="Email" autocomplete="email" required />
 
@@ -27,7 +28,14 @@
         </div>
 
         <!-- SAME LABEL AS BEFORE -->
-        <button type="submit" class="primary-btn">Sign Up</button>
+        <button type="submit" class="primary-btn" id="createAccountBtn">Sign Up</button>
+        </div>
+
+        <div id="signupStepTwo" class="hidden">
+          <input type="text" id="favoriteFood" placeholder="What's your favorite food?" required />
+          <input type="text" id="favoriteSport" placeholder="What's your favorite sport?" required />
+          <button type="button" class="primary-btn" id="finishProfileBtn">Finish Profile</button>
+        </div>
       </form>
 
       <p class="switch">
@@ -53,6 +61,13 @@
     const confirmInput = document.getElementById("confirmPassword");
     const togglePassword = document.getElementById("togglePassword");
     const toggleConfirm = document.getElementById("toggleConfirmPassword");
+    const stepOne = document.getElementById("signupStepOne");
+    const stepTwo = document.getElementById("signupStepTwo");
+    const finishProfileBtn = document.getElementById("finishProfileBtn");
+
+    let createdUser = null;
+    let createdNickname = "";
+    let createdEmail = "";
 
     togglePassword.onclick = () => {
       const hidden = passwordInput.type === "password";
@@ -82,12 +97,43 @@
 
       try {
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
-        const user = cred.user;
+        createdUser = cred.user;
+        createdNickname = nickname;
+        createdEmail = email;
 
-        await user.updateProfile({ displayName: nickname });
-        await firebase.firestore().collection("users").doc(user.uid).set({
-          nickname,
-          email
+        await createdUser.updateProfile({ displayName: nickname });
+
+        stepOne.classList.add("hidden");
+        stepTwo.classList.remove("hidden");
+      } catch (err) {
+        console.error(err);
+        errorMsg.textContent = err.message;
+      }
+    };
+
+    finishProfileBtn.onclick = async () => {
+      if (!createdUser) return;
+      errorMsg.textContent = "";
+
+      const favoriteFood = document.getElementById("favoriteFood").value.trim();
+      const favoriteSport = document.getElementById("favoriteSport").value.trim();
+
+      if (!favoriteFood || !favoriteSport) {
+        errorMsg.textContent = "Please answer both profile questions.";
+        return;
+      }
+
+      const firstLetter = (createdNickname || "a").trim().charAt(0).toLowerCase() || "a";
+      const description = `Favorite food: ${favoriteFood} · Favorite sport: ${favoriteSport}`;
+
+      try {
+        await firebase.firestore().collection("users").doc(createdUser.uid).set({
+          nickname: createdNickname,
+          email: createdEmail,
+          favoriteFood,
+          favoriteSport,
+          description,
+          profilePicture: `images/pfp/${firstLetter}.png`
         });
 
         window.location.href = "profile.html";
