@@ -1289,3 +1289,72 @@ textarea {
   font-weight: 500;
   color: var(--text-soft);
 }
+
+
+/* ==================================================
+   FEED V5 + PROFILE EDIT BOX
+   ================================================== */
+.feed-page {
+  grid-template-columns: 24% 56% 20%;
+}
+
+.right-toolbar {
+  height: 100vh;
+  overflow-y: auto;
+  border-left: 1px solid var(--border-soft);
+  padding: 20px;
+  background: #0b1220;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.feed-page.sidebar-hidden {
+  grid-template-columns: 0 80% 20%;
+}
+
+.sidebar-toggle-btn {
+  left: calc(24% - 16px);
+}
+
+.profile-edit-box {
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 10px;
+}
+
+.profile-edit-box h3 {
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
+.profile-small-text {
+  margin: 0 0 8px;
+  color: var(--text-soft);
+  font-size: 0.8rem;
+}
+
+.profile-edit-controls {
+  display: flex;
+  gap: 8px;
+}
+
+.profile-edit-controls input {
+  flex: 1;
+  background: #020617;
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  padding: 8px 10px;
+}
+
+@media (max-width: 1000px) {
+  .feed-page {
+    grid-template-columns: 1fr;
+  }
+
+  .right-toolbar {
+    display: none;
+  }
+}

@@ -20,6 +20,15 @@
       <div class="profile-row"><span>Email</span><strong id="emailValue">-</strong></div>
       <div class="profile-row"><span>Description</span><strong id="descriptionValue">-</strong></div>
 
+      <section class="profile-edit-box">
+        <h3>Edit nickname</h3>
+        <p id="nicknameChangesLeft" class="profile-small-text">Changes left: 15</p>
+        <div class="profile-edit-controls">
+          <input id="nicknameEditInput" type="text" maxlength="15" placeholder="New nickname (max 15 chars)" />
+          <button id="saveNicknameBtn" type="button" class="secondary-btn">Save Nickname</button>
+        </div>
+      </section>
+
       <div class="profile-actions">
         <button id="chatBtn" class="primary-btn" type="button">Open Wind Feed</button>
         <button id="logoutBtn" class="secondary-btn danger" type="button">Logout</button>
@@ -33,7 +42,6 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="app.js"></script>
-
   <script src="profile.js"></script>
 </body>
 </html>

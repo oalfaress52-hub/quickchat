@@ -20,6 +20,7 @@
       <nav class="feed-nav" aria-label="Feed views">
         <button id="homeTabBtn" class="sidebar-btn active" type="button">🏠 Home</button>
         <button id="exploreTabBtn" class="sidebar-btn" type="button">🌎 Explore</button>
+        <button id="profileTabBtn" class="sidebar-btn" type="button">👤 Profile</button>
       </nav>
 
       <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button">Logout</button>
@@ -35,10 +36,10 @@
         </header>
 
         <section class="wind-compose">
-          <label for="chatInput">Drop a wind (max 60 chars)</label>
-          <textarea id="chatInput" maxlength="60" placeholder="What's blowing through your head?"></textarea>
+          <label for="chatInput">Drop a wind (max 120 chars)</label>
+          <textarea id="chatInput" maxlength="120" placeholder="What's blowing through your head?"></textarea>
           <div class="wind-compose-footer">
-            <span id="charCounter">0/60</span>
+            <span id="charCounter">0/120</span>
             <button id="sendBtn" class="chat-send-btn" type="button">Post Wind</button>
           </div>
           <p id="feedNotice" class="feed-notice hidden"></p>
@@ -47,6 +48,13 @@
         <section id="chatContainer" class="wind-feed" aria-live="polite"></section>
       </div>
     </section>
+
+    <aside class="right-toolbar" aria-label="Extra toolbar">
+      <h3>Extra</h3>
+      <p>This toolbar is intentionally useless.</p>
+      <button type="button" class="secondary-btn" disabled>Nothing</button>
+      <button type="button" class="secondary-btn" disabled>Still nothing</button>
+    </aside>
   </main>
 
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -63,13 +71,14 @@
     const feedNotice = document.getElementById("feedNotice");
     const homeTabBtn = document.getElementById("homeTabBtn");
     const exploreTabBtn = document.getElementById("exploreTabBtn");
+    const profileTabBtn = document.getElementById("profileTabBtn");
     const feedTitle = document.getElementById("feedTitle");
     const feedSubtitle = document.getElementById("feedSubtitle");
     const feedPage = document.getElementById("feedPage");
     const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
     const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
 
-    const MAX_WIND_LENGTH = 60;
+    const MAX_WIND_LENGTH = 120;
     const LIKE_ICON = "images/ui/like.png";
     const LIKED_ICON = "images/ui/liked.png";
     let unsubscribeFeed = null;
@@ -418,11 +427,15 @@
         attachFeedListener(user);
       });
 
+      profileTabBtn.addEventListener("click", () => {
+        window.location.href = "profile.html";
+      });
+
       sendBtn.addEventListener("click", async () => {
         const text = chatInput.value.trim();
         if (!text) return;
         if (text.length > MAX_WIND_LENGTH) {
-          alert("Winds are limited to 60 characters.");
+          alert("Winds are limited to 120 characters.");
           return;
         }
         if (window.containsBannedWords && window.containsBannedWords(text)) {
