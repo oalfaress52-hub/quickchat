@@ -7,11 +7,14 @@
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="feed-page">
-    <aside class="feed-sidebar">
-      <div class="sidebar-brand">
-        <img src="favicon.ico" alt="Kite logo" class="sidebar-logo" />
-        <strong>Kite</strong>
+  <main class="feed-page" id="feedPage">
+    <aside class="feed-sidebar" id="feedSidebar">
+      <div class="sidebar-top-row">
+        <div class="sidebar-brand">
+          <img src="favicon.ico" alt="Kite logo" class="sidebar-logo" />
+          <strong>Kite</strong>
+        </div>
+        <button id="sidebarCloseBtn" class="sidebar-close-btn" type="button" aria-label="Close toolbar">❌</button>
       </div>
 
       <nav class="feed-nav" aria-label="Feed views">
@@ -21,6 +24,8 @@
 
       <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button">Logout</button>
     </aside>
+
+    <button id="sidebarToggleBtn" class="sidebar-toggle-btn" type="button" aria-label="Toggle toolbar">&gt;&gt;</button>
 
     <section class="feed-main">
       <div class="feed-main-inner">
@@ -60,12 +65,19 @@
     const exploreTabBtn = document.getElementById("exploreTabBtn");
     const feedTitle = document.getElementById("feedTitle");
     const feedSubtitle = document.getElementById("feedSubtitle");
+    const feedPage = document.getElementById("feedPage");
+    const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
+    const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
 
     const MAX_WIND_LENGTH = 60;
+    const LIKE_ICON = "images/ui/like.png";
+    const LIKED_ICON = "images/ui/liked.png";
     let unsubscribeFeed = null;
     const commentUnsubscribers = new Map();
     let activeFeedView = "home";
     let homeAuthors = new Set();
+    const likedWindIds = new Set();
+    const likedCommentIds = new Set();
 
     function showNotice(text) {
       feedNotice.textContent = text;
@@ -84,6 +96,37 @@
     function clearCommentListeners() {
       commentUnsubscribers.forEach((unsubscribe) => unsubscribe());
       commentUnsubscribers.clear();
+    }
+
+    function setSidebarOpen(open) {
+      feedPage.classList.toggle("sidebar-hidden", !open);
+      sidebarToggleBtn.textContent = open ? "<<" : ">>";
+    }
+
+    function createLikeButton(likes, liked) {
+      const button = document.createElement("button");
+      button.className = "feed-like-btn";
+      button.type = "button";
+
+      const icon = document.createElement("img");
+      icon.className = "feed-like-icon";
+      icon.src = liked ? LIKED_ICON : LIKE_ICON;
+      icon.alt = liked ? "liked" : "like";
+
+      const count = document.createElement("span");
+      count.className = "feed-like-count";
+      count.textContent = String(Number(likes) || 0);
+
+      button.appendChild(icon);
+      button.appendChild(count);
+
+      return { button, icon, count };
+    }
+
+    function updateLikeVisual(iconEl, countEl, liked, likes) {
+      iconEl.src = liked ? LIKED_ICON : LIKE_ICON;
+      iconEl.alt = liked ? "liked" : "like";
+      countEl.textContent = String(Number(likes) || 0);
     }
 
     async function loadHomeAuthors(user) {
@@ -122,7 +165,8 @@
       return homeAuthors.has(normalizeId(wind.user));
     }
 
-    function renderComment(comment, currentUserLabel) {
+    function renderComment(commentDoc, currentUserLabel) {
+      const comment = commentDoc.data();
       const row = document.createElement("div");
       row.className = "comment-row";
 
@@ -138,18 +182,37 @@
       const text = document.createElement("p");
       text.textContent = comment.text || "";
 
-      const likeBtn = document.createElement("button");
-      likeBtn.className = "secondary-btn feed-action-btn";
-      likeBtn.type = "button";
-      likeBtn.textContent = `♥ ${Number(comment.likes) || 0}`;
+      const commentKey = commentDoc.ref.path;
+      const commentLike = createLikeButton(comment.likes, likedCommentIds.has(commentKey));
 
       header.appendChild(author);
       header.appendChild(time);
       row.appendChild(header);
       row.appendChild(text);
-      row.appendChild(likeBtn);
+      row.appendChild(commentLike.button);
 
-      return { row, likeBtn };
+      commentLike.button.addEventListener("click", async () => {
+        const currentlyLiked = likedCommentIds.has(commentKey);
+        const delta = currentlyLiked ? -1 : 1;
+        try {
+          await firebase.firestore().runTransaction(async (transaction) => {
+            const snap = await transaction.get(commentDoc.ref);
+            const currentLikes = Number(snap.data()?.likes) || 0;
+            const nextLikes = Math.max(0, currentLikes + delta);
+            transaction.update(commentDoc.ref, { likes: nextLikes });
+          });
+          if (currentlyLiked) {
+            likedCommentIds.delete(commentKey);
+          } else {
+            likedCommentIds.add(commentKey);
+          }
+          updateLikeVisual(commentLike.icon, commentLike.count, !currentlyLiked, (Number(comment.likes) || 0) + delta);
+        } catch (error) {
+          showNotice(`Unable to like response: ${error.message || "unknown error"}`);
+        }
+      });
+
+      return row;
     }
 
     function renderWind(windDoc, currentUserLabel) {
@@ -173,16 +236,13 @@
       const actionBar = document.createElement("div");
       actionBar.className = "wind-actions";
 
-      const likeBtn = document.createElement("button");
-      likeBtn.className = "secondary-btn feed-action-btn";
-      likeBtn.type = "button";
-      likeBtn.textContent = `♥ ${Number(wind.likes) || 0}`;
+      const windLike = createLikeButton(wind.likes, likedWindIds.has(windDoc.id));
 
       const hint = document.createElement("span");
       hint.className = "wind-comments-hint";
       hint.textContent = "click wind to open comments";
 
-      actionBar.appendChild(likeBtn);
+      actionBar.appendChild(windLike.button);
       actionBar.appendChild(hint);
 
       const commentsWrap = document.createElement("div");
@@ -223,13 +283,25 @@
         commentsWrap.classList.toggle("hidden");
       });
 
-      likeBtn.addEventListener("click", async () => {
+      windLike.button.addEventListener("click", async () => {
+        const currentlyLiked = likedWindIds.has(windDoc.id);
+        const delta = currentlyLiked ? -1 : 1;
+
         try {
           await firebase.firestore().runTransaction(async (transaction) => {
             const snap = await transaction.get(windRef);
-            const nextLikes = (Number(snap.data()?.likes) || 0) + 1;
+            const currentLikes = Number(snap.data()?.likes) || 0;
+            const nextLikes = Math.max(0, currentLikes + delta);
             transaction.update(windRef, { likes: nextLikes });
           });
+
+          if (currentlyLiked) {
+            likedWindIds.delete(windDoc.id);
+          } else {
+            likedWindIds.add(windDoc.id);
+          }
+
+          updateLikeVisual(windLike.icon, windLike.count, !currentlyLiked, (Number(wind.likes) || 0) + delta);
         } catch (error) {
           showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
         }
@@ -263,20 +335,7 @@
           .onSnapshot((snapshot) => {
             commentsList.innerHTML = "";
             snapshot.forEach((commentDoc) => {
-              const rendered = renderComment(commentDoc.data(), currentUserLabel);
-              commentsList.appendChild(rendered.row);
-
-              rendered.likeBtn.addEventListener("click", async () => {
-                try {
-                  await firebase.firestore().runTransaction(async (transaction) => {
-                    const snap = await transaction.get(commentDoc.ref);
-                    const nextLikes = (Number(snap.data()?.likes) || 0) + 1;
-                    transaction.update(commentDoc.ref, { likes: nextLikes });
-                  });
-                } catch (error) {
-                  showNotice(`Unable to like response: ${error.message || "unknown error"}`);
-                }
-              });
+              commentsList.appendChild(renderComment(commentDoc, currentUserLabel));
             });
           });
 
@@ -356,9 +415,16 @@
         return;
       }
 
+      setSidebarOpen(true);
       homeAuthors = await loadHomeAuthors(user);
       setActiveView("home");
       attachFeedListener(user);
+
+      sidebarCloseBtn.addEventListener("click", () => setSidebarOpen(false));
+      sidebarToggleBtn.addEventListener("click", () => {
+        const isOpen = !feedPage.classList.contains("sidebar-hidden");
+        setSidebarOpen(!isOpen);
+      });
 
       homeTabBtn.addEventListener("click", () => {
         setActiveView("home");
