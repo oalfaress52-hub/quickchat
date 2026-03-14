@@ -1485,7 +1485,8 @@ body.light-mode .right-toolbar-note {
 }
 
 body:not(.light-mode) {
-  background: #020617;
+  /* Keep dark-mode text colors while allowing the global JPG background to show. */
+  color: #e5e7eb;
 }
 
 body:not(.light-mode) .feed-sidebar,
@@ -2047,4 +2048,85 @@ body {
   .profile-page-shell .right-toolbar {
     display: none;
   }
+}
+
+/* Home + Explore: keep picture only inside wind cards (not under toolbars) */
+body.feed-view {
+  background-image: none;
+  background-color: #1a1a28;
+}
+
+body.feed-view .feed-main {
+  background: rgba(8, 14, 30, 0.4);
+  border-left: none;
+  border-right: none;
+}
+
+body.feed-view .feed-main-inner {
+  background: transparent;
+}
+
+body.feed-view .wind-feed {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  backdrop-filter: none;
+  padding: 10px 6px 24px;
+}
+
+body.feed-view .wind-card {
+  background-color: rgba(8, 14, 30, 0.72);
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.34), rgba(35, 12, 10, 0.28)),
+    url("images/background.jpg");
+  background-position: center;
+  background-size: cover;
+}
+
+/* Keep Profile readable/solid and avoid accidental transparency regressions */
+body.profile-view .feed-main,
+body.profile-view .profile-main,
+body.profile-view .profile-feed-card,
+body.profile-view .profile-edit-panel,
+body.profile-view .profile-identity-card,
+body.profile-view .profile-tabs {
+  background: rgba(8, 14, 30, 0.72);
+}
+
+/* Twitter-like feed polish + like-state feedback */
+body.feed-view .feed-header h1 {
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+body.feed-view .feed-header p {
+  font-size: 0.9rem;
+}
+
+body.feed-view .wind-compose {
+  position: sticky;
+  top: 12px;
+  z-index: 5;
+  border-radius: 16px;
+}
+
+body.feed-view .wind-card {
+  border-radius: 16px;
+  border: 1px solid rgba(191, 219, 254, 0.18);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+body.feed-view .wind-card:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.32);
+}
+
+.feed-like-btn.liked {
+  opacity: 0.8;
+  cursor: default;
+}
+
+.feed-like-btn.pending {
+  opacity: 0.65;
+  pointer-events: none;
 }

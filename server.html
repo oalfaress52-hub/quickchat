@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <link rel="stylesheet" href="style.css" />
 </head>
-<body>
+<body class="feed-view">
   <main class="feed-page" id="feedPage">
     <aside class="feed-sidebar" id="feedSidebar">
       <div class="sidebar-top-row">
@@ -30,7 +30,7 @@
       <div class="feed-main-inner">
         <header class="feed-header">
           <h1 id="feedTitle">Home</h1>
-          <p id="feedSubtitle">Winds from people you follow and who they follow.</p>
+          <p id="feedSubtitle">Latest winds from people you follow and who they follow.</p>
         </header>
 
         <section id="discoverSearch" class="discover-search hidden">
@@ -39,11 +39,11 @@
         </section>
 
         <section class="wind-compose">
-          <label for="chatInput">Drop a wind (max 120 chars)</label>
-          <textarea id="chatInput" maxlength="120" placeholder="What's blowing through your head?"></textarea>
+          <label for="chatInput">What's happening?</label>
+          <textarea id="chatInput" maxlength="120" placeholder="What's happening right now?"></textarea>
           <div class="wind-compose-footer">
             <span id="charCounter">0/120</span>
-            <button id="sendBtn" class="chat-send-btn" type="button">Post Wind</button>
+            <button id="sendBtn" class="chat-send-btn" type="button">Post</button>
           </div>
           <p id="feedNotice" class="feed-notice hidden"></p>
         </section>
@@ -97,6 +97,8 @@
     const MAX_WIND_LENGTH = 120;
     const LIKE_ICON = "images/ui/like.png";
     const LIKED_ICON = "images/ui/liked.png";
+    const LIKED_WINDS_KEY_PREFIX = "kite-liked-winds";
+    const LIKED_COMMENTS_KEY_PREFIX = "kite-liked-comments";
     let unsubscribeFeed = null;
     const commentUnsubscribers = new Map();
     let activeFeedView = "home";
@@ -108,6 +110,33 @@
     let globalSearchTerm = "";
     let darkModeEnabled = true;
     let currentUserProfilePicture = "images/pfp/a.png";
+
+    function likedWindsStorageKey() {
+      return currentUser ? `${LIKED_WINDS_KEY_PREFIX}-${currentUser.uid}` : LIKED_WINDS_KEY_PREFIX;
+    }
+
+    function likedCommentsStorageKey() {
+      return currentUser ? `${LIKED_COMMENTS_KEY_PREFIX}-${currentUser.uid}` : LIKED_COMMENTS_KEY_PREFIX;
+    }
+
+    function saveLikedState() {
+      localStorage.setItem(likedWindsStorageKey(), JSON.stringify([...likedWindIds]));
+      localStorage.setItem(likedCommentsStorageKey(), JSON.stringify([...likedCommentIds]));
+    }
+
+    function loadLikedState() {
+      likedWindIds.clear();
+      likedCommentIds.clear();
+
+      try {
+        const rawWinds = JSON.parse(localStorage.getItem(likedWindsStorageKey()) || "[]");
+        const rawComments = JSON.parse(localStorage.getItem(likedCommentsStorageKey()) || "[]");
+        if (Array.isArray(rawWinds)) rawWinds.forEach((id) => likedWindIds.add(String(id)));
+        if (Array.isArray(rawComments)) rawComments.forEach((id) => likedCommentIds.add(String(id)));
+      } catch (error) {
+        console.warn("Unable to restore liked state", error);
+      }
+    }
 
     reportLoadStatus("Feed controls");
 
@@ -201,6 +230,8 @@
       const button = document.createElement("button");
       button.className = "feed-like-btn";
       button.type = "button";
+      button.disabled = liked;
+      button.classList.toggle("liked", liked);
 
       const icon = document.createElement("img");
       icon.className = "feed-like-icon";
@@ -217,7 +248,9 @@
       return { button, icon, count };
     }
 
-    function updateLikeVisual(iconEl, countEl, liked, likes) {
+    function updateLikeVisual(buttonEl, iconEl, countEl, liked, likes) {
+      buttonEl.classList.toggle("liked", liked);
+      buttonEl.disabled = liked;
       iconEl.src = liked ? LIKED_ICON : LIKE_ICON;
       iconEl.alt = liked ? "liked" : "like";
       countEl.textContent = String(Number(likes) || 0);
@@ -310,12 +343,18 @@
       row.appendChild(commentLike.button);
 
       commentLike.button.addEventListener("click", async () => {
+        if (likedCommentIds.has(commentKey) || commentLike.button.classList.contains("pending")) return;
+        commentLike.button.classList.add("pending");
         try {
           await incrementLike(commentDoc.ref);
           likedCommentIds.add(commentKey);
-          updateLikeVisual(commentLike.icon, commentLike.count, true, (Number(commentLike.count.textContent) || 0) + 1);
+          saveLikedState();
+          updateLikeVisual(commentLike.button, commentLike.icon, commentLike.count, true, (Number(commentLike.count.textContent) || 0) + 1);
         } catch (error) {
+          commentLike.button.disabled = false;
           showNotice(`Unable to like response: ${error.message || "unknown error"}`);
+        } finally {
+          commentLike.button.classList.remove("pending");
         }
       });
 
@@ -428,12 +467,18 @@
       });
 
       windLike.button.addEventListener("click", async () => {
+        if (likedWindIds.has(windDoc.id) || windLike.button.classList.contains("pending")) return;
+        windLike.button.classList.add("pending");
         try {
           await incrementLike(windRef);
           likedWindIds.add(windDoc.id);
-          updateLikeVisual(windLike.icon, windLike.count, true, (Number(windLike.count.textContent) || 0) + 1);
+          saveLikedState();
+          updateLikeVisual(windLike.button, windLike.icon, windLike.count, true, (Number(windLike.count.textContent) || 0) + 1);
         } catch (error) {
+          windLike.button.disabled = false;
           showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
+        } finally {
+          windLike.button.classList.remove("pending");
         }
       });
 
@@ -490,10 +535,10 @@
       discoverSearch.classList.toggle("hidden", !showDiscover);
       if (view === "home") {
         feedTitle.textContent = "Home";
-        feedSubtitle.textContent = "Winds from people you follow and who they follow.";
+        feedSubtitle.textContent = "Latest winds from people you follow and who they follow.";
       } else {
         feedTitle.textContent = "Explore";
-        feedSubtitle.textContent = hashtagFilter ? `Showing #${hashtagFilter}` : "All winds.";
+        feedSubtitle.textContent = hashtagFilter ? `Showing latest for #${hashtagFilter}` : "Latest winds from everyone.";
       }
     }
 
@@ -506,7 +551,7 @@
       clearNotice();
       clearCommentListeners();
 
-      const query = firebase.firestore().collection("winds").orderBy("likes", "desc").limit(150);
+      const query = firebase.firestore().collection("winds").orderBy("time", "desc").limit(150);
       unsubscribeFeed = query.onSnapshot(
         (snapshot) => {
           chatContainer.innerHTML = "";
@@ -553,6 +598,7 @@
       }
 
       currentUser = user;
+      loadLikedState();
       try {
         const userDoc = await firebase.firestore().collection("users").doc(user.uid).get();
         const userData = userDoc.exists ? userDoc.data() : {};
@@ -576,6 +622,8 @@
       });
 
       homeTabBtn.addEventListener("click", () => {
+        hashtagFilter = "";
+        hashtagSearchInput.value = "";
         setActiveView("home");
         attachFeedListener(user);
       });
