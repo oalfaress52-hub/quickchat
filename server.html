@@ -353,6 +353,7 @@
           saveLikedState();
           updateLikeVisual(commentLike.button, commentLike.icon, commentLike.count, true, (Number(commentLike.count.textContent) || 0) + 1);
         } catch (error) {
+          commentLike.button.disabled = false;
           showNotice(`Unable to like response: ${error.message || "unknown error"}`);
         } finally {
           commentLike.button.classList.remove("pending");
@@ -480,6 +481,7 @@
           saveLikedState();
           updateLikeVisual(windLike.button, windLike.icon, windLike.count, true, (Number(windLike.count.textContent) || 0) + 1);
         } catch (error) {
+          windLike.button.disabled = false;
           showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
         } finally {
           windLike.button.classList.remove("pending");
