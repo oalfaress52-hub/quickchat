@@ -1402,3 +1402,110 @@ textarea {
   font-size: 0.75rem;
   cursor: pointer;
 }
+
+/* ==================================================
+   TWITTER-INSPIRED POLISH + SEARCH/DARKMODE
+   ================================================== */
+.feed-sidebar {
+  background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+}
+
+.sidebar-brand strong {
+  font-size: 1.25rem;
+}
+
+.feed-nav .sidebar-btn {
+  justify-content: flex-start;
+  border-radius: 999px;
+  padding: 12px 16px;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.feed-nav .sidebar-btn.active {
+  background: #e0f2fe;
+  color: #0369a1;
+  border: none;
+}
+
+.feed-main {
+  background: #ffffff;
+}
+
+.wind-card,
+.wind-compose,
+.discover-search {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+}
+
+.right-toolbar {
+  background: #f8fafc;
+}
+
+.right-search {
+  width: 100%;
+  border: 1px solid #d1d5db;
+  border-radius: 999px;
+  padding: 10px 14px;
+}
+
+.right-toolbar-note {
+  color: #64748b;
+  font-size: 0.82rem;
+  margin: 4px 0;
+}
+
+/* dark mode toggle state */
+body.light-mode {
+  background: #f1f5f9;
+  color: #0f172a;
+}
+
+body.light-mode .feed-page {
+  background: #f1f5f9;
+}
+
+body.light-mode .feed-sidebar,
+body.light-mode .feed-main,
+body.light-mode .wind-card,
+body.light-mode .wind-compose,
+body.light-mode .discover-search,
+body.light-mode .right-toolbar {
+  background: #ffffff;
+  color: #0f172a;
+}
+
+body.light-mode .wind-text,
+body.light-mode .feed-header p,
+body.light-mode .wind-meta,
+body.light-mode .right-toolbar-note {
+  color: #334155;
+}
+
+body:not(.light-mode) {
+  background: #020617;
+}
+
+body:not(.light-mode) .feed-sidebar,
+body:not(.light-mode) .feed-main,
+body:not(.light-mode) .right-toolbar,
+body:not(.light-mode) .wind-card,
+body:not(.light-mode) .wind-compose,
+body:not(.light-mode) .discover-search {
+  background: #0b1220;
+  color: #e5e7eb;
+  border-color: #23314f;
+}
+
+body:not(.light-mode) .feed-nav .sidebar-btn.active {
+  background: #1e293b;
+  color: #93c5fd;
+}
+
+body:not(.light-mode) .right-search {
+  background: #020617;
+  color: #e5e7eb;
+  border-color: #334155;
+}

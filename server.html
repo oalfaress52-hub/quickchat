@@ -23,6 +23,7 @@
         <button id="profileTabBtn" class="sidebar-btn" type="button">👤 Profile</button>
       </nav>
 
+      <button id="darkModeBtn" class="secondary-btn" type="button">🌙 Dark Mode: On</button>
       <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button">Logout</button>
     </aside>
 
@@ -54,11 +55,11 @@
       </div>
     </section>
 
-    <aside class="right-toolbar" aria-label="Extra toolbar">
-      <h3>Extra</h3>
-      <p>This toolbar is intentionally useless.</p>
-      <button type="button" class="secondary-btn" disabled>Nothing</button>
-      <button type="button" class="secondary-btn" disabled>Still nothing</button>
+    <aside class="right-toolbar" aria-label="Search and tools">
+      <h3>Search</h3>
+      <input id="globalSearchInput" class="right-search" type="text" placeholder="Search @user/email or #hashtag" />
+      <p class="right-toolbar-note">Use @name (or @gmail) to find user winds, and #tag for wind hashtags.</p>
+      <button id="clearSearchBtn" type="button" class="secondary-btn">Clear Search</button>
     </aside>
   </main>
 
@@ -84,6 +85,9 @@
     const feedPage = document.getElementById("feedPage");
     const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
     const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
+    const globalSearchInput = document.getElementById("globalSearchInput");
+    const clearSearchBtn = document.getElementById("clearSearchBtn");
+    const darkModeBtn = document.getElementById("darkModeBtn");
 
     const MAX_WIND_LENGTH = 120;
     const LIKE_ICON = "images/ui/like.png";
@@ -96,6 +100,8 @@
     const likedWindIds = new Set();
     const likedCommentIds = new Set();
     let hashtagFilter = "";
+    let globalSearchTerm = "";
+    let darkModeEnabled = true;
 
     function showNotice(text) {
       feedNotice.textContent = text;
@@ -125,6 +131,39 @@
       const fromField = Array.isArray(wind.hashtags) ? wind.hashtags : [];
       const tags = fromField.length ? fromField : extractHashtags(wind.text);
       return tags.includes(hashtagFilter);
+    }
+
+    function parseSearchTerm(value) {
+      const raw = String(value || "").trim().toLowerCase();
+      if (!raw) return { type: "none", value: "" };
+      if (raw.startsWith("@")) return { type: "user", value: raw.slice(1) };
+      if (raw.startsWith("#")) return { type: "hashtag", value: normalizeHashtag(raw) };
+      return { type: "text", value: raw };
+    }
+
+    function matchesGlobalSearch(wind) {
+      const parsed = parseSearchTerm(globalSearchTerm);
+      if (parsed.type === "none") return true;
+
+      if (parsed.type === "user") {
+        const author = normalizeId(wind.user);
+        return author.includes(parsed.value);
+      }
+
+      if (parsed.type === "hashtag") {
+        const tags = Array.isArray(wind.hashtags) ? wind.hashtags : extractHashtags(wind.text);
+        return tags.includes(parsed.value);
+      }
+
+      const haystack = `${wind.user || ""} ${wind.text || ""}`.toLowerCase();
+      return haystack.includes(parsed.value);
+    }
+
+    function setDarkMode(enabled) {
+      darkModeEnabled = enabled;
+      document.body.classList.toggle("light-mode", !enabled);
+      darkModeBtn.textContent = enabled ? "🌙 Dark Mode: On" : "☀️ Dark Mode: Off";
+      localStorage.setItem("kite-dark-mode", enabled ? "on" : "off");
     }
 
 
@@ -423,6 +462,7 @@
             const wind = doc.data();
             if (activeFeedView === "home" && !matchesHomeFeed(wind)) return;
             if (activeFeedView === "explore" && !matchesHashtagFilter(wind)) return;
+            if (!matchesGlobalSearch(wind)) return;
             chatContainer.appendChild(renderWind(doc, currentUserLabel));
             renderedCount += 1;
           });
@@ -457,6 +497,8 @@
       }
 
       currentUser = user;
+      const storedMode = localStorage.getItem("kite-dark-mode");
+      setDarkMode(storedMode !== "off");
       setSidebarOpen(true);
       homeAuthors = await loadHomeAuthors(user);
       setActiveView("home");
@@ -480,6 +522,21 @@
 
       profileTabBtn.addEventListener("click", () => {
         window.location.href = "profile.html";
+      });
+
+      globalSearchInput.addEventListener("input", () => {
+        globalSearchTerm = globalSearchInput.value;
+        attachFeedListener(user);
+      });
+
+      clearSearchBtn.addEventListener("click", () => {
+        globalSearchInput.value = "";
+        globalSearchTerm = "";
+        attachFeedListener(user);
+      });
+
+      darkModeBtn.addEventListener("click", () => {
+        setDarkMode(!darkModeEnabled);
       });
 
       hashtagSearchInput.addEventListener("input", () => {
