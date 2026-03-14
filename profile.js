@@ -27,7 +27,7 @@
   const goFeedBtn = document.getElementById("goFeedBtn");
   const logoutBtn = document.getElementById("logoutBtn");
 
-  const MAX_CHANGES = 15;
+  const MAX_CHANGES = 3;
   const targetIdentity = String(new URLSearchParams(window.location.search).get("user") || "").trim();
 
   let currentUser = null;
