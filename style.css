@@ -1485,7 +1485,8 @@ body.light-mode .right-toolbar-note {
 }
 
 body:not(.light-mode) {
-  background: #020617;
+  /* Keep dark-mode text colors while allowing the global JPG background to show. */
+  color: #e5e7eb;
 }
 
 body:not(.light-mode) .feed-sidebar,
