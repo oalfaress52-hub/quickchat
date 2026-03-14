@@ -230,7 +230,6 @@
       const button = document.createElement("button");
       button.className = "feed-like-btn";
       button.type = "button";
-      button.disabled = liked;
       button.classList.toggle("liked", liked);
 
       const icon = document.createElement("img");
@@ -250,7 +249,6 @@
 
     function updateLikeVisual(buttonEl, iconEl, countEl, liked, likes) {
       buttonEl.classList.toggle("liked", liked);
-      buttonEl.disabled = liked;
       iconEl.src = liked ? LIKED_ICON : LIKE_ICON;
       iconEl.alt = liked ? "liked" : "like";
       countEl.textContent = String(Number(likes) || 0);
@@ -343,7 +341,11 @@
       row.appendChild(commentLike.button);
 
       commentLike.button.addEventListener("click", async () => {
-        if (likedCommentIds.has(commentKey) || commentLike.button.classList.contains("pending")) return;
+        if (commentLike.button.classList.contains("pending")) return;
+        if (likedCommentIds.has(commentKey)) {
+          showNotice("You already liked this response.");
+          return;
+        }
         commentLike.button.classList.add("pending");
         try {
           await incrementLike(commentDoc.ref);
@@ -467,7 +469,11 @@
       });
 
       windLike.button.addEventListener("click", async () => {
-        if (likedWindIds.has(windDoc.id) || windLike.button.classList.contains("pending")) return;
+        if (windLike.button.classList.contains("pending")) return;
+        if (likedWindIds.has(windDoc.id)) {
+          showNotice("You already liked this wind.");
+          return;
+        }
         windLike.button.classList.add("pending");
         try {
           await incrementLike(windRef);

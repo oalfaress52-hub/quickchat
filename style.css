@@ -2057,7 +2057,12 @@ body.feed-view {
 }
 
 body.feed-view .feed-main {
-  background: rgba(8, 14, 30, 0.4);
+  background-color: rgba(8, 14, 30, 0.44);
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.22), rgba(35, 12, 10, 0.2)),
+    url("images/background.jpg");
+  background-position: center;
+  background-size: cover;
   border-left: none;
   border-right: none;
 }
@@ -2075,12 +2080,13 @@ body.feed-view .wind-feed {
 }
 
 body.feed-view .wind-card {
-  background-color: rgba(8, 14, 30, 0.72);
-  background-image:
-    linear-gradient(180deg, rgba(5, 8, 20, 0.34), rgba(35, 12, 10, 0.28)),
-    url("images/background.jpg");
-  background-position: center;
-  background-size: cover;
+  background: rgba(8, 14, 30, 0.78);
+}
+
+
+body.profile-view {
+  background-image: none;
+  background-color: #020617;
 }
 
 /* Keep Profile readable/solid and avoid accidental transparency regressions */
@@ -2122,8 +2128,8 @@ body.feed-view .wind-card:hover {
 }
 
 .feed-like-btn.liked {
-  opacity: 0.8;
-  cursor: default;
+  opacity: 0.92;
+  cursor: pointer;
 }
 
 .feed-like-btn.pending {
