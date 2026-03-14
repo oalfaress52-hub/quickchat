@@ -1,4 +1,14 @@
 (function waitForFirebase() {
+  function reportLoadStatus(name, error) {
+    if (error) {
+      console.error(`error "${name}" didnt load ❌`, error);
+      return;
+    }
+    console.info(`"${name}" succesfully loaded ✔`);
+  }
+
+  window.reportLoadStatus = reportLoadStatus;
+
   if (
     typeof firebase === "undefined" ||
     !firebase.apps ||
@@ -44,4 +54,5 @@
   window.db = db;
   window.containsBannedWords = containsBannedWords;
   window.formatTimestamp = formatTimestamp;
+  reportLoadStatus("Firebase bootstrap");
 })();

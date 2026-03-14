@@ -1,4 +1,12 @@
 (function initProfilePage() {
+  const reportLoadStatus = window.reportLoadStatus || ((name, error) => {
+    if (error) {
+      console.error(`error "${name}" didnt load ❌`, error);
+    } else {
+      console.info(`"${name}" succesfully loaded ✔`);
+    }
+  });
+
   const nicknameValue = document.getElementById("nicknameValue");
   const handleValue = document.getElementById("handleValue");
   const descriptionValue = document.getElementById("descriptionValue");
@@ -330,6 +338,7 @@
   }
 
   applyStoredTheme();
+  reportLoadStatus("Profile theme");
 
   firebase.auth().onAuthStateChanged(async (user) => {
     if (!user) {
@@ -404,6 +413,7 @@
 
     applyProfileToUI();
     setActiveTab("winds");
+    reportLoadStatus("Profile data");
 
     goHomeBtn.addEventListener("click", () => {
       window.location.href = "server.html";
@@ -431,8 +441,9 @@
     saveProfileBtn.addEventListener("click", async () => {
       try {
         await saveProfileChanges();
+        reportLoadStatus("Profile save");
       } catch (error) {
-        console.error(error);
+        reportLoadStatus("Profile save", error);
         setMessage(`Could not save profile: ${error.message || "unknown error"}`);
       }
     });
@@ -451,5 +462,7 @@
       await firebase.auth().signOut();
       window.location.href = "login.html";
     });
+
+    reportLoadStatus("Profile page");
   });
 })();
