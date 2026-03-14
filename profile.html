@@ -9,13 +9,15 @@
 <body>
   <main class="profile-layout">
     <aside class="profile-sidebar">
-      <div class="profile-sidebar-brand">🐦 Kite</div>
+      <div class="profile-sidebar-brand" aria-label="Kite brand">🐦 <span>Kite</span></div>
 
       <nav class="profile-nav" aria-label="Main navigation">
-        <button id="goHomeBtn" class="profile-nav-btn" type="button">🏠 Home</button>
-        <button id="goExploreBtn" class="profile-nav-btn" type="button"># Explore</button>
-        <button class="profile-nav-btn active" type="button">👤 Profile</button>
+        <button id="goHomeBtn" class="profile-nav-btn" type="button">🏠 <span>Home</span></button>
+        <button id="goExploreBtn" class="profile-nav-btn" type="button">🌎 <span>Explore</span></button>
+        <button class="profile-nav-btn active" type="button">👤 <span>Profile</span></button>
       </nav>
+
+      <button id="profileDarkModeBtn" class="secondary-btn" type="button">🌙 Dark Mode: On</button>
 
       <div class="profile-sidebar-actions">
         <button id="goFeedBtn" class="primary-btn" type="button">Open Wind Feed</button>

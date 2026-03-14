@@ -54,6 +54,14 @@
   <script src="app.js"></script>
 
   <script>
+    const reportLoadStatus = window.reportLoadStatus || ((name, error) => {
+      if (error) {
+        console.error(`error "${name}" didnt load ❌`, error);
+      } else {
+        console.info(`"${name}" succesfully loaded ✔`);
+      }
+    });
+
     const form = document.getElementById("signupForm");
     const errorMsg = document.getElementById("errorMsg");
 
@@ -81,6 +89,8 @@
       toggleConfirm.textContent = hidden ? "Hide" : "Show";
     };
 
+    reportLoadStatus("Signup controls");
+
     form.onsubmit = async (e) => {
       e.preventDefault();
       errorMsg.textContent = "";
@@ -102,11 +112,12 @@
         createdEmail = email;
 
         await createdUser.updateProfile({ displayName: nickname });
+        reportLoadStatus("Signup account creation");
 
         stepOne.classList.add("hidden");
         stepTwo.classList.remove("hidden");
       } catch (err) {
-        console.error(err);
+        reportLoadStatus("Signup account creation", err);
         errorMsg.textContent = err.message;
       }
     };
@@ -136,9 +147,10 @@
           profilePicture: `images/pfp/${firstLetter}.png`
         });
 
+        reportLoadStatus("Signup profile setup");
         window.location.href = "profile.html";
       } catch (err) {
-        console.error(err);
+        reportLoadStatus("Signup profile setup", err);
         errorMsg.textContent = err.message;
       }
     };

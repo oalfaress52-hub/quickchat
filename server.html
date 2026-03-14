@@ -10,10 +10,7 @@
   <main class="feed-page" id="feedPage">
     <aside class="feed-sidebar" id="feedSidebar">
       <div class="sidebar-top-row">
-        <div class="sidebar-brand">
-          <img src="favicon.ico" alt="Kite logo" class="sidebar-logo" />
-          <strong>Kite</strong>
-        </div>
+        <div class="sidebar-brand" aria-label="Kite brand">🐦 <strong>Kite</strong></div>
         <button id="sidebarCloseBtn" class="sidebar-close-btn" type="button" aria-label="Close toolbar">❌</button>
       </div>
 
@@ -69,6 +66,14 @@
   <script src="app.js"></script>
 
   <script>
+    const reportLoadStatus = window.reportLoadStatus || ((name, error) => {
+      if (error) {
+        console.error(`error "${name}" didnt load ❌`, error);
+      } else {
+        console.info(`"${name}" succesfully loaded ✔`);
+      }
+    });
+
     const chatContainer = document.getElementById("chatContainer");
     const chatInput = document.getElementById("chatInput");
     const sendBtn = document.getElementById("sendBtn");
@@ -103,6 +108,8 @@
     let globalSearchTerm = "";
     let darkModeEnabled = true;
     let currentUserProfilePicture = "images/pfp/a.png";
+
+    reportLoadStatus("Feed controls");
 
     function showNotice(text) {
       feedNotice.textContent = text;
@@ -523,7 +530,7 @@
         },
         (error) => {
           showNotice(`Feed unavailable: ${error.message || "permission denied"}`);
-          console.error("Feed listener failed:", error);
+          reportLoadStatus("Feed listener", error);
         }
       );
     }
@@ -558,6 +565,7 @@
       setDarkMode(storedMode !== "off");
       setSidebarOpen(true);
       homeAuthors = await loadHomeAuthors(user);
+      reportLoadStatus("Feed authors");
       setActiveView("home");
       attachFeedListener(user);
 
@@ -639,6 +647,7 @@
       });
 
       updateCounter();
+      reportLoadStatus("Feed page");
     });
   </script>
 </body>
