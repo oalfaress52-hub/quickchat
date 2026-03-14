@@ -1750,3 +1750,16 @@ body:not(.light-mode) .right-search {
 .comment-header {
   align-items: center;
 }
+
+.author-link {
+  border: none;
+  background: transparent;
+  color: inherit;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+}
+
+.author-link:hover {
+  text-decoration: underline;
+}

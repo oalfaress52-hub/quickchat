@@ -173,6 +173,12 @@
       localStorage.setItem("kite-dark-mode", enabled ? "on" : "off");
     }
 
+    function goToProfileByName(name) {
+      const value = String(name || "").trim();
+      if (!value) return;
+      window.location.href = `profile.html?user=${encodeURIComponent(value)}`;
+    }
+
 
     function clearCommentListeners() {
       commentUnsubscribers.forEach((unsubscribe) => unsubscribe());
@@ -269,8 +275,14 @@
       avatar.alt = "author avatar";
       avatar.src = comment.profilePicture || avatarFromName(comment.user);
 
-      const author = document.createElement("strong");
-      author.textContent = normalizeId(comment.user) === normalizeId(currentUserLabel) ? "You" : (comment.user || "Anonymous");
+      const author = document.createElement("button");
+      author.type = "button";
+      author.className = "author-link";
+      const commentAuthorLabel = normalizeId(comment.user) === normalizeId(currentUserLabel) ? "You" : (comment.user || "Anonymous");
+      author.textContent = commentAuthorLabel;
+      if (commentAuthorLabel !== "You") {
+        author.addEventListener("click", () => goToProfileByName(comment.user));
+      }
 
       authorWrap.appendChild(avatar);
       authorWrap.appendChild(author);
@@ -319,8 +331,14 @@
       avatar.alt = "author avatar";
       avatar.src = wind.profilePicture || avatarFromName(wind.user);
 
-      const name = document.createElement("strong");
-      name.textContent = normalizeId(wind.user) === normalizeId(currentUserLabel) ? "You" : (wind.user || "Anonymous");
+      const name = document.createElement("button");
+      name.type = "button";
+      name.className = "author-link";
+      const windAuthorLabel = normalizeId(wind.user) === normalizeId(currentUserLabel) ? "You" : (wind.user || "Anonymous");
+      name.textContent = windAuthorLabel;
+      if (windAuthorLabel !== "You") {
+        name.addEventListener("click", () => goToProfileByName(wind.user));
+      }
 
       authorWrap.appendChild(avatar);
       authorWrap.appendChild(name);

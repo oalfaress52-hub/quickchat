@@ -28,9 +28,13 @@
   const logoutBtn = document.getElementById("logoutBtn");
 
   const MAX_CHANGES = 15;
+  const targetIdentity = String(new URLSearchParams(window.location.search).get("user") || "").trim();
+
   let currentUser = null;
   let userRef = null;
   let activeTab = "winds";
+  let isViewingOtherProfile = false;
+  let viewLabels = [];
 
   const profileState = {
     nickname: "",
@@ -66,6 +70,15 @@
     descriptionChangesLeft.textContent = `Description changes left: ${Math.max(0, MAX_CHANGES - profileState.descriptionChanges)}`;
   }
 
+  function setEditAvailability() {
+    if (isViewingOtherProfile) {
+      editProfileBtn.classList.add("hidden");
+      editPanel.classList.add("hidden");
+    } else {
+      editProfileBtn.classList.remove("hidden");
+    }
+  }
+
   function applyProfileToUI() {
     nicknameValue.textContent = profileState.nickname;
     handleValue.textContent = `@${profileState.handle || "user"}`;
@@ -76,6 +89,14 @@
     handleEditInput.value = `@${profileState.handle}`;
     descriptionEditInput.value = profileState.description;
     updateChangeLabels();
+    setEditAvailability();
+  }
+
+  function labelsFromIdentity(identity) {
+    const vals = [identity.nickname, identity.handle ? `@${identity.handle}` : "", identity.handle, identity.email]
+      .map((v) => String(v || "").trim())
+      .filter(Boolean);
+    return [...new Set(vals)];
   }
 
   function setActiveTab(tab) {
@@ -107,18 +128,15 @@
   }
 
   async function loadUserWinds() {
-    const labels = [profileState.nickname, currentUser.displayName, currentUser.email]
-      .map((v) => String(v || "").trim())
-      .filter(Boolean);
-
     const seen = new Set();
     const allDocs = [];
-    for (const label of labels) {
+
+    for (const label of viewLabels) {
       const snap = await firebase.firestore()
         .collection("winds")
         .where("user", "==", label)
         .orderBy("time", "desc")
-        .limit(100)
+        .limit(120)
         .get();
 
       snap.forEach((doc) => {
@@ -139,12 +157,9 @@
   }
 
   async function loadReplies() {
-    const labels = [profileState.nickname, currentUser.displayName, currentUser.email]
-      .map((v) => String(v || "").trim())
-      .filter(Boolean);
-
     const replies = [];
-    for (const label of labels) {
+
+    for (const label of viewLabels) {
       try {
         const snap = await firebase.firestore()
           .collectionGroup("comments")
@@ -154,14 +169,10 @@
           .get();
 
         snap.forEach((doc) => {
-          replies.push({
-            id: doc.id,
-            path: doc.ref.path,
-            ...doc.data()
-          });
+          replies.push({ id: doc.id, path: doc.ref.path, ...doc.data() });
         });
       } catch (error) {
-        // If collectionGroup index/rules fail, continue gracefully.
+        // Graceful fallback when indexes/rules are unavailable.
       }
     }
 
@@ -207,7 +218,33 @@
     }
   }
 
+  async function findUserByIdentity(identity) {
+    const db = firebase.firestore();
+    const plain = identity.replace(/^@+/, "");
+
+    const tries = [
+      () => db.collection("users").where("nickname", "==", identity).limit(1).get(),
+      () => db.collection("users").where("email", "==", identity).limit(1).get(),
+      () => db.collection("users").where("handle", "==", plain.toLowerCase()).limit(1).get()
+    ];
+
+    for (const getSnap of tries) {
+      const snap = await getSnap();
+      if (!snap.empty) {
+        const doc = snap.docs[0];
+        return { id: doc.id, ...doc.data() };
+      }
+    }
+
+    return null;
+  }
+
   async function saveProfileChanges() {
+    if (isViewingOtherProfile) {
+      setMessage("You can only edit your own profile.");
+      return;
+    }
+
     hideMessage();
 
     const newNickname = nicknameEditInput.value.trim();
@@ -262,7 +299,6 @@
     await userRef.set(updates, { merge: true });
 
     Object.assign(profileState, {
-      ...profileState,
       nickname: updates.nickname ?? profileState.nickname,
       handle: updates.handle ?? profileState.handle,
       description: updates.description ?? profileState.description,
@@ -272,6 +308,7 @@
       profilePicture: updates.profilePicture ?? profileState.profilePicture
     });
 
+    viewLabels = labelsFromIdentity(profileState);
     applyProfileToUI();
     editPanel.classList.add("hidden");
     setMessage("Profile saved.");
@@ -287,31 +324,65 @@
     currentUser = user;
     userRef = firebase.firestore().collection("users").doc(user.uid);
 
-    const snap = await userRef.get();
-    const data = snap.exists ? snap.data() : {};
+    const ownSnap = await userRef.get();
+    const ownData = ownSnap.exists ? ownSnap.data() : {};
 
-    const nickname = data.nickname || user.displayName || "Anonymous";
-    const handle = data.handle || normalizeHandle(nickname + (user.uid || "").slice(0, 5)) || "user";
-    const profilePicture = data.profilePicture || `images/pfp/${letterForAvatar(nickname)}.png`;
+    const ownNickname = ownData.nickname || user.displayName || "Anonymous";
+    const ownHandle = ownData.handle || normalizeHandle(ownNickname + (user.uid || "").slice(0, 5)) || "user";
+    const ownPicture = ownData.profilePicture || `images/pfp/${letterForAvatar(ownNickname)}.png`;
 
-    Object.assign(profileState, {
-      nickname,
-      handle,
-      description: data.description || "",
-      nicknameChanges: Number(data.nicknameChanges) || 0,
-      handleChanges: Number(data.handleChanges) || 0,
-      descriptionChanges: Number(data.descriptionChanges) || 0,
-      profilePicture
-    });
+    const ownProfile = {
+      nickname: ownNickname,
+      handle: ownHandle,
+      description: ownData.description || "",
+      nicknameChanges: Number(ownData.nicknameChanges) || 0,
+      handleChanges: Number(ownData.handleChanges) || 0,
+      descriptionChanges: Number(ownData.descriptionChanges) || 0,
+      profilePicture: ownPicture,
+      email: ownData.email || user.email || ""
+    };
 
-    if (!snap.exists || !data.handle) {
+    let chosen = ownProfile;
+    if (targetIdentity && !labelsFromIdentity(ownProfile).map((v) => v.toLowerCase()).includes(targetIdentity.toLowerCase())) {
+      const found = await findUserByIdentity(targetIdentity);
+      if (found) {
+        isViewingOtherProfile = true;
+        chosen = {
+          nickname: found.nickname || targetIdentity,
+          handle: found.handle || normalizeHandle(found.nickname || targetIdentity) || "user",
+          description: found.description || "",
+          nicknameChanges: Number(found.nicknameChanges) || 0,
+          handleChanges: Number(found.handleChanges) || 0,
+          descriptionChanges: Number(found.descriptionChanges) || 0,
+          profilePicture: found.profilePicture || `images/pfp/${letterForAvatar(found.nickname || targetIdentity)}.png`,
+          email: found.email || ""
+        };
+      } else {
+        isViewingOtherProfile = true;
+        chosen = {
+          nickname: targetIdentity,
+          handle: normalizeHandle(targetIdentity) || "user",
+          description: "",
+          nicknameChanges: 0,
+          handleChanges: 0,
+          descriptionChanges: 0,
+          profilePicture: `images/pfp/${letterForAvatar(targetIdentity)}.png`,
+          email: ""
+        };
+      }
+    }
+
+    Object.assign(profileState, chosen);
+    viewLabels = labelsFromIdentity({ ...chosen, email: chosen.email });
+
+    if (!ownSnap.exists || !ownData.handle) {
       await userRef.set({
-        nickname,
-        handle,
-        profilePicture,
-        nicknameChanges: Number(data.nicknameChanges) || 0,
-        handleChanges: Number(data.handleChanges) || 0,
-        descriptionChanges: Number(data.descriptionChanges) || 0
+        nickname: ownProfile.nickname,
+        handle: ownProfile.handle,
+        profilePicture: ownProfile.profilePicture,
+        nicknameChanges: ownProfile.nicknameChanges,
+        handleChanges: ownProfile.handleChanges,
+        descriptionChanges: ownProfile.descriptionChanges
       }, { merge: true });
     }
 
@@ -331,6 +402,7 @@
     });
 
     editProfileBtn.addEventListener("click", () => {
+      if (isViewingOtherProfile) return;
       editPanel.classList.toggle("hidden");
     });
 
