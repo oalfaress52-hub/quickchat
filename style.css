@@ -2050,7 +2050,12 @@ body {
   }
 }
 
-/* Home + Explore: keep winds floating over the background without affecting Profile */
+/* Home + Explore: keep picture only inside wind cards (not under toolbars) */
+body.feed-view {
+  background-image: none;
+  background-color: #1a1a28;
+}
+
 body.feed-view .feed-main {
   background: rgba(8, 14, 30, 0.4);
   border-left: none;
@@ -2070,7 +2075,12 @@ body.feed-view .wind-feed {
 }
 
 body.feed-view .wind-card {
-  background: rgba(8, 14, 30, 0.78);
+  background-color: rgba(8, 14, 30, 0.72);
+  background-image:
+    linear-gradient(180deg, rgba(5, 8, 20, 0.34), rgba(35, 12, 10, 0.28)),
+    url("images/background.jpg");
+  background-position: center;
+  background-size: cover;
 }
 
 /* Keep Profile readable/solid and avoid accidental transparency regressions */
