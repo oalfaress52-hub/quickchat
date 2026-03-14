@@ -2049,3 +2049,21 @@ body {
     display: none;
   }
 }
+
+/* Home + Explore should feel like winds floating over the page background */
+.feed-main,
+.feed-main-inner,
+.wind-feed {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+}
+
+.wind-feed {
+  padding: 10px 6px 24px;
+}
+
+.wind-card {
+  background: rgba(8, 14, 30, 0.78);
+}
