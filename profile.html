@@ -38,7 +38,8 @@
             <h1 id="nicknameValue">-</h1>
             <p id="handleValue" class="profile-handle">@-</p>
             <p id="descriptionValue" class="profile-description">-</p>
-            <p class="profile-meta">Kite account</p>
+            <p id="profileMetaValue" class="profile-meta">Kite account</p>
+            <div id="profileInterests" class="profile-interests hidden"></div>
           </div>
 
           <button id="editProfileBtn" class="secondary-btn" type="button">Edit profile</button>
@@ -60,6 +61,14 @@
             <label>Description</label>
             <textarea id="descriptionEditInput" maxlength="220" placeholder="About you..."></textarea>
             <small id="descriptionChangesLeft">Description changes left: 3</small>
+          </div>
+          <div class="profile-edit-row">
+            <label>Favorite food</label>
+            <input id="favoriteFoodEditInput" type="text" maxlength="40" placeholder="Your favorite food" />
+          </div>
+          <div class="profile-edit-row">
+            <label>Favorite sport</label>
+            <input id="favoriteSportEditInput" type="text" maxlength="40" placeholder="Your favorite sport" />
           </div>
           <div class="profile-edit-actions">
             <button id="saveProfileBtn" class="primary-btn" type="button">Save profile</button>
