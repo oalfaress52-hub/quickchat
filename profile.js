@@ -10,6 +10,8 @@
   const nicknameValue = document.getElementById("nicknameValue");
   const handleValue = document.getElementById("handleValue");
   const descriptionValue = document.getElementById("descriptionValue");
+  const profileMetaValue = document.getElementById("profileMetaValue");
+  const profileInterests = document.getElementById("profileInterests");
   const profileAvatar = document.getElementById("profileAvatar");
   const profileFeed = document.getElementById("profileFeed");
   const profileMsg = document.getElementById("profileMsg");
@@ -22,6 +24,8 @@
   const nicknameEditInput = document.getElementById("nicknameEditInput");
   const handleEditInput = document.getElementById("handleEditInput");
   const descriptionEditInput = document.getElementById("descriptionEditInput");
+  const favoriteFoodEditInput = document.getElementById("favoriteFoodEditInput");
+  const favoriteSportEditInput = document.getElementById("favoriteSportEditInput");
 
   const nicknameChangesLeft = document.getElementById("nicknameChangesLeft");
   const handleChangesLeft = document.getElementById("handleChangesLeft");
@@ -49,6 +53,8 @@
     nickname: "",
     handle: "",
     description: "",
+    favoriteFood: "",
+    favoriteSport: "",
     nicknameChanges: 0,
     handleChanges: 0,
     descriptionChanges: 0,
@@ -106,10 +112,32 @@
     handleValue.textContent = `@${profileState.handle || "user"}`;
     descriptionValue.textContent = profileState.description || "No description yet.";
     profileAvatar.src = profileState.profilePicture;
+    const onboardingDone = Boolean(profileState.favoriteFood && profileState.favoriteSport);
+    profileMetaValue.textContent = onboardingDone ? "Kite account · Profile setup complete" : "Kite account · Finish profile setup";
+
+    if (onboardingDone) {
+      profileInterests.classList.remove("hidden");
+      profileInterests.innerHTML = "";
+
+      const foodChip = document.createElement("span");
+      foodChip.className = "profile-interest-chip";
+      foodChip.textContent = `🍔 ${profileState.favoriteFood}`;
+
+      const sportChip = document.createElement("span");
+      sportChip.className = "profile-interest-chip";
+      sportChip.textContent = `🏅 ${profileState.favoriteSport}`;
+
+      profileInterests.appendChild(foodChip);
+      profileInterests.appendChild(sportChip);
+    } else {
+      profileInterests.classList.add("hidden");
+    }
 
     nicknameEditInput.value = profileState.nickname;
     handleEditInput.value = `@${profileState.handle}`;
     descriptionEditInput.value = profileState.description;
+    favoriteFoodEditInput.value = profileState.favoriteFood;
+    favoriteSportEditInput.value = profileState.favoriteSport;
     updateChangeLabels();
     setEditAvailability();
   }
@@ -272,6 +300,8 @@
     const newNickname = nicknameEditInput.value.trim();
     const newHandle = normalizeHandle(handleEditInput.value);
     const newDescription = descriptionEditInput.value.trim();
+    const newFavoriteFood = favoriteFoodEditInput.value.trim();
+    const newFavoriteSport = favoriteSportEditInput.value.trim();
 
     if (!newNickname) {
       setMessage("Nickname cannot be empty.");
@@ -313,6 +343,20 @@
       updates.descriptionChanges = profileState.descriptionChanges + 1;
     }
 
+    if (newFavoriteFood !== profileState.favoriteFood) {
+      updates.favoriteFood = newFavoriteFood;
+    }
+
+    if (newFavoriteSport !== profileState.favoriteSport) {
+      updates.favoriteSport = newFavoriteSport;
+    }
+
+    if ("favoriteFood" in updates || "favoriteSport" in updates) {
+      const finalFood = "favoriteFood" in updates ? updates.favoriteFood : profileState.favoriteFood;
+      const finalSport = "favoriteSport" in updates ? updates.favoriteSport : profileState.favoriteSport;
+      updates.onboardingComplete = Boolean(finalFood && finalSport);
+    }
+
     if (!Object.keys(updates).length) {
       setMessage("No changes to save.");
       return;
@@ -324,6 +368,8 @@
       nickname: updates.nickname ?? profileState.nickname,
       handle: updates.handle ?? profileState.handle,
       description: updates.description ?? profileState.description,
+      favoriteFood: updates.favoriteFood ?? profileState.favoriteFood,
+      favoriteSport: updates.favoriteSport ?? profileState.favoriteSport,
       nicknameChanges: updates.nicknameChanges ?? profileState.nicknameChanges,
       handleChanges: updates.handleChanges ?? profileState.handleChanges,
       descriptionChanges: updates.descriptionChanges ?? profileState.descriptionChanges,
@@ -360,6 +406,8 @@
       nickname: ownNickname,
       handle: ownHandle,
       description: ownData.description || "",
+      favoriteFood: ownData.favoriteFood || "",
+      favoriteSport: ownData.favoriteSport || "",
       nicknameChanges: Number(ownData.nicknameChanges) || 0,
       handleChanges: Number(ownData.handleChanges) || 0,
       descriptionChanges: Number(ownData.descriptionChanges) || 0,
@@ -376,6 +424,8 @@
           nickname: found.nickname || targetIdentity,
           handle: found.handle || normalizeHandle(found.nickname || targetIdentity) || "user",
           description: found.description || "",
+          favoriteFood: found.favoriteFood || "",
+          favoriteSport: found.favoriteSport || "",
           nicknameChanges: Number(found.nicknameChanges) || 0,
           handleChanges: Number(found.handleChanges) || 0,
           descriptionChanges: Number(found.descriptionChanges) || 0,
@@ -388,6 +438,8 @@
           nickname: targetIdentity,
           handle: normalizeHandle(targetIdentity) || "user",
           description: "",
+          favoriteFood: "",
+          favoriteSport: "",
           nicknameChanges: 0,
           handleChanges: 0,
           descriptionChanges: 0,
@@ -405,6 +457,8 @@
         nickname: ownProfile.nickname,
         handle: ownProfile.handle,
         profilePicture: ownProfile.profilePicture,
+        favoriteFood: ownProfile.favoriteFood,
+        favoriteSport: ownProfile.favoriteSport,
         nicknameChanges: ownProfile.nicknameChanges,
         handleChanges: ownProfile.handleChanges,
         descriptionChanges: ownProfile.descriptionChanges

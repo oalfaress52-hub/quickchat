@@ -33,9 +33,20 @@
           <p id="feedSubtitle">Latest winds from people you follow and who they follow.</p>
         </header>
 
-        <section id="discoverSearch" class="discover-search hidden">
-          <label for="hashtagSearchInput">Search hashtags in Explore</label>
-          <input id="hashtagSearchInput" type="text" placeholder="#kite" />
+        <section class="feed-ranking-panel" aria-label="Feed ranking controls">
+          <div class="feed-ranking-row">
+            <label for="rankModeSelect">Ranking mode</label>
+            <select id="rankModeSelect" class="feed-rank-select">
+              <option value="balanced" selected>Balanced</option>
+              <option value="latest">Latest first</option>
+              <option value="popular">Popular now</option>
+            </select>
+          </div>
+          <div class="feed-stats" id="feedStats">
+            <span id="feedMetricTotal" class="feed-stat-chip">0 shown</span>
+            <span id="feedMetricFollowing" class="feed-stat-chip">0 following</span>
+            <span id="feedMetricDiscover" class="feed-stat-chip">0 discovery</span>
+          </div>
         </section>
 
         <section class="wind-compose">
@@ -57,6 +68,12 @@
       <input id="globalSearchInput" class="right-search" type="text" placeholder="Search @user/email or #hashtag" />
       <p class="right-toolbar-note">Use @name (or @gmail) to find user winds, and #tag for wind hashtags.</p>
       <button id="clearSearchBtn" type="button" class="secondary-btn">Clear Search</button>
+
+      <section class="notifications-panel" aria-label="Notifications">
+        <h3>Notifications</h3>
+        <p id="notificationEmpty" class="right-toolbar-note">No notifications yet.</p>
+        <div id="notificationList" class="notification-list"></div>
+      </section>
     </aside>
   </main>
 
@@ -85,14 +102,18 @@
     const profileTabBtn = document.getElementById("profileTabBtn");
     const feedTitle = document.getElementById("feedTitle");
     const feedSubtitle = document.getElementById("feedSubtitle");
-    const discoverSearch = document.getElementById("discoverSearch");
-    const hashtagSearchInput = document.getElementById("hashtagSearchInput");
     const feedPage = document.getElementById("feedPage");
     const sidebarCloseBtn = document.getElementById("sidebarCloseBtn");
     const sidebarToggleBtn = document.getElementById("sidebarToggleBtn");
     const globalSearchInput = document.getElementById("globalSearchInput");
     const clearSearchBtn = document.getElementById("clearSearchBtn");
     const darkModeBtn = document.getElementById("darkModeBtn");
+    const notificationList = document.getElementById("notificationList");
+    const notificationEmpty = document.getElementById("notificationEmpty");
+    const rankModeSelect = document.getElementById("rankModeSelect");
+    const feedMetricTotal = document.getElementById("feedMetricTotal");
+    const feedMetricFollowing = document.getElementById("feedMetricFollowing");
+    const feedMetricDiscover = document.getElementById("feedMetricDiscover");
 
     const MAX_WIND_LENGTH = 120;
     const LIKE_ICON = "images/ui/like.png";
@@ -103,6 +124,8 @@
     const commentUnsubscribers = new Map();
     let activeFeedView = "home";
     let homeAuthors = new Set();
+    let directFollowingAuthors = new Set();
+    let secondHopAuthors = new Set();
     let currentUser = null;
     const likedWindIds = new Set();
     const likedCommentIds = new Set();
@@ -110,6 +133,9 @@
     let globalSearchTerm = "";
     let darkModeEnabled = true;
     let currentUserProfilePicture = "images/pfp/a.png";
+    let unsubscribeNotifications = null;
+    let rankingMode = "balanced";
+    if (rankModeSelect) rankingMode = rankModeSelect.value || "balanced";
 
     function likedWindsStorageKey() {
       return currentUser ? `${LIKED_WINDS_KEY_PREFIX}-${currentUser.uid}` : LIKED_WINDS_KEY_PREFIX;
@@ -221,6 +247,68 @@
       commentUnsubscribers.clear();
     }
 
+    function renderNotificationItem(notification) {
+      const row = document.createElement("article");
+      row.className = "notification-item";
+
+      const message = document.createElement("p");
+      message.className = "notification-message";
+      message.textContent = notification.message || "New activity";
+
+      const meta = document.createElement("p");
+      meta.className = "notification-meta";
+      meta.textContent = window.formatTimestamp ? window.formatTimestamp(notification.time) : "now";
+
+      row.appendChild(message);
+      row.appendChild(meta);
+      return row;
+    }
+
+    function attachNotificationsListener(user) {
+      if (unsubscribeNotifications) {
+        unsubscribeNotifications();
+        unsubscribeNotifications = null;
+      }
+
+      unsubscribeNotifications = firebase.firestore()
+        .collection("users")
+        .doc(user.uid)
+        .collection("notifications")
+        .orderBy("time", "desc")
+        .limit(20)
+        .onSnapshot((snapshot) => {
+          notificationList.innerHTML = "";
+          if (snapshot.empty) {
+            notificationEmpty.classList.remove("hidden");
+            return;
+          }
+
+          notificationEmpty.classList.add("hidden");
+          snapshot.forEach((doc) => {
+            notificationList.appendChild(renderNotificationItem(doc.data()));
+          });
+        }, (error) => {
+          notificationEmpty.classList.remove("hidden");
+          notificationEmpty.textContent = `Notifications unavailable: ${error.message || "permission denied"}`;
+        });
+    }
+
+    async function createNotification(recipientUid, message, windId) {
+      if (!currentUser || !recipientUid || recipientUid === currentUser.uid) return;
+
+      await firebase.firestore()
+        .collection("users")
+        .doc(recipientUid)
+        .collection("notifications")
+        .add({
+          message,
+          windId: windId || "",
+          actorUid: currentUser.uid,
+          actorLabel: currentUser.displayName || currentUser.email || "Someone",
+          time: firebase.firestore.FieldValue.serverTimestamp()
+        });
+    }
+
     function setSidebarOpen(open) {
       feedPage.classList.toggle("sidebar-hidden", !open);
       sidebarToggleBtn.textContent = open ? "<<" : ">>";
@@ -285,9 +373,11 @@
 
     async function loadHomeAuthors(user) {
       const db = firebase.firestore();
-      const authors = new Set();
+      const allAuthors = new Set();
+      const directAuthors = new Set();
+      const secondHop = new Set();
       const selfIds = [user.uid, user.email, user.displayName].map(normalizeId).filter(Boolean);
-      selfIds.forEach((id) => authors.add(id));
+      selfIds.forEach((id) => allAuthors.add(id));
 
       try {
         const meSnap = await db.collection("users").doc(user.uid).get();
@@ -295,15 +385,21 @@
         const myFollowing = Array.isArray(me.following) ? me.following : [];
         const followingIds = myFollowing.map(normalizeId).filter(Boolean);
 
-        followingIds.forEach((id) => authors.add(id));
+        followingIds.forEach((id) => {
+          directAuthors.add(id);
+          allAuthors.add(id);
+        });
 
         for (const followedId of followingIds) {
           try {
             const followedSnap = await db.collection("users").doc(followedId).get();
             if (!followedSnap.exists) continue;
             const followed = followedSnap.data();
-            const secondHop = Array.isArray(followed.following) ? followed.following : [];
-            secondHop.map(normalizeId).filter(Boolean).forEach((id) => authors.add(id));
+            const secondHopFollowing = Array.isArray(followed.following) ? followed.following : [];
+            secondHopFollowing.map(normalizeId).filter(Boolean).forEach((id) => {
+              secondHop.add(id);
+              allAuthors.add(id);
+            });
           } catch (error) {
             console.warn("Could not load followed user:", followedId, error);
           }
@@ -312,11 +408,134 @@
         console.warn("Could not load following list:", error);
       }
 
-      return authors;
+      return { allAuthors, directAuthors, secondHop };
     }
 
     function matchesHomeFeed(wind) {
       return homeAuthors.has(normalizeId(wind.user));
+    }
+
+    function windTimestampMs(wind) {
+      if (wind && wind.time && wind.time.toMillis) return wind.time.toMillis();
+      if (wind && wind.time) return new Date(wind.time).getTime() || 0;
+      return 0;
+    }
+
+    function relationshipBoost(wind, user) {
+      const authorId = normalizeId(wind.user);
+      const selfIds = [user.uid, user.email, user.displayName].map(normalizeId).filter(Boolean);
+      if (selfIds.includes(authorId)) return 8;
+      if (directFollowingAuthors.has(authorId)) return 5;
+      if (secondHopAuthors.has(authorId)) return 2;
+      return 0;
+    }
+
+    function computeFeedScore(entry, trendMap, user) {
+      const wind = entry.data;
+      const now = Date.now();
+      const ageHours = Math.max(0, (now - windTimestampMs(wind)) / 3600000);
+      const likes = Number(wind.likes) || 0;
+      const hashtags = Array.isArray(wind.hashtags) ? wind.hashtags : extractHashtags(wind.text);
+      const trendValue = hashtags.reduce((total, tag) => total + (trendMap.get(tag) || 0), 0);
+      const relationship = relationshipBoost(wind, user);
+      const textLength = String(wind.text || "").length;
+      const textQualityBoost = textLength >= 30 && textLength <= MAX_WIND_LENGTH ? 1 : 0;
+
+      if (rankingMode === "latest") {
+        return windTimestampMs(wind);
+      }
+
+      if (rankingMode === "popular") {
+        const popularity = likes * 3.2 + Math.log10(textLength + 10) + trendValue * 0.9;
+        const freshness = 40 / (ageHours + 2);
+        return popularity + freshness + relationship;
+      }
+
+      const recency = 70 / (ageHours + 2);
+      const engagement = likes * 2.4;
+      const trendBoost = trendValue * 0.8;
+      const freshnessBonus = ageHours < 1 ? 2 : 0;
+      return recency + engagement + relationship + trendBoost + textQualityBoost + freshnessBonus;
+    }
+
+    function diversifyFeed(entries) {
+      const pool = entries.slice();
+      const authorCounts = new Map();
+      const ordered = [];
+
+      while (pool.length) {
+        let bestIndex = 0;
+        let bestValue = -Infinity;
+
+        for (let i = 0; i < pool.length; i += 1) {
+          const author = normalizeId(pool[i].data.user);
+          const repeats = authorCounts.get(author) || 0;
+          const adjusted = pool[i].score - repeats * 5;
+          if (adjusted > bestValue) {
+            bestValue = adjusted;
+            bestIndex = i;
+          }
+        }
+
+        const [picked] = pool.splice(bestIndex, 1);
+        const author = normalizeId(picked.data.user);
+        authorCounts.set(author, (authorCounts.get(author) || 0) + 1);
+        ordered.push(picked);
+      }
+
+      return ordered;
+    }
+
+    function rankFeedEntries(entries, user) {
+      const trendMap = new Map();
+      entries.forEach((entry) => {
+        const tags = Array.isArray(entry.data.hashtags) ? entry.data.hashtags : extractHashtags(entry.data.text);
+        tags.forEach((tag) => {
+          trendMap.set(tag, (trendMap.get(tag) || 0) + 1);
+        });
+      });
+
+      const scored = entries.map((entry) => ({
+        ...entry,
+        score: computeFeedScore(entry, trendMap, user)
+      }));
+
+      scored.sort((a, b) => {
+        if (b.score !== a.score) return b.score - a.score;
+        return windTimestampMs(b.data) - windTimestampMs(a.data);
+      });
+
+      return diversifyFeed(scored);
+    }
+
+    function mixHomeFeed(rankedEntries) {
+      const followed = rankedEntries.filter((entry) => matchesHomeFeed(entry.data));
+      const discovery = rankedEntries.filter((entry) => !matchesHomeFeed(entry.data));
+      const mixed = [];
+
+      let i = 0;
+      let j = 0;
+      while (i < followed.length || j < discovery.length) {
+        for (let step = 0; step < 4 && i < followed.length; step += 1) {
+          mixed.push({ ...followed[i], source: "following" });
+          i += 1;
+        }
+
+        if (j < discovery.length) {
+          mixed.push({ ...discovery[j], source: "discover" });
+          j += 1;
+        }
+      }
+
+      return mixed;
+    }
+
+    function updateFeedMetrics(items) {
+      const followingCount = items.filter((item) => item.source === "following").length;
+      const discoverCount = items.filter((item) => item.source === "discover").length;
+      feedMetricTotal.textContent = `${items.length} shown`;
+      feedMetricFollowing.textContent = `${followingCount} following`;
+      feedMetricDiscover.textContent = `${discoverCount} discovery`;
     }
 
     function renderComment(commentDoc, currentUserLabel) {
@@ -374,6 +593,11 @@
           likedCommentIds.add(commentKey);
           saveLikedState();
           updateLikeVisual(commentLike.button, commentLike.icon, commentLike.count, true, (Number(commentLike.count.textContent) || 0) + 1);
+          await createNotification(
+            comment.creatorUid,
+            `${currentUser.displayName || currentUser.email || "Someone"} liked your response.`,
+            comment.windId || ""
+          );
         } catch (error) {
           commentLike.button.disabled = false;
           showNotice(`Unable to like response: ${error.message || "unknown error"}`);
@@ -385,8 +609,8 @@
       return row;
     }
 
-    function renderWind(windDoc, currentUserLabel) {
-      const wind = windDoc.data();
+    function renderWind(windDoc, currentUserLabel, sourceLabel = "") {
+      const wind = typeof windDoc.data === "function" ? windDoc.data() : windDoc.data;
       const card = document.createElement("article");
       card.className = "wind-card";
 
@@ -416,6 +640,13 @@
       const time = document.createElement("span");
       time.textContent = window.formatTimestamp ? window.formatTimestamp(wind.time) : "now";
 
+      const sourceBadge = document.createElement("span");
+      sourceBadge.className = "wind-source-badge";
+      sourceBadge.textContent = sourceLabel === "discover" ? "Discover pick" : "Following";
+      if (!sourceLabel) {
+        sourceBadge.classList.add("hidden");
+      }
+
       const text = document.createElement("p");
       text.className = "wind-text";
       text.textContent = wind.text || "";
@@ -433,7 +664,8 @@
         chip.addEventListener("click", () => {
           setActiveView("explore");
           hashtagFilter = tag;
-          hashtagSearchInput.value = `#${tag}`;
+          globalSearchTerm = `#${tag}`;
+          globalSearchInput.value = `#${tag}`;
           attachFeedListener(currentUser);
         });
         hashtagsRow.appendChild(chip);
@@ -502,6 +734,7 @@
 
       header.appendChild(authorWrap);
       header.appendChild(time);
+      header.appendChild(sourceBadge);
       card.appendChild(header);
       card.appendChild(text);
       if (hashtags.length) card.appendChild(hashtagsRow);
@@ -527,6 +760,11 @@
           likedWindIds.add(windDoc.id);
           saveLikedState();
           updateLikeVisual(windLike.button, windLike.icon, windLike.count, true, (Number(windLike.count.textContent) || 0) + 1);
+          await createNotification(
+            wind.creatorUid,
+            `${currentUser.displayName || currentUser.email || "Someone"} liked your wind.`,
+            windDoc.id
+          );
         } catch (error) {
           windLike.button.disabled = false;
           showNotice(`Unable to like wind: ${error.message || "unknown error"}`);
@@ -549,8 +787,15 @@
             text: responseText,
             time: firebase.firestore.FieldValue.serverTimestamp(),
             user: currentUserLabel,
-            profilePicture: currentUserProfilePicture
+            profilePicture: currentUserProfilePicture,
+            creatorUid: currentUser.uid,
+            windId: windDoc.id
           });
+          await createNotification(
+            wind.creatorUid,
+            `${currentUser.displayName || currentUser.email || "Someone"} replied to your wind.`,
+            windDoc.id
+          );
           commentInput.value = "";
         } catch (error) {
           showNotice(`Unable to post response: ${error.message || "unknown error"}`);
@@ -584,14 +829,14 @@
       activeFeedView = view;
       homeTabBtn.classList.toggle("active", view === "home");
       exploreTabBtn.classList.toggle("active", view === "explore");
-      const showDiscover = view === "explore";
-      discoverSearch.classList.toggle("hidden", !showDiscover);
       if (view === "home") {
         feedTitle.textContent = "Home";
-        feedSubtitle.textContent = "Latest winds from people you follow and who they follow.";
+        feedSubtitle.textContent = "Smart-ranked: people you follow first, with discovery mixed in.";
       } else {
         feedTitle.textContent = "Explore";
-        feedSubtitle.textContent = hashtagFilter ? `Showing latest for #${hashtagFilter}` : "Latest winds from everyone.";
+        feedSubtitle.textContent = hashtagFilter
+          ? `Smart-ranked results for #${hashtagFilter}`
+          : "Smart-ranked winds from everyone.";
       }
     }
 
@@ -604,25 +849,39 @@
       clearNotice();
       clearCommentListeners();
 
-      const query = firebase.firestore().collection("winds").orderBy("time", "desc").limit(150);
+      const query = firebase.firestore().collection("winds").orderBy("time", "desc").limit(180);
       unsubscribeFeed = query.onSnapshot(
         (snapshot) => {
           chatContainer.innerHTML = "";
           const currentUserLabel = user.displayName || user.email || "Anonymous";
-          let renderedCount = 0;
 
+          const candidates = [];
           snapshot.forEach((doc) => {
             const wind = doc.data();
-            if (activeFeedView === "home" && !matchesHomeFeed(wind)) return;
             if (activeFeedView === "explore" && !matchesHashtagFilter(wind)) return;
             if (!matchesGlobalSearch(wind)) return;
-            chatContainer.appendChild(renderWind(doc, currentUserLabel));
-            renderedCount += 1;
+            candidates.push({ id: doc.id, data: wind });
           });
 
-          if (renderedCount === 0) {
+          const ranked = rankFeedEntries(candidates, user);
+          let feedItems = ranked;
+
+          if (activeFeedView === "home") {
+            feedItems = mixHomeFeed(ranked);
+          } else {
+            feedItems = ranked.map((entry) => ({ ...entry, source: "discover" }));
+          }
+
+          const sliced = feedItems.slice(0, 120);
+          updateFeedMetrics(sliced);
+
+          sliced.forEach((item) => {
+            chatContainer.appendChild(renderWind(item, currentUserLabel, item.source));
+          });
+
+          if (sliced.length === 0) {
             showNotice(activeFeedView === "home"
-              ? "No winds in Home yet."
+              ? "No winds in Home yet. Follow more people to tune your ranking."
               : (hashtagFilter ? `No winds for #${hashtagFilter}.` : "No winds yet. Be the first to post."));
           }
         },
@@ -664,10 +923,14 @@
       const storedMode = localStorage.getItem("kite-dark-mode");
       setDarkMode(storedMode !== "off");
       setSidebarOpen(true);
-      homeAuthors = await loadHomeAuthors(user);
+      const authorGraph = await loadHomeAuthors(user);
+      homeAuthors = authorGraph.allAuthors;
+      directFollowingAuthors = authorGraph.directAuthors;
+      secondHopAuthors = authorGraph.secondHop;
       reportLoadStatus("Feed authors");
       setActiveView("home");
       attachFeedListener(user);
+      attachNotificationsListener(user);
 
       sidebarCloseBtn.addEventListener("click", () => setSidebarOpen(false));
       sidebarToggleBtn.addEventListener("click", () => {
@@ -677,7 +940,6 @@
 
       homeTabBtn.addEventListener("click", () => {
         hashtagFilter = "";
-        hashtagSearchInput.value = "";
         setActiveView("home");
         attachFeedListener(user);
       });
@@ -702,16 +964,13 @@
         attachFeedListener(user);
       });
 
-      darkModeBtn.addEventListener("click", () => {
-        setDarkMode(!darkModeEnabled);
+      rankModeSelect.addEventListener("change", () => {
+        rankingMode = rankModeSelect.value;
+        attachFeedListener(user);
       });
 
-      hashtagSearchInput.addEventListener("input", () => {
-        hashtagFilter = normalizeHashtag(hashtagSearchInput.value);
-        if (activeFeedView === "explore") {
-          setActiveView("explore");
-          attachFeedListener(user);
-        }
+      darkModeBtn.addEventListener("click", () => {
+        setDarkMode(!darkModeEnabled);
       });
 
       sendBtn.addEventListener("click", async () => {
@@ -749,6 +1008,7 @@
       });
 
       updateCounter();
+      updateFeedMetrics([]);
       reportLoadStatus("Feed page");
     });
   </script>
