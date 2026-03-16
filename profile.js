@@ -46,6 +46,7 @@
   const goHomeBtn = document.getElementById("goHomeBtn");
   const goExploreBtn = document.getElementById("goExploreBtn");
   const goFeedBtn = document.getElementById("goFeedBtn");
+  const goSettingsBtn = document.getElementById("goSettingsBtn");
   const logoutBtn = document.getElementById("logoutBtn");
   const profileDarkModeBtn = document.getElementById("profileDarkModeBtn");
 
@@ -542,7 +543,8 @@
       handleChanges: Number(ownData.handleChanges) || 0,
       descriptionChanges: Number(ownData.descriptionChanges) || 0,
       profilePicture: ownPicture,
-      email: ownData.email || user.email || ""
+      email: ownData.email || user.email || "",
+      language: ownData.language || "en"
     };
 
     let chosen = ownProfile;
@@ -566,7 +568,8 @@
           handleChanges: Number(found.handleChanges) || 0,
           descriptionChanges: Number(found.descriptionChanges) || 0,
           profilePicture: found.profilePicture || `images/pfp/${letterForAvatar(found.nickname || targetIdentity)}.png`,
-          email: found.email || ""
+          email: found.email || "",
+          language: found.language || "en"
         };
       } else {
         isViewingOtherProfile = true;
@@ -586,12 +589,15 @@
           handleChanges: 0,
           descriptionChanges: 0,
           profilePicture: `images/pfp/${letterForAvatar(targetIdentity)}.png`,
-          email: ""
+          email: "",
+          language: "en"
         };
       }
     }
 
     Object.assign(profileState, chosen);
+    if (chosen.language) window.KITE_I18N.setLanguage(chosen.language);
+    await window.KITE_I18N.applyLanguage(document);
     viewLabels = labelsFromIdentity({ ...chosen, email: chosen.email });
 
     if (!ownSnap.exists || !ownData.handle) {
@@ -628,6 +634,12 @@
     goFeedBtn.addEventListener("click", () => {
       window.location.href = "server.html";
     });
+
+    if (goSettingsBtn) {
+      goSettingsBtn.addEventListener("click", () => {
+        window.location.href = "settings.html";
+      });
+    }
 
     editProfileBtn.addEventListener("click", () => {
       if (isViewingOtherProfile) return;

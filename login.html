@@ -10,14 +10,14 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Kite</h1>
-      <h2>Advanced Login</h2>
-      <p class="profile-small-text">Secure sign-in with device trust + challenge code.</p>
+      <h2 data-i18n="login.title">Advanced Login</h2>
+      <p class="profile-small-text" data-i18n="login.subtitle">Secure sign-in with device trust + challenge code.</p>
 
       <form id="loginForm" autocomplete="on">
         <input
           type="email"
           id="email"
-          placeholder="Email"
+          placeholder="Email" data-i18n-placeholder="login.email"
           autocomplete="email"
           required
         />
@@ -26,7 +26,7 @@
           <input
             type="password"
             id="password"
-            placeholder="Password"
+            placeholder="Password" data-i18n-placeholder="login.password"
             autocomplete="current-password"
             required
           />
@@ -34,14 +34,14 @@
         </div>
 
         <div class="profile-edit-row">
-          <label for="challengeCode">Security challenge code (optional)</label>
+          <label for="challengeCode" data-i18n="login.challenge">Security challenge code (optional)</label>
           <input type="text" id="challengeCode" maxlength="6" inputmode="numeric" placeholder="123456" />
-          <small>Tip: Enter 123456 in demo mode to simulate second factor.</small>
+          <small data-i18n="login.challenge.tip">Tip: Enter 123456 in demo mode to simulate second factor.</small>
         </div>
 
-        <label class="remember-row"><input type="checkbox" id="rememberDevice" checked /> Trust this device for 30 days</label>
+        <label class="remember-row"><input type="checkbox" id="rememberDevice" checked /> <span data-i18n="login.trust">Trust this device for 30 days</span></label>
 
-        <button type="submit" class="primary-btn">Secure Log In</button>
+        <button type="submit" class="primary-btn" data-i18n="login.submit">Secure Log In</button>
       </form>
 
       <p class="switch">
@@ -58,6 +58,7 @@
 
   <script src="blacklisted.js"></script>
   <script src="policy.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -75,6 +76,8 @@
     const errorMsg = document.getElementById("errorMsg");
     const codeInput = document.getElementById("challengeCode");
     const rememberDevice = document.getElementById("rememberDevice");
+
+    window.KITE_I18N.applyLanguage(document);
 
     window.KITE_POLICY.requireLocalPolicyAcceptance({
       title: "Login Policy Gate",
@@ -120,6 +123,9 @@
             return;
           }
         }
+        const userSnap = await firebase.firestore().collection("users").doc(user.uid).get();
+        const userData = userSnap.exists ? userSnap.data() : {};
+        if (userData.language) await window.KITE_I18N.setAndApply(userData.language);
         window.KITE_POLICY.setSessionCookie(user.uid, 30);
         window.location.href = "profile.html";
       } catch (err) {

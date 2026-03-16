@@ -16,14 +16,15 @@
       <nav class="feed-nav profile-nav" aria-label="Main navigation">
         <button id="goHomeBtn" class="sidebar-btn" type="button">🏠 <span>Home</span></button>
         <button id="goExploreBtn" class="sidebar-btn" type="button">🌎 <span>Explore</span></button>
-        <button class="sidebar-btn active" type="button">👤 <span>Profile</span></button>
+        <button class="sidebar-btn active" type="button">👤 <span data-i18n="feed.profile">Profile</span></button>
+        <button id="goSettingsBtn" class="sidebar-btn" type="button">⚙️ <span data-i18n="feed.settings">Settings</span></button>
       </nav>
 
       <button id="profileDarkModeBtn" class="secondary-btn" type="button">🌙 Dark Mode: On</button>
 
       <div class="profile-sidebar-actions">
         <button id="goFeedBtn" class="primary-btn" type="button">Open Wind Feed</button>
-        <button id="logoutBtn" class="secondary-btn danger" type="button">Logout</button>
+        <button id="logoutBtn" class="secondary-btn danger" type="button" data-i18n="feed.logout">Logout</button>
       </div>
     </aside>
 
@@ -143,6 +144,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="blacklisted.js"></script>
   <script src="policy.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
   <script src="profile.js"></script>
 </body>

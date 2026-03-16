@@ -10,37 +10,44 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Kite</h1>
-      <h2>Create Account</h2>
+      <h2 data-i18n="signup.title">Create Account</h2>
 
       <form id="signupForm" novalidate>
         <div id="signupStepOne">
-        <input type="text" id="nickname" placeholder="Nickname" required />
-        <input type="email" id="email" placeholder="Email" autocomplete="email" required />
+        <input type="text" id="nickname" placeholder="Nickname" data-i18n-placeholder="signup.nickname" required />
+        <input type="email" id="email" placeholder="Email" data-i18n-placeholder="signup.email" autocomplete="email" required />
 
         <div class="password-field">
-          <input type="password" id="password" placeholder="Password" autocomplete="new-password" required />
+          <input type="password" id="password" placeholder="Password" data-i18n-placeholder="signup.password" autocomplete="new-password" required />
           <span class="password-toggle" id="togglePassword">Show</span>
         </div>
 
         <div class="password-field">
-          <input type="password" id="confirmPassword" placeholder="Confirm Password" autocomplete="new-password" required />
+          <input type="password" id="confirmPassword" placeholder="Confirm Password" data-i18n-placeholder="signup.confirm" autocomplete="new-password" required />
           <span class="password-toggle" id="toggleConfirmPassword">Show</span>
         </div>
 
         <!-- SAME LABEL AS BEFORE -->
-        <label class="remember-row"><input type="checkbox" id="acceptPolicy" required /> I accept Kite policy and understand violating it can terminate my account.</label>
-        <button type="submit" class="primary-btn" id="createAccountBtn">Sign Up</button>
+
+        <div class="profile-edit-row">
+          <label for="defaultLanguage" data-i18n="signup.language">Default language</label>
+          <select id="defaultLanguage">
+            <option value="en" data-i18n="signup.english">English</option>
+            <option value="sv" data-i18n="signup.swedish">Swedish</option>
+          </select>
+        </div>
+        <button type="submit" class="primary-btn" id="createAccountBtn" data-i18n="signup.submit">Sign Up</button>
         </div>
 
         <div id="signupStepTwo" class="hidden">
-          <input type="text" id="favoriteFood" placeholder="What's your favorite food?" required />
-          <input type="text" id="favoriteSport" placeholder="What's your favorite sport?" required />
-          <button type="button" class="primary-btn" id="finishProfileBtn">Finish Profile</button>
+          <input type="text" id="favoriteFood" placeholder="What's your favorite food?" data-i18n-placeholder="signup.food" required />
+          <input type="text" id="favoriteSport" placeholder="What's your favorite sport?" data-i18n-placeholder="signup.sport" required />
+          <button type="button" class="primary-btn" id="finishProfileBtn" data-i18n="signup.finish">Finish Profile</button>
         </div>
       </form>
 
       <p class="switch">
-        Already have an account? <a href="login.html">Login</a>
+        <a href="login.html" data-i18n="signup.login">Already have an account? Login</a>
       </p>
 
       <p id="errorMsg" class="error-text"></p>
@@ -54,6 +61,7 @@
 
   <script src="blacklisted.js"></script>
   <script src="policy.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -82,9 +90,19 @@
       subtitle: "You must accept Kite policy before creating an account."
     });
 
+    window.KITE_POLICY.requireLocalPolicyAcceptance({
+      title: "Sign-up Policy Gate",
+      subtitle: "You must accept Kite policy before creating an account."
+    });
+
+    const defaultLanguage = document.getElementById("defaultLanguage");
+
     let createdUser = null;
     let createdNickname = "";
     let createdEmail = "";
+
+    window.KITE_I18N.applyLanguage(document);
+    defaultLanguage.value = window.KITE_I18N.getLanguage();
 
     togglePassword.onclick = () => {
       const hidden = passwordInput.type === "password";
@@ -108,6 +126,7 @@
       const email = document.getElementById("email").value.trim();
       const password = passwordInput.value;
       const confirmPassword = confirmInput.value;
+      const preferredLanguage = defaultLanguage.value;
 
       if (password !== confirmPassword) {
         errorMsg.textContent = "Passwords do not match.";
@@ -120,6 +139,7 @@
 
       try {
         await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+        await window.KITE_I18N.setAndApply(preferredLanguage);
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
         createdUser = cred.user;
         createdNickname = nickname;
@@ -164,9 +184,11 @@
           favoriteSport,
           onboardingComplete: true,
           description,
-          profilePicture: `images/pfp/${firstLetter}.png`
-        });
+          profilePicture: `images/pfp/${firstLetter}.png`,
+          language: defaultLanguage.value
+        }, { merge: true });
 
+        window.KITE_I18N.setLanguage(defaultLanguage.value);
         window.KITE_POLICY.setSessionCookie(createdUser.uid, 30);
         reportLoadStatus("Signup profile setup");
         window.location.href = "profile.html";

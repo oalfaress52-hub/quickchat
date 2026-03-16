@@ -15,13 +15,14 @@
       </div>
 
       <nav class="feed-nav" aria-label="Feed views">
-        <button id="homeTabBtn" class="sidebar-btn active" type="button">🏠 Home</button>
-        <button id="exploreTabBtn" class="sidebar-btn" type="button">🌎 Explore</button>
-        <button id="profileTabBtn" class="sidebar-btn" type="button">👤 Profile</button>
+        <button id="homeTabBtn" class="sidebar-btn active" type="button" data-i18n="feed.home">🏠 Home</button>
+        <button id="exploreTabBtn" class="sidebar-btn" type="button" data-i18n="feed.explore">🌎 Explore</button>
+        <button id="profileTabBtn" class="sidebar-btn" type="button" data-i18n="feed.profile">👤 Profile</button>
+        <button id="settingsTabBtn" class="sidebar-btn" type="button" data-i18n="feed.settings">⚙️ Settings</button>
       </nav>
 
       <button id="darkModeBtn" class="secondary-btn" type="button">🌙 Dark Mode: On</button>
-      <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button">Logout</button>
+      <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button" data-i18n="feed.logout">Logout</button>
     </aside>
 
     <button id="sidebarToggleBtn" class="sidebar-toggle-btn" type="button" aria-label="Toggle toolbar">&gt;&gt;</button>
@@ -50,11 +51,11 @@
         </section>
 
         <section class="wind-compose">
-          <label for="chatInput">What's happening?</label>
+          <label for="chatInput" data-i18n="feed.happening">What's happening?</label>
           <textarea id="chatInput" maxlength="120" placeholder="What's happening right now?"></textarea>
           <div class="wind-compose-footer">
             <span id="charCounter">0/120</span>
-            <button id="sendBtn" class="chat-send-btn" type="button">Post</button>
+            <button id="sendBtn" class="chat-send-btn" type="button" data-i18n="feed.post">Post</button>
           </div>
           <p id="feedNotice" class="feed-notice hidden"></p>
         </section>
@@ -64,13 +65,13 @@
     </section>
 
     <aside class="right-toolbar" aria-label="Search and tools">
-      <h3>Search</h3>
+      <h3 data-i18n="feed.search">Search</h3>
       <input id="globalSearchInput" class="right-search" type="text" placeholder="Search @user/email or #hashtag" />
       <p class="right-toolbar-note">Use @name (or @gmail) to find user winds, and #tag for wind hashtags.</p>
-      <button id="clearSearchBtn" type="button" class="secondary-btn">Clear Search</button>
+      <button id="clearSearchBtn" type="button" class="secondary-btn" data-i18n="feed.clear">Clear Search</button>
 
       <section class="notifications-panel" aria-label="Notifications">
-        <h3>Notifications</h3>
+        <h3 data-i18n="feed.notifications">Notifications</h3>
         <p id="notificationEmpty" class="right-toolbar-note">No notifications yet.</p>
         <div id="notificationList" class="notification-list"></div>
       </section>
@@ -82,6 +83,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
   <script src="blacklisted.js"></script>
   <script src="policy.js"></script>
+  <script src="i18n.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -102,6 +104,7 @@
     const homeTabBtn = document.getElementById("homeTabBtn");
     const exploreTabBtn = document.getElementById("exploreTabBtn");
     const profileTabBtn = document.getElementById("profileTabBtn");
+    const settingsTabBtn = document.getElementById("settingsTabBtn");
     const feedTitle = document.getElementById("feedTitle");
     const feedSubtitle = document.getElementById("feedSubtitle");
     const feedPage = document.getElementById("feedPage");
@@ -938,6 +941,8 @@
         const userDoc = await firebase.firestore().collection("users").doc(user.uid).get();
         const userData = userDoc.exists ? userDoc.data() : {};
         currentUserProfilePicture = userData.profilePicture || avatarFromName(user.displayName || user.email || "a");
+        if (userData.language) window.KITE_I18N.setLanguage(userData.language);
+        await window.KITE_I18N.applyLanguage(document);
       } catch (error) {
         currentUserProfilePicture = avatarFromName(user.displayName || user.email || "a");
       }
@@ -973,6 +978,10 @@
 
       profileTabBtn.addEventListener("click", () => {
         window.location.href = "profile.html";
+      });
+
+      settingsTabBtn.addEventListener("click", () => {
+        window.location.href = "settings.html";
       });
 
       globalSearchInput.addEventListener("input", () => {

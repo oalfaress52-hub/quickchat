@@ -40,13 +40,15 @@
 </head>
 <body>
   <div class="container">
-    <h1>Welcome to Kite</h1>
-    <button onclick="location.href='login.html'">Login</button>
-    <button onclick="location.href='signup.html'">Create Account</button>
+    <h1 data-i18n="index.welcome">Welcome to Kite</h1>
+    <button onclick="location.href='login.html'" data-i18n="index.login">Login</button>
+    <button onclick="location.href='signup.html'" data-i18n="index.create">Create Account</button>
   </div>
   <script src="policy.js"></script>
+  <script src="i18n.js"></script>
   <script>
     window.addEventListener("DOMContentLoaded", async () => {
+      if (window.KITE_I18N) await window.KITE_I18N.applyLanguage(document);
       if (window.KITE_POLICY) {
         await window.KITE_POLICY.requireLocalPolicyAcceptance({
           title: "Welcome to Kite",
