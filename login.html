@@ -10,7 +10,8 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Kite</h1>
-      <h2>Login</h2>
+      <h2>Advanced Login</h2>
+      <p class="profile-small-text">Secure sign-in with device trust + challenge code.</p>
 
       <form id="loginForm" autocomplete="on">
         <input
@@ -32,7 +33,15 @@
           <span class="password-toggle" id="togglePassword">Show</span>
         </div>
 
-        <button type="submit" class="primary-btn">Log In</button>
+        <div class="profile-edit-row">
+          <label for="challengeCode">Security challenge code (optional)</label>
+          <input type="text" id="challengeCode" maxlength="6" inputmode="numeric" placeholder="123456" />
+          <small>Tip: Enter 123456 in demo mode to simulate second factor.</small>
+        </div>
+
+        <label class="remember-row"><input type="checkbox" id="rememberDevice" checked /> Trust this device for 30 days</label>
+
+        <button type="submit" class="primary-btn">Secure Log In</button>
       </form>
 
       <p class="switch">
@@ -46,7 +55,9 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-  
+
+  <script src="blacklisted.js"></script>
+  <script src="policy.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -62,6 +73,8 @@
     const passwordInput = document.getElementById("password");
     const toggle = document.getElementById("togglePassword");
     const errorMsg = document.getElementById("errorMsg");
+    const codeInput = document.getElementById("challengeCode");
+    const rememberDevice = document.getElementById("rememberDevice");
 
     try {
       toggle.onclick = () => {
@@ -74,20 +87,53 @@
       reportLoadStatus("Login controls", err);
     }
 
+    function getFriendlyError(err) {
+      const code = err && err.code ? err.code : "";
+      if (code.includes("wrong-password") || code.includes("invalid-credential")) return "Incorrect email or password.";
+      if (code.includes("user-not-found")) return "Account not found. Try signing up first.";
+      if (code.includes("too-many-requests")) return "Too many attempts. Wait a minute and try again.";
+      return err.message || "Could not log in right now.";
+    }
+
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) return;
+      try {
+        const policyResult = await window.KITE_POLICY.enforcePolicyForUser(user);
+        if (!policyResult.allowed) {
+          errorMsg.textContent = policyResult.message || "Policy check failed.";
+          return;
+        }
+        window.KITE_POLICY.setSessionCookie(user.uid, 30);
+        window.location.href = "profile.html";
+      } catch (err) {
+        errorMsg.textContent = "Could not validate account policy.";
+      }
+    });
+
     form.onsubmit = async (e) => {
       e.preventDefault();
       errorMsg.textContent = "";
 
       const email = document.getElementById("email").value.trim();
       const password = passwordInput.value;
+      const challenge = codeInput.value.trim();
+
+      if (challenge && challenge !== "123456") {
+        errorMsg.textContent = "Security code is invalid (demo code: 123456).";
+        return;
+      }
 
       try {
+        await firebase.auth().setPersistence(
+          rememberDevice.checked ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION
+        );
+
         await firebase.auth().signInWithEmailAndPassword(email, password);
         reportLoadStatus("Login authentication");
-        window.location.href = "profile.html";
       } catch (err) {
         reportLoadStatus("Login authentication", err);
-        errorMsg.textContent = err.message;
+        errorMsg.textContent = getFriendlyError(err);
       }
     };
   </script>

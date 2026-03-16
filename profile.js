@@ -8,6 +8,7 @@
   });
 
   const nicknameValue = document.getElementById("nicknameValue");
+  const smartTagValue = document.getElementById("smartTagValue");
   const handleValue = document.getElementById("handleValue");
   const descriptionValue = document.getElementById("descriptionValue");
   const profileMetaValue = document.getElementById("profileMetaValue");
@@ -15,17 +16,25 @@
   const profileAvatar = document.getElementById("profileAvatar");
   const profileFeed = document.getElementById("profileFeed");
   const profileMsg = document.getElementById("profileMsg");
+  const profileIntroList = document.getElementById("profileIntroList");
+  const profileStats = document.getElementById("profileStats");
 
   const editProfileBtn = document.getElementById("editProfileBtn");
   const editPanel = document.getElementById("editPanel");
   const saveProfileBtn = document.getElementById("saveProfileBtn");
   const cancelEditBtn = document.getElementById("cancelEditBtn");
+  const generateTagBtn = document.getElementById("generateTagBtn");
 
   const nicknameEditInput = document.getElementById("nicknameEditInput");
   const handleEditInput = document.getElementById("handleEditInput");
   const descriptionEditInput = document.getElementById("descriptionEditInput");
   const favoriteFoodEditInput = document.getElementById("favoriteFoodEditInput");
   const favoriteSportEditInput = document.getElementById("favoriteSportEditInput");
+  const cityEditInput = document.getElementById("cityEditInput");
+  const workEditInput = document.getElementById("workEditInput");
+  const educationEditInput = document.getElementById("educationEditInput");
+  const websiteEditInput = document.getElementById("websiteEditInput");
+  const relationshipEditInput = document.getElementById("relationshipEditInput");
 
   const nicknameChangesLeft = document.getElementById("nicknameChangesLeft");
   const handleChangesLeft = document.getElementById("handleChangesLeft");
@@ -55,6 +64,12 @@
     description: "",
     favoriteFood: "",
     favoriteSport: "",
+    city: "",
+    workplace: "",
+    education: "",
+    website: "",
+    relationshipStatus: "",
+    smartTag: "",
     nicknameChanges: 0,
     handleChanges: 0,
     descriptionChanges: 0,
@@ -107,11 +122,52 @@
     }
   }
 
+  function renderProfileDetails() {
+    const introItems = [];
+    if (profileState.city) introItems.push(`📍 Lives in ${profileState.city}`);
+    if (profileState.workplace) introItems.push(`💼 Works at ${profileState.workplace}`);
+    if (profileState.education) introItems.push(`🎓 Studied at ${profileState.education}`);
+    if (profileState.relationshipStatus) introItems.push(`❤️ ${profileState.relationshipStatus}`);
+    if (profileState.website) introItems.push(`🔗 ${profileState.website}`);
+
+    profileIntroList.innerHTML = "";
+    if (!introItems.length) {
+      const li = document.createElement("li");
+      li.textContent = "No intro details yet.";
+      profileIntroList.appendChild(li);
+    } else {
+      introItems.forEach((item) => {
+        const li = document.createElement("li");
+        li.textContent = item;
+        profileIntroList.appendChild(li);
+      });
+    }
+
+    const score = [profileState.description, profileState.city, profileState.workplace, profileState.education, profileState.favoriteFood, profileState.favoriteSport]
+      .filter(Boolean)
+      .join(" ").length;
+    const profilePower = Math.min(100, Math.round(score / 5));
+
+    profileStats.innerHTML = `
+      <div class="profile-stat"><strong>${profilePower}%</strong><span>Profile strength</span></div>
+      <div class="profile-stat"><strong>${profileState.smartTag ? 1 : 0}</strong><span>Smart tags</span></div>
+      <div class="profile-stat"><strong>${profileState.description.length}</strong><span>Bio chars</span></div>
+    `;
+  }
+
   function applyProfileToUI() {
     nicknameValue.textContent = profileState.nickname;
     handleValue.textContent = `@${profileState.handle || "user"}`;
     descriptionValue.textContent = profileState.description || "No description yet.";
     profileAvatar.src = profileState.profilePicture;
+
+    if (profileState.smartTag) {
+      smartTagValue.textContent = `#${profileState.smartTag}`;
+      smartTagValue.classList.remove("hidden");
+    } else {
+      smartTagValue.classList.add("hidden");
+    }
+
     const onboardingDone = Boolean(profileState.favoriteFood && profileState.favoriteSport);
     profileMetaValue.textContent = onboardingDone ? "Kite account · Profile setup complete" : "Kite account · Finish profile setup";
 
@@ -138,8 +194,15 @@
     descriptionEditInput.value = profileState.description;
     favoriteFoodEditInput.value = profileState.favoriteFood;
     favoriteSportEditInput.value = profileState.favoriteSport;
+    cityEditInput.value = profileState.city;
+    workEditInput.value = profileState.workplace;
+    educationEditInput.value = profileState.education;
+    websiteEditInput.value = profileState.website;
+    relationshipEditInput.value = profileState.relationshipStatus;
+
     updateChangeLabels();
     setEditAvailability();
+    renderProfileDetails();
   }
 
   function labelsFromIdentity(identity) {
@@ -175,6 +238,45 @@
     card.appendChild(metaEl);
     card.appendChild(bodyEl);
     return card;
+  }
+
+  function relu(v) {
+    return Math.max(0, v);
+  }
+
+  function tinyNeuralTagger(snapshot) {
+    const text = [snapshot.description, snapshot.favoriteFood, snapshot.favoriteSport, snapshot.workplace, snapshot.education].join(" ").toLowerCase();
+    const feature = (k) => (text.includes(k) ? 1 : 0);
+    const x = [
+      Math.min(1, (snapshot.description || "").length / 180),
+      feature("build") || feature("engineer") || feature("code"),
+      feature("design") || feature("art") || feature("create"),
+      feature("sport") || feature("run") || feature("fitness") || feature("soccer"),
+      feature("food") || feature("chef") || feature("cook"),
+      feature("music") || feature("movie") || feature("travel")
+    ];
+
+    const hidden = [
+      relu(0.8 * x[0] + 1.1 * x[1] + 0.2 * x[5] - 0.3),
+      relu(0.7 * x[0] + 1.2 * x[2] + 0.4 * x[5] - 0.4),
+      relu(0.5 * x[0] + 1.4 * x[3] + 0.3 * x[4] - 0.3),
+      relu(0.6 * x[0] + 0.9 * x[4] + 0.8 * x[5] - 0.2)
+    ];
+
+    const outputs = [
+      { name: "builder", score: 1.2 * hidden[0] + 0.3 * hidden[1] },
+      { name: "creator", score: 0.5 * hidden[0] + 1.2 * hidden[1] },
+      { name: "athlete", score: 0.4 * hidden[2] + 0.4 * hidden[0] },
+      { name: "lifestyle", score: 0.9 * hidden[3] + 0.4 * hidden[2] }
+    ];
+
+    outputs.sort((a, b) => b.score - a.score);
+    const best = outputs[0]?.name || "member";
+    const summary = `A ${best}-minded person into ${snapshot.favoriteSport || "new experiences"} and ${snapshot.favoriteFood || "good food"}.`;
+    return {
+      tag: best,
+      summary
+    };
   }
 
   async function loadUserWinds() {
@@ -302,9 +404,19 @@
     const newDescription = descriptionEditInput.value.trim();
     const newFavoriteFood = favoriteFoodEditInput.value.trim();
     const newFavoriteSport = favoriteSportEditInput.value.trim();
+    const newCity = cityEditInput.value.trim();
+    const newWorkplace = workEditInput.value.trim();
+    const newEducation = educationEditInput.value.trim();
+    const newWebsite = websiteEditInput.value.trim();
+    const newRelationshipStatus = relationshipEditInput.value;
 
     if (!newNickname) {
       setMessage("Nickname cannot be empty.");
+      return;
+    }
+    if (window.containsBlacklistedWords && (window.containsBlacklistedWords(newNickname).flagged || window.containsBlacklistedWords(newDescription).flagged || window.containsBlacklistedWords(newFavoriteFood).flagged || window.containsBlacklistedWords(newFavoriteSport).flagged)) {
+      const violation = await window.KITE_POLICY.registerPolicyViolation(currentUser, "blacklisted-profile", `${newNickname} ${newDescription}`);
+      setMessage(violation.terminated ? "Policy violation detected. Account terminated." : "Profile contains blocked language.");
       return;
     }
     if (!newHandle) {
@@ -343,13 +455,13 @@
       updates.descriptionChanges = profileState.descriptionChanges + 1;
     }
 
-    if (newFavoriteFood !== profileState.favoriteFood) {
-      updates.favoriteFood = newFavoriteFood;
-    }
-
-    if (newFavoriteSport !== profileState.favoriteSport) {
-      updates.favoriteSport = newFavoriteSport;
-    }
+    if (newFavoriteFood !== profileState.favoriteFood) updates.favoriteFood = newFavoriteFood;
+    if (newFavoriteSport !== profileState.favoriteSport) updates.favoriteSport = newFavoriteSport;
+    if (newCity !== profileState.city) updates.city = newCity;
+    if (newWorkplace !== profileState.workplace) updates.workplace = newWorkplace;
+    if (newEducation !== profileState.education) updates.education = newEducation;
+    if (newWebsite !== profileState.website) updates.website = newWebsite;
+    if (newRelationshipStatus !== profileState.relationshipStatus) updates.relationshipStatus = newRelationshipStatus;
 
     if ("favoriteFood" in updates || "favoriteSport" in updates) {
       const finalFood = "favoriteFood" in updates ? updates.favoriteFood : profileState.favoriteFood;
@@ -370,6 +482,11 @@
       description: updates.description ?? profileState.description,
       favoriteFood: updates.favoriteFood ?? profileState.favoriteFood,
       favoriteSport: updates.favoriteSport ?? profileState.favoriteSport,
+      city: updates.city ?? profileState.city,
+      workplace: updates.workplace ?? profileState.workplace,
+      education: updates.education ?? profileState.education,
+      website: updates.website ?? profileState.website,
+      relationshipStatus: updates.relationshipStatus ?? profileState.relationshipStatus,
       nicknameChanges: updates.nicknameChanges ?? profileState.nicknameChanges,
       handleChanges: updates.handleChanges ?? profileState.handleChanges,
       descriptionChanges: updates.descriptionChanges ?? profileState.descriptionChanges,
@@ -393,6 +510,13 @@
     }
 
     currentUser = user;
+    const policyResult = await window.KITE_POLICY.enforcePolicyForUser(user);
+    if (!policyResult.allowed) {
+      setMessage(policyResult.message || "Policy check failed.");
+      setTimeout(() => { window.location.href = "login.html"; }, 800);
+      return;
+    }
+    window.KITE_POLICY.setSessionCookie(user.uid, 30);
     userRef = firebase.firestore().collection("users").doc(user.uid);
 
     const ownSnap = await userRef.get();
@@ -408,6 +532,12 @@
       description: ownData.description || "",
       favoriteFood: ownData.favoriteFood || "",
       favoriteSport: ownData.favoriteSport || "",
+      city: ownData.city || "",
+      workplace: ownData.workplace || "",
+      education: ownData.education || "",
+      website: ownData.website || "",
+      relationshipStatus: ownData.relationshipStatus || "",
+      smartTag: ownData.smartTag || "",
       nicknameChanges: Number(ownData.nicknameChanges) || 0,
       handleChanges: Number(ownData.handleChanges) || 0,
       descriptionChanges: Number(ownData.descriptionChanges) || 0,
@@ -426,6 +556,12 @@
           description: found.description || "",
           favoriteFood: found.favoriteFood || "",
           favoriteSport: found.favoriteSport || "",
+          city: found.city || "",
+          workplace: found.workplace || "",
+          education: found.education || "",
+          website: found.website || "",
+          relationshipStatus: found.relationshipStatus || "",
+          smartTag: found.smartTag || "",
           nicknameChanges: Number(found.nicknameChanges) || 0,
           handleChanges: Number(found.handleChanges) || 0,
           descriptionChanges: Number(found.descriptionChanges) || 0,
@@ -440,6 +576,12 @@
           description: "",
           favoriteFood: "",
           favoriteSport: "",
+          city: "",
+          workplace: "",
+          education: "",
+          website: "",
+          relationshipStatus: "",
+          smartTag: "",
           nicknameChanges: 0,
           handleChanges: 0,
           descriptionChanges: 0,
@@ -459,6 +601,12 @@
         profilePicture: ownProfile.profilePicture,
         favoriteFood: ownProfile.favoriteFood,
         favoriteSport: ownProfile.favoriteSport,
+        city: ownProfile.city,
+        workplace: ownProfile.workplace,
+        education: ownProfile.education,
+        website: ownProfile.website,
+        relationshipStatus: ownProfile.relationshipStatus,
+        smartTag: ownProfile.smartTag,
         nicknameChanges: ownProfile.nicknameChanges,
         handleChanges: ownProfile.handleChanges,
         descriptionChanges: ownProfile.descriptionChanges
@@ -492,6 +640,23 @@
       hideMessage();
     });
 
+    generateTagBtn.addEventListener("click", async () => {
+      const generated = tinyNeuralTagger({
+        description: descriptionEditInput.value.trim(),
+        favoriteFood: favoriteFoodEditInput.value.trim(),
+        favoriteSport: favoriteSportEditInput.value.trim(),
+        workplace: workEditInput.value.trim(),
+        education: educationEditInput.value.trim()
+      });
+
+      descriptionEditInput.value = generated.summary;
+      await userRef.set({ smartTag: generated.tag, description: generated.summary }, { merge: true });
+      profileState.smartTag = generated.tag;
+      profileState.description = generated.summary;
+      applyProfileToUI();
+      setMessage(`Smart tag generated: #${generated.tag}`);
+    });
+
     saveProfileBtn.addEventListener("click", async () => {
       try {
         await saveProfileChanges();
@@ -513,6 +678,7 @@
     }
 
     logoutBtn.addEventListener("click", async () => {
+      window.KITE_POLICY.clearSessionCookie();
       await firebase.auth().signOut();
       window.location.href = "login.html";
     });

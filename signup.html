@@ -28,6 +28,7 @@
         </div>
 
         <!-- SAME LABEL AS BEFORE -->
+        <label class="remember-row"><input type="checkbox" id="acceptPolicy" required /> I accept Kite policy and understand violating it can terminate my account.</label>
         <button type="submit" class="primary-btn" id="createAccountBtn">Sign Up</button>
         </div>
 
@@ -51,6 +52,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+  <script src="blacklisted.js"></script>
+  <script src="policy.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -72,6 +75,7 @@
     const stepOne = document.getElementById("signupStepOne");
     const stepTwo = document.getElementById("signupStepTwo");
     const finishProfileBtn = document.getElementById("finishProfileBtn");
+    const acceptPolicy = document.getElementById("acceptPolicy");
 
     let createdUser = null;
     let createdNickname = "";
@@ -104,14 +108,24 @@
         errorMsg.textContent = "Passwords do not match.";
         return;
       }
+      if (!acceptPolicy.checked) {
+        errorMsg.textContent = "You must accept the policy to join Kite.";
+        return;
+      }
+      if (window.containsBlacklistedWords && window.containsBlacklistedWords(nickname).flagged) {
+        errorMsg.textContent = "Nickname violates policy.";
+        return;
+      }
 
       try {
+        await firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
         const cred = await firebase.auth().createUserWithEmailAndPassword(email, password);
         createdUser = cred.user;
         createdNickname = nickname;
         createdEmail = email;
 
         await createdUser.updateProfile({ displayName: nickname });
+        await window.KITE_POLICY.registerPolicyAcceptance(createdUser.uid, email);
         reportLoadStatus("Signup account creation");
 
         stepOne.classList.add("hidden");
@@ -133,6 +147,10 @@
         errorMsg.textContent = "Please answer both profile questions.";
         return;
       }
+      if (window.containsBlacklistedWords && (window.containsBlacklistedWords(favoriteFood).flagged || window.containsBlacklistedWords(favoriteSport).flagged)) {
+        errorMsg.textContent = "Profile answers violate policy.";
+        return;
+      }
 
       const firstLetter = (createdNickname || "a").trim().charAt(0).toLowerCase() || "a";
       const description = `Favorite food: ${favoriteFood} · Favorite sport: ${favoriteSport}`;
@@ -148,6 +166,7 @@
           profilePicture: `images/pfp/${firstLetter}.png`
         });
 
+        window.KITE_POLICY.setSessionCookie(createdUser.uid, 30);
         reportLoadStatus("Signup profile setup");
         window.location.href = "profile.html";
       } catch (err) {
