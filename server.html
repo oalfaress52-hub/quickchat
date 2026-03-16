@@ -80,6 +80,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="blacklisted.js"></script>
+  <script src="policy.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -776,8 +778,9 @@
       postCommentBtn.addEventListener("click", async () => {
         const responseText = commentInput.value.trim();
         if (!responseText) return;
-        if (window.containsBannedWords && window.containsBannedWords(responseText)) {
-          alert("That response contains blocked words.");
+        if (window.containsBlacklistedWords && window.containsBlacklistedWords(responseText).flagged) {
+          const violation = await window.KITE_POLICY.registerPolicyViolation(currentUser, "blacklisted-comment", responseText);
+          alert(violation.terminated ? "Policy violation detected. Your account was terminated." : "That response contains blocked words.");
           return;
         }
 
@@ -911,6 +914,13 @@
       }
 
       currentUser = user;
+      const policyResult = await window.KITE_POLICY.enforcePolicyForUser(user);
+      if (!policyResult.allowed) {
+        alert(policyResult.message || "Policy check failed.");
+        window.location.href = "login.html";
+        return;
+      }
+      window.KITE_POLICY.setSessionCookie(user.uid, 30);
       loadLikedState();
       try {
         const userDoc = await firebase.firestore().collection("users").doc(user.uid).get();
@@ -980,8 +990,9 @@
           alert("Winds are limited to 120 characters.");
           return;
         }
-        if (window.containsBannedWords && window.containsBannedWords(text)) {
-          alert("That wind contains blocked words.");
+        if (window.containsBlacklistedWords && window.containsBlacklistedWords(text).flagged) {
+          const violation = await window.KITE_POLICY.registerPolicyViolation(currentUser, "blacklisted-wind", text);
+          alert(violation.terminated ? "Policy violation detected. Your account was terminated." : "That wind contains blocked words.");
           return;
         }
 
@@ -1003,6 +1014,7 @@
       });
 
       logoutBtn.addEventListener("click", async () => {
+        window.KITE_POLICY.clearSessionCookie();
         await firebase.auth().signOut();
         window.location.href = "login.html";
       });

@@ -414,6 +414,11 @@
       setMessage("Nickname cannot be empty.");
       return;
     }
+    if (window.containsBlacklistedWords && (window.containsBlacklistedWords(newNickname).flagged || window.containsBlacklistedWords(newDescription).flagged || window.containsBlacklistedWords(newFavoriteFood).flagged || window.containsBlacklistedWords(newFavoriteSport).flagged)) {
+      const violation = await window.KITE_POLICY.registerPolicyViolation(currentUser, "blacklisted-profile", `${newNickname} ${newDescription}`);
+      setMessage(violation.terminated ? "Policy violation detected. Account terminated." : "Profile contains blocked language.");
+      return;
+    }
     if (!newHandle) {
       setMessage("@ handle cannot be empty.");
       return;
@@ -505,6 +510,13 @@
     }
 
     currentUser = user;
+    const policyResult = await window.KITE_POLICY.enforcePolicyForUser(user);
+    if (!policyResult.allowed) {
+      setMessage(policyResult.message || "Policy check failed.");
+      setTimeout(() => { window.location.href = "login.html"; }, 800);
+      return;
+    }
+    window.KITE_POLICY.setSessionCookie(user.uid, 30);
     userRef = firebase.firestore().collection("users").doc(user.uid);
 
     const ownSnap = await userRef.get();
@@ -666,6 +678,7 @@
     }
 
     logoutBtn.addEventListener("click", async () => {
+      window.KITE_POLICY.clearSessionCookie();
       await firebase.auth().signOut();
       window.location.href = "login.html";
     });

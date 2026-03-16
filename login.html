@@ -56,6 +56,8 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
+  <script src="blacklisted.js"></script>
+  <script src="policy.js"></script>
   <script src="app.js"></script>
 
   <script>
@@ -93,6 +95,22 @@
       return err.message || "Could not log in right now.";
     }
 
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) return;
+      try {
+        const policyResult = await window.KITE_POLICY.enforcePolicyForUser(user);
+        if (!policyResult.allowed) {
+          errorMsg.textContent = policyResult.message || "Policy check failed.";
+          return;
+        }
+        window.KITE_POLICY.setSessionCookie(user.uid, 30);
+        window.location.href = "profile.html";
+      } catch (err) {
+        errorMsg.textContent = "Could not validate account policy.";
+      }
+    });
+
     form.onsubmit = async (e) => {
       e.preventDefault();
       errorMsg.textContent = "";
@@ -113,7 +131,6 @@
 
         await firebase.auth().signInWithEmailAndPassword(email, password);
         reportLoadStatus("Login authentication");
-        window.location.href = "profile.html";
       } catch (err) {
         reportLoadStatus("Login authentication", err);
         errorMsg.textContent = getFriendlyError(err);

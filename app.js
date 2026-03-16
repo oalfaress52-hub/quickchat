@@ -35,13 +35,11 @@
   const auth = firebase.auth();
   const db = firebase.firestore();
 
-  const BANNED_WORDS = ["slur1", "slur2", "badword1"];
-
   function containsBannedWords(text) {
-    const lower = String(text || "").toLowerCase();
-    return BANNED_WORDS.some((word) =>
-      new RegExp(`\\b${word}\\b`, "i").test(lower)
-    );
+    if (typeof window.containsBlacklistedWords === "function") {
+      return window.containsBlacklistedWords(text).flagged;
+    }
+    return false;
   }
 
   function formatTimestamp(timestamp) {
