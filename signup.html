@@ -83,6 +83,12 @@
     const stepOne = document.getElementById("signupStepOne");
     const stepTwo = document.getElementById("signupStepTwo");
     const finishProfileBtn = document.getElementById("finishProfileBtn");
+    const acceptPolicy = document.getElementById("acceptPolicy");
+
+    window.KITE_POLICY.requireLocalPolicyAcceptance({
+      title: "Sign-up Policy Gate",
+      subtitle: "You must accept Kite policy before creating an account."
+    });
 
     window.KITE_POLICY.requireLocalPolicyAcceptance({
       title: "Sign-up Policy Gate",
