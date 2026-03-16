@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kite - Settings</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body class="profile-view">
+  <main class="feed-page profile-page-shell">
+    <aside class="feed-sidebar profile-sidebar">
+      <div class="sidebar-top-row">
+        <div class="sidebar-brand">🐦 <strong data-i18n="common.kite">Kite</strong></div>
+      </div>
+      <nav class="feed-nav profile-nav">
+        <button id="toFeedBtn" class="sidebar-btn" type="button" data-i18n="feed.home">🏠 Home</button>
+        <button id="toProfileBtn" class="sidebar-btn" type="button" data-i18n="feed.profile">👤 Profile</button>
+        <button class="sidebar-btn active" type="button" data-i18n="feed.settings">⚙️ Settings</button>
+      </nav>
+      <button id="logoutBtn" class="secondary-btn danger" type="button" data-i18n="settings.logout">Logout</button>
+    </aside>
+
+    <section class="feed-main profile-main">
+      <div class="feed-main-inner settings-main">
+        <header class="settings-header">
+          <h1 data-i18n="settings.title">Settings</h1>
+          <p data-i18n="settings.subtitle">Personalize language and experience.</p>
+        </header>
+
+        <section class="profile-edit-panel settings-panel">
+          <div class="profile-edit-row">
+            <label for="languageSelect" data-i18n="settings.language">Language</label>
+            <select id="languageSelect">
+              <option value="en" data-i18n="signup.english">English</option>
+              <option value="sv" data-i18n="signup.swedish">Swedish</option>
+            </select>
+          </div>
+          <div class="profile-edit-actions">
+            <button id="saveSettingsBtn" class="primary-btn" type="button" data-i18n="settings.save">Save settings</button>
+            <button id="backBtn" class="secondary-btn" type="button" data-i18n="settings.back">Back to feed</button>
+          </div>
+          <p id="settingsMsg" class="switch hidden"></p>
+        </section>
+      </div>
+    </section>
+  </main>
+
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <script src="blacklisted.js"></script>
+  <script src="policy.js"></script>
+  <script src="i18n.js"></script>
+  <script src="app.js"></script>
+  <script>
+    const languageSelect = document.getElementById("languageSelect");
+    const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+    const settingsMsg = document.getElementById("settingsMsg");
+
+    document.getElementById("toFeedBtn").onclick = () => (window.location.href = "server.html");
+    document.getElementById("toProfileBtn").onclick = () => (window.location.href = "profile.html");
+    document.getElementById("backBtn").onclick = () => (window.location.href = "server.html");
+
+    firebase.auth().onAuthStateChanged(async (user) => {
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const policy = await window.KITE_POLICY.enforcePolicyForUser(user);
+      if (!policy.allowed) {
+        if (policy.reason === "policy-not-accepted") {
+          const accepted = await window.KITE_POLICY.promptAndAcceptPolicyForUser(user);
+          if (!accepted) {
+            await firebase.auth().signOut();
+            window.location.href = "login.html";
+            return;
+          }
+        } else {
+          window.location.href = "login.html";
+          return;
+        }
+      }
+
+      const snap = await firebase.firestore().collection("users").doc(user.uid).get();
+      const savedLang = snap.exists ? snap.data().language : "en";
+      window.KITE_I18N.setLanguage(savedLang || window.KITE_I18N.getLanguage());
+      languageSelect.value = window.KITE_I18N.getLanguage();
+      await window.KITE_I18N.applyLanguage(document);
+
+      saveSettingsBtn.onclick = async () => {
+        const lang = languageSelect.value;
+        await firebase.firestore().collection("users").doc(user.uid).set({ language: lang }, { merge: true });
+        await window.KITE_I18N.setAndApply(lang);
+        settingsMsg.textContent = window.KITE_I18N.t("settings.saved", "Settings saved.");
+        settingsMsg.classList.remove("hidden");
+      };
+
+      document.getElementById("logoutBtn").onclick = async () => {
+        window.KITE_POLICY.clearSessionCookie();
+        await firebase.auth().signOut();
+        window.location.href = "login.html";
+      };
+    });
+  </script>
+</body>
+</html>
