@@ -2857,53 +2857,7 @@ body.feed-view .wind-compose textarea {
   }
 }
 
-/* feed refresh: ranking controls + richer card metadata */
-.feed-ranking-panel {
-  border: 1px solid rgba(148, 163, 184, 0.35);
-  border-radius: 14px;
-  padding: 10px 12px;
-  margin-bottom: 10px;
-  background: rgba(15, 23, 42, 0.35);
-  backdrop-filter: blur(2px);
-}
-
-.feed-ranking-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-}
-
-.feed-ranking-row label {
-  font-size: 0.82rem;
-  color: #cbd5e1;
-  font-weight: 700;
-}
-
-.feed-rank-select {
-  border: 1px solid #475569;
-  border-radius: 999px;
-  padding: 6px 12px;
-  background: #0f172a;
-  color: #e2e8f0;
-  font-weight: 600;
-}
-
-.feed-stats {
-  margin-top: 10px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.feed-stat-chip {
-  padding: 5px 10px;
-  border-radius: 999px;
-  border: 1px solid rgba(148, 163, 184, 0.45);
-  font-size: 0.74rem;
-  font-weight: 700;
-  color: #cbd5e1;
-}
+/* feed refresh: richer card metadata */
 
 .wind-source-badge {
   margin-left: auto;
@@ -2914,22 +2868,6 @@ body.feed-view .wind-compose textarea {
   padding: 2px 8px;
   border-radius: 999px;
   background: rgba(14, 165, 233, 0.12);
-}
-
-body.light-mode .feed-ranking-panel {
-  background: #f8fafc;
-  border-color: #cbd5e1;
-}
-
-body.light-mode .feed-ranking-row label,
-body.light-mode .feed-stat-chip {
-  color: #334155;
-}
-
-body.light-mode .feed-rank-select {
-  background: #ffffff;
-  color: #0f172a;
-  border-color: #cbd5e1;
 }
 
 body.light-mode .wind-source-badge {
@@ -3028,8 +2966,7 @@ body.profile-view {
 .wind-compose,
 .profile-edit-panel,
 .profile-detail-card,
-.profile-feed-card,
-.feed-ranking-panel {
+.profile-feed-card {
   background: rgba(15, 23, 42, 0.75);
   border: 1px solid rgba(148, 163, 184, 0.25);
   box-shadow: 0 10px 30px rgba(2, 6, 23, 0.35);
@@ -3054,5 +2991,105 @@ body.profile-view {
     border-radius: 0;
     border-left: none;
     border-right: none;
+  }
+}
+
+
+/* ==================================================
+   FEED POLISH — CLOUD EMOJIS ON POSTS
+   ================================================== */
+body.feed-view .wind-card {
+  padding: 20px 24px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(191, 219, 254, 0.45);
+  box-shadow: 0 16px 30px rgba(15, 23, 42, 0.18);
+}
+
+body.feed-view .wind-meta,
+body.feed-view .wind-text,
+body.feed-view .comment-header,
+body.feed-view .comment-row p,
+body.feed-view .right-toolbar-note {
+  color: #0f172a;
+}
+
+body.feed-view .wind-cloud-emoji {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin: 6px 0 10px;
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+body.feed-view .wind-source-badge {
+  background: rgba(96, 165, 250, 0.16);
+  color: #1d4ed8;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+body.feed-view .wind-text,
+body.feed-view .comment-row p {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+body.feed-view .wind-comments-hint {
+  color: #334155;
+}
+
+body.feed-view .feed-like-btn,
+body.feed-view .wind-delete-btn,
+body.feed-view .hashtag-chip,
+body.feed-view .chat-send-btn {
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.18);
+}
+
+body.feed-view .comments-wrap {
+  margin-top: 16px;
+  padding: 18px 16px 14px;
+  background: rgba(241, 245, 249, 0.88);
+  border: 1px solid rgba(191, 219, 254, 0.42);
+  border-radius: 20px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+body.feed-view .comment-row {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(191, 219, 254, 0.4);
+  border-radius: 18px;
+}
+
+body.feed-view .comment-compose {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(96, 165, 250, 0.45);
+}
+
+body.feed-view .comment-compose input,
+body.feed-view .wind-compose textarea {
+  background: rgba(255, 255, 255, 0.76) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(148, 163, 184, 0.55) !important;
+}
+
+body.feed-view .comment-compose input::placeholder,
+body.feed-view .wind-compose textarea::placeholder {
+  color: #64748b;
+}
+
+body.feed-view .wind-compose {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(191, 219, 254, 0.12)),
+    url("images/question_cloud.png") !important;
+  filter: drop-shadow(0 24px 34px rgba(15, 23, 42, 0.28));
+}
+
+@media (max-width: 900px) {
+  body.feed-view .wind-card {
+    padding: 18px;
+  }
+
+  body.feed-view .comments-wrap {
+    padding: 16px 12px 12px;
   }
 }
