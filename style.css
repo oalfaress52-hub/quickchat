@@ -3056,3 +3056,172 @@ body.profile-view {
     border-right: none;
   }
 }
+
+
+/* ==================================================
+   CLOUD THEME PASS — WINDS + CHAT CLOUDS
+   ================================================== */
+body.feed-view .wind-card {
+  position: relative;
+  overflow: visible;
+  padding: 24px 24px 20px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.96), rgba(226, 242, 255, 0.93));
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: 34px 38px 30px 40px / 30px 36px 28px 42px;
+  box-shadow:
+    0 20px 34px rgba(15, 23, 42, 0.22),
+    inset 0 -10px 20px rgba(191, 219, 254, 0.35);
+}
+
+body.feed-view .wind-card::before,
+body.feed-view .wind-card::after,
+body.feed-view .comments-wrap::before,
+body.feed-view .comments-wrap::after {
+  content: "";
+  position: absolute;
+  pointer-events: none;
+  background: inherit;
+  border: inherit;
+  box-shadow: inherit;
+}
+
+body.feed-view .wind-card::before {
+  width: 108px;
+  height: 92px;
+  top: -26px;
+  left: 22px;
+  border-radius: 50%;
+}
+
+body.feed-view .wind-card::after {
+  width: 138px;
+  height: 110px;
+  top: -34px;
+  right: 28px;
+  border-radius: 50%;
+}
+
+body.feed-view .wind-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.feed-view .wind-meta,
+body.feed-view .wind-text,
+body.feed-view .wind-compose label,
+body.feed-view #charCounter,
+body.feed-view #feedNotice,
+body.feed-view .comment-header,
+body.feed-view .comment-row p,
+body.feed-view .right-toolbar-note {
+  color: #0f172a;
+}
+
+body.feed-view .wind-source-badge {
+  background: rgba(96, 165, 250, 0.16);
+  color: #1d4ed8;
+  border: 1px solid rgba(96, 165, 250, 0.3);
+}
+
+body.feed-view .wind-text,
+body.feed-view .comment-row p {
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+body.feed-view .wind-comments-hint {
+  color: #334155;
+}
+
+body.feed-view .feed-like-btn,
+body.feed-view .wind-delete-btn,
+body.feed-view .hashtag-chip,
+body.feed-view .chat-send-btn {
+  box-shadow: 0 10px 20px rgba(59, 130, 246, 0.18);
+}
+
+body.feed-view .comments-wrap {
+  position: relative;
+  margin-top: 16px;
+  padding: 20px 18px 16px;
+  background: linear-gradient(180deg, rgba(248, 252, 255, 0.97), rgba(230, 244, 255, 0.95));
+  border: 1px solid rgba(191, 219, 254, 0.9);
+  border-radius: 30px 32px 28px 34px / 28px 34px 26px 36px;
+  box-shadow:
+    0 18px 28px rgba(15, 23, 42, 0.16),
+    inset 0 -8px 18px rgba(191, 219, 254, 0.32);
+}
+
+body.feed-view .comments-wrap::before {
+  width: 88px;
+  height: 72px;
+  top: -20px;
+  left: 16px;
+  border-radius: 50%;
+}
+
+body.feed-view .comments-wrap::after {
+  width: 112px;
+  height: 86px;
+  top: -24px;
+  right: 18px;
+  border-radius: 50%;
+}
+
+body.feed-view .comments-wrap > * {
+  position: relative;
+  z-index: 1;
+}
+
+body.feed-view .comment-row {
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(191, 219, 254, 0.65);
+  border-radius: 20px;
+}
+
+body.feed-view .comment-compose {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px dashed rgba(96, 165, 250, 0.45);
+}
+
+body.feed-view .comment-compose input,
+body.feed-view .wind-compose textarea {
+  background: rgba(255, 255, 255, 0.76) !important;
+  color: #0f172a !important;
+  border: 1px solid rgba(148, 163, 184, 0.55) !important;
+}
+
+body.feed-view .comment-compose input::placeholder,
+body.feed-view .wind-compose textarea::placeholder {
+  color: #64748b;
+}
+
+body.feed-view .wind-compose {
+  background-image:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(191, 219, 254, 0.12)),
+    url("images/question_cloud.png") !important;
+  filter: drop-shadow(0 24px 34px rgba(15, 23, 42, 0.28));
+}
+
+@media (max-width: 900px) {
+  body.feed-view .wind-card {
+    padding: 20px 18px 18px;
+  }
+
+  body.feed-view .wind-card::before {
+    width: 78px;
+    height: 64px;
+    top: -16px;
+  }
+
+  body.feed-view .wind-card::after {
+    width: 98px;
+    height: 76px;
+    top: -18px;
+    right: 16px;
+  }
+
+  body.feed-view .comments-wrap {
+    padding: 18px 14px 14px;
+  }
+}
