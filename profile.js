@@ -7,17 +7,17 @@
         </div>
 
         <nav class="feed-nav profile-nav" aria-label="Main navigation">
-          <button id="goHomeBtn" class="sidebar-btn" type="button" aria-label="Home" title="Home">🏠</button>
-          <button id="goExploreBtn" class="sidebar-btn" type="button" aria-label="Explore" title="Explore">🌎</button>
-          <button class="sidebar-btn active" type="button" aria-label="Profile" title="Profile">👤</button>
-          <button id="goSettingsBtn" class="sidebar-btn" type="button" aria-label="Settings" title="Settings">⚙️</button>
+          <button id="goHomeBtn" class="sidebar-btn" type="button">🏠 <span>Home</span></button>
+          <button id="goExploreBtn" class="sidebar-btn" type="button">🌎 <span>Explore</span></button>
+          <button class="sidebar-btn active" type="button">👤 <span data-i18n="feed.profile">Profile</span></button>
+          <button id="goSettingsBtn" class="sidebar-btn" type="button">⚙️ <span data-i18n="feed.settings">Settings</span></button>
         </nav>
 
-        <button id="profileDarkModeBtn" class="secondary-btn" type="button" aria-label="Toggle dark mode" title="Toggle dark mode">◐</button>
+        <button id="profileDarkModeBtn" class="secondary-btn" type="button">🌙 Dark Mode: On</button>
 
         <div class="profile-sidebar-actions">
-          <button id="goFeedBtn" class="primary-btn" type="button" aria-label="Open wind feed" title="Open wind feed">📰</button>
-          <button id="logoutBtn" class="secondary-btn danger" type="button" aria-label="Logout" title="Logout">↩</button>
+          <button id="goFeedBtn" class="primary-btn" type="button">Open Wind Feed</button>
+          <button id="logoutBtn" class="secondary-btn danger" type="button" data-i18n="feed.logout">Logout</button>
         </div>
       </aside>
 
@@ -232,7 +232,7 @@
     document.body.classList.toggle("light-mode", !enabled);
     localStorage.setItem("kite-dark-mode", enabled ? "on" : "off");
     if (profileDarkModeBtn) {
-      profileDarkModeBtn.textContent = enabled ? "◐" : "◑";
+      profileDarkModeBtn.textContent = enabled ? "🌙 Dark Mode: On" : "☀️ Dark Mode: Off";
     }
   }
 
