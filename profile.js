@@ -26,7 +26,12 @@
           <header class="profile-banner"></header>
 
           <section class="profile-identity-card">
-            <img id="profileAvatar" class="profile-avatar-large" alt="Profile picture" src="images/pfp/a.png" />
+            <img
+              id="profileAvatar"
+              class="profile-avatar-large"
+              alt="Profile picture"
+              src="${window.avatarProfilePictureForName ? window.avatarProfilePictureForName("a") : ""}"
+            />
 
             <div class="profile-headline">
               <h1><span id="nicknameValue">-</span> <span id="smartTagValue" class="smart-tag hidden">#new</span></h1>
@@ -218,10 +223,6 @@
     profilePicture: ""
   };
 
-  function letterForAvatar(value) {
-    return String(value || "").trim().charAt(0).toLowerCase() || "a";
-  }
-
   function normalizeHandle(value) {
     const raw = String(value || "").trim().replace(/^@+/, "");
     return raw.replace(/[^a-zA-Z0-9._]/g, "").toLowerCase();
@@ -301,7 +302,9 @@
     nicknameValue.textContent = profileState.nickname;
     handleValue.textContent = `@${profileState.handle || "user"}`;
     descriptionValue.textContent = profileState.description || "No description yet.";
-    profileAvatar.src = profileState.profilePicture;
+    profileAvatar.src = window.resolveProfilePicture
+      ? window.resolveProfilePicture(profileState.profilePicture, profileState.nickname || profileState.handle)
+      : profileState.profilePicture;
 
     if (profileState.smartTag) {
       smartTagValue.textContent = `#${profileState.smartTag}`;
@@ -575,7 +578,9 @@
       }
       updates.nickname = newNickname;
       updates.nicknameChanges = profileState.nicknameChanges + 1;
-      updates.profilePicture = `images/pfp/${letterForAvatar(newNickname)}.png`;
+      updates.profilePicture = window.avatarProfilePictureForName
+        ? window.avatarProfilePictureForName(newNickname)
+        : profileState.profilePicture;
       await currentUser.updateProfile({ displayName: newNickname });
     }
 
@@ -666,7 +671,9 @@
 
     const ownNickname = ownData.nickname || user.displayName || "Anonymous";
     const ownHandle = ownData.handle || normalizeHandle(ownNickname + (user.uid || "").slice(0, 5)) || "user";
-    const ownPicture = ownData.profilePicture || `images/pfp/${letterForAvatar(ownNickname)}.png`;
+    const ownPicture = window.resolveProfilePicture
+      ? window.resolveProfilePicture(ownData.profilePicture, ownNickname)
+      : (ownData.profilePicture || "");
 
     const ownProfile = {
       nickname: ownNickname,
@@ -708,7 +715,9 @@
           nicknameChanges: Number(found.nicknameChanges) || 0,
           handleChanges: Number(found.handleChanges) || 0,
           descriptionChanges: Number(found.descriptionChanges) || 0,
-          profilePicture: found.profilePicture || `images/pfp/${letterForAvatar(found.nickname || targetIdentity)}.png`,
+          profilePicture: window.resolveProfilePicture
+            ? window.resolveProfilePicture(found.profilePicture, found.nickname || targetIdentity)
+            : (found.profilePicture || ""),
           email: found.email || "",
           language: found.language || "en"
         };
@@ -729,7 +738,9 @@
           nicknameChanges: 0,
           handleChanges: 0,
           descriptionChanges: 0,
-          profilePicture: `images/pfp/${letterForAvatar(targetIdentity)}.png`,
+          profilePicture: window.avatarProfilePictureForName
+            ? window.avatarProfilePictureForName(targetIdentity)
+            : "",
           email: "",
           language: "en"
         };

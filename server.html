@@ -137,7 +137,9 @@
     let hashtagFilter = "";
     let globalSearchTerm = "";
     let darkModeEnabled = true;
-    let currentUserProfilePicture = "images/pfp/a.png";
+    let currentUserProfilePicture = window.avatarProfilePictureForName
+      ? window.avatarProfilePictureForName("a")
+      : "";
     let unsubscribeNotifications = null;
     let rankingMode = "balanced";
     if (rankModeSelect) rankingMode = rankModeSelect.value || "balanced";
@@ -190,8 +192,10 @@
     }
 
     function avatarFromName(name) {
-      const letter = String(name || "a").trim().charAt(0).toLowerCase() || "a";
-      return `images/pfp/${letter}.png`;
+      if (window.avatarProfilePictureForName) {
+        return window.avatarProfilePictureForName(name);
+      }
+      return "";
     }
 
 
@@ -557,7 +561,9 @@
       const avatar = document.createElement("img");
       avatar.className = "author-avatar";
       avatar.alt = "author avatar";
-      avatar.src = comment.profilePicture || avatarFromName(comment.user);
+      avatar.src = window.resolveProfilePicture
+        ? window.resolveProfilePicture(comment.profilePicture, comment.user)
+        : (comment.profilePicture || avatarFromName(comment.user));
 
       const author = document.createElement("button");
       author.type = "button";
@@ -628,7 +634,9 @@
       const avatar = document.createElement("img");
       avatar.className = "author-avatar";
       avatar.alt = "author avatar";
-      avatar.src = wind.profilePicture || avatarFromName(wind.user);
+      avatar.src = window.resolveProfilePicture
+        ? window.resolveProfilePicture(wind.profilePicture, wind.user)
+        : (wind.profilePicture || avatarFromName(wind.user));
 
       const name = document.createElement("button");
       name.type = "button";
