@@ -2024,6 +2024,79 @@ body.light-mode {
   gap: 8px;
 }
 
+/* ==================================================
+   TWITTER-LIKE SIMPLICITY REFRESH
+   ================================================== */
+body.feed-view.light-mode {
+  background: #f5f8fa;
+  color: #0f1419;
+}
+
+body.feed-view.light-mode .feed-page {
+  max-width: 1240px;
+  margin: 0 auto;
+  grid-template-columns: 250px minmax(560px, 1fr) 320px;
+  gap: 20px;
+  padding: 16px;
+}
+
+body.feed-view.light-mode .feed-sidebar,
+body.feed-view.light-mode .feed-main,
+body.feed-view.light-mode .right-toolbar,
+body.feed-view.light-mode .wind-card,
+body.feed-view.light-mode .wind-compose {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  box-shadow: none;
+}
+
+body.feed-view.light-mode .feed-sidebar,
+body.feed-view.light-mode .right-toolbar {
+  border-radius: 16px;
+}
+
+body.feed-view.light-mode .feed-main {
+  border-radius: 20px;
+}
+
+body.feed-view.light-mode .wind-card,
+body.feed-view.light-mode .wind-compose {
+  border-radius: 14px;
+}
+
+body.feed-view.light-mode .feed-header h1,
+body.feed-view.light-mode .wind-text,
+body.feed-view.light-mode .sidebar-brand,
+body.feed-view.light-mode .feed-nav .sidebar-btn {
+  color: #0f1419;
+}
+
+body.feed-view.light-mode .feed-header p,
+body.feed-view.light-mode .wind-meta,
+body.feed-view.light-mode .right-toolbar-note,
+body.feed-view.light-mode #charCounter {
+  color: #536471;
+}
+
+body.feed-view.light-mode .feed-nav .sidebar-btn.active {
+  background: #e8f5fe;
+  border: 1px solid #b9e2fb;
+  color: #0f1419;
+}
+
+body.feed-view.light-mode .chat-send-btn,
+body.feed-view.light-mode .primary-btn {
+  background: #1d9bf0;
+  color: #ffffff;
+  box-shadow: none;
+}
+
+body.feed-view.light-mode .chat-send-btn:hover,
+body.feed-view.light-mode .primary-btn:hover {
+  background: #1a8cd8;
+  transform: none;
+}
+
 .profile-sidebar-brand,
 .sidebar-brand {
   display: flex;

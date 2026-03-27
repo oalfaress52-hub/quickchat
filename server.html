@@ -21,7 +21,7 @@
         <button id="settingsTabBtn" class="sidebar-btn" type="button" data-i18n="feed.settings">Settings</button>
       </nav>
 
-      <button id="darkModeBtn" class="secondary-btn" type="button">Dark mode: On</button>
+      <button id="darkModeBtn" class="secondary-btn" type="button">Theme: Light</button>
       <button id="logoutBtn" class="secondary-btn sidebar-logout" type="button" data-i18n="feed.logout">Logout</button>
     </aside>
 
@@ -31,15 +31,15 @@
       <div class="feed-main-inner">
         <header class="feed-header">
           <h1 id="feedTitle">Home</h1>
-          <p id="feedSubtitle">Latest winds from people you follow and who they follow.</p>
+          <p id="feedSubtitle">Recent posts from people you follow and related accounts.</p>
         </header>
 
 
         <section class="wind-compose">
           <label for="chatInput" data-i18n="feed.happening">What's happening?</label>
-          <textarea id="chatInput" maxlength="120" placeholder="What's happening right now?"></textarea>
+          <textarea id="chatInput" maxlength="280" placeholder="What’s happening?"></textarea>
           <div class="wind-compose-footer">
-            <span id="charCounter">0/120</span>
+            <span id="charCounter">0/280</span>
             <button id="sendBtn" class="chat-send-btn" type="button" data-i18n="feed.post">Post</button>
           </div>
           <p id="feedNotice" class="feed-notice hidden"></p>
@@ -110,7 +110,7 @@
     const notificationList = document.getElementById("notificationList");
     const notificationEmpty = document.getElementById("notificationEmpty");
 
-    const MAX_WIND_LENGTH = 120;
+    const MAX_WIND_LENGTH = 280;
     const LIKE_ICON = "images/ui/like.png";
     const LIKED_ICON = "images/ui/liked.png";
     const LIKED_WINDS_KEY_PREFIX = "kite-liked-winds";
@@ -228,7 +228,7 @@
     function setDarkMode(enabled) {
       darkModeEnabled = enabled;
       document.body.classList.toggle("light-mode", !enabled);
-      darkModeBtn.textContent = enabled ? "Dark mode: On" : "Dark mode: Off";
+      darkModeBtn.textContent = enabled ? "Theme: Dark" : "Theme: Light";
       localStorage.setItem("kite-dark-mode", enabled ? "on" : "off");
     }
 
@@ -868,8 +868,8 @@
 
           if (sliced.length === 0) {
             showNotice(activeFeedView === "home"
-              ? "No winds in Home yet. Follow more people to tune your ranking."
-              : (hashtagFilter ? `No winds for #${hashtagFilter}.` : "No winds yet. Be the first to post."));
+              ? "No posts in Home yet. Follow more people to tune your timeline."
+              : (hashtagFilter ? `No posts for #${hashtagFilter}.` : "No posts yet. Be the first to post."));
           }
         },
         (error) => {
@@ -929,7 +929,7 @@
       }
 
       const storedMode = localStorage.getItem("kite-dark-mode");
-      setDarkMode(storedMode !== "off");
+      setDarkMode(storedMode === "on");
       setSidebarOpen(true);
       const authorGraph = await loadHomeAuthors(user);
       homeAuthors = authorGraph.allAuthors;
@@ -984,12 +984,12 @@
         const text = chatInput.value.trim();
         if (!text) return;
         if (text.length > MAX_WIND_LENGTH) {
-          alert("Winds are limited to 120 characters.");
+          alert("Posts are limited to 280 characters.");
           return;
         }
         if (window.containsBlacklistedWords && window.containsBlacklistedWords(text).flagged) {
           const violation = await window.KITE_POLICY.registerPolicyViolation(currentUser, "blacklisted-wind", text);
-          alert(violation.terminated ? "Policy violation detected. Your account was terminated." : "That wind contains blocked words.");
+          alert(violation.terminated ? "Policy violation detected. Your account was terminated." : "That post contains blocked words.");
           return;
         }
 
@@ -999,7 +999,7 @@
           updateCounter();
           clearNotice();
         } catch (error) {
-          showNotice(`Unable to post wind: ${error.message || "unknown error"}`);
+          showNotice(`Unable to post: ${error.message || "unknown error"}`);
         }
       });
 
