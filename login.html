@@ -127,7 +127,7 @@
         const userData = userSnap.exists ? userSnap.data() : {};
         if (userData.language) await window.KITE_I18N.setAndApply(userData.language);
         window.KITE_POLICY.setSessionCookie(user.uid, 30);
-        window.location.href = "profile.html";
+        window.location.href = "server.html?view=profile";
       } catch (err) {
         errorMsg.textContent = "Could not validate account policy.";
       }

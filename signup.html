@@ -184,7 +184,7 @@
         window.KITE_I18N.setLanguage(defaultLanguage.value);
         window.KITE_POLICY.setSessionCookie(createdUser.uid, 30);
         reportLoadStatus("Signup profile setup");
-        window.location.href = "profile.html";
+        window.location.href = "server.html?view=profile";
       } catch (err) {
         reportLoadStatus("Signup profile setup", err);
         errorMsg.textContent = err.message;
