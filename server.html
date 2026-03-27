@@ -72,6 +72,15 @@
   <script src="app.js"></script>
 
   <script>
+    const routeParams = new URLSearchParams(window.location.search);
+    const isProfileRoute = routeParams.get("view") === "profile" || routeParams.has("user");
+
+    if (isProfileRoute) {
+      document.body.innerHTML = '<div id="profilePageRoot"></div>';
+      const profileScript = document.createElement("script");
+      profileScript.src = "profile.js";
+      document.body.appendChild(profileScript);
+    } else {
     const reportLoadStatus = window.reportLoadStatus || ((name, error) => {
       if (error) {
         console.error(`error "${name}" didnt load ❌`, error);
@@ -226,7 +235,7 @@
     function goToProfileByName(name) {
       const value = String(name || "").trim();
       if (!value) return;
-      window.location.href = `profile.html?user=${encodeURIComponent(value)}`;
+      window.location.href = `server.html?view=profile&user=${encodeURIComponent(value)}`;
     }
 
 
@@ -949,7 +958,7 @@
       });
 
       profileTabBtn.addEventListener("click", () => {
-        window.location.href = "profile.html";
+        window.location.href = "server.html?view=profile";
       });
 
       settingsTabBtn.addEventListener("click", () => {
@@ -1011,6 +1020,7 @@
       updateFeedMetrics([]);
       reportLoadStatus("Feed page");
     });
+    }
   </script>
 </body>
 </html>

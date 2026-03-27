@@ -58,7 +58,7 @@
     const settingsMsg = document.getElementById("settingsMsg");
 
     document.getElementById("toFeedBtn").onclick = () => (window.location.href = "server.html");
-    document.getElementById("toProfileBtn").onclick = () => (window.location.href = "profile.html");
+    document.getElementById("toProfileBtn").onclick = () => (window.location.href = "server.html?view=profile");
     document.getElementById("backBtn").onclick = () => (window.location.href = "server.html");
 
     firebase.auth().onAuthStateChanged(async (user) => {

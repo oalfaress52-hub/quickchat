@@ -3,47 +3,31 @@
 <head>
   <meta charset="UTF-8">
   <title>Kite</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #0d1117;
-      color: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .container {
-      background: #161b22;
-      padding: 30px;
-      border-radius: 10px;
-      width: 350px;
-      text-align: center;
-      box-shadow: 0 0 10px rgba(0,0,0,0.5);
-    }
-    button {
-      width: 100%;
-      padding: 10px;
-      margin: 10px 0;
-      border-radius: 5px;
-      border: none;
-      background: #238636;
-      color: white;
-      cursor: pointer;
-      font-size: 16px;
-    }
-    button:hover {
-      background: #2ea043;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="style.css" />
 </head>
-<body>
-  <div class="container">
-    <h1 data-i18n="index.welcome">Welcome to Kite</h1>
-    <button onclick="location.href='login.html'" data-i18n="index.login">Login</button>
-    <button onclick="location.href='signup.html'" data-i18n="index.create">Create Account</button>
-  </div>
+<body class="landing-body">
+  <main class="landing-shell">
+    <section class="landing-card" aria-label="Welcome to Kite">
+      <p class="landing-eyebrow">Social in the cloud</p>
+      <h1 data-i18n="index.welcome">Welcome to Kite</h1>
+      <p class="landing-subtitle">
+        Share quick winds, discover people, and keep your profile in sync across devices.
+      </p>
+
+      <div class="landing-actions">
+        <button class="primary-btn" onclick="location.href='login.html'" data-i18n="index.login">Login</button>
+        <button class="secondary-btn" onclick="location.href='signup.html'" data-i18n="index.create">Create Account</button>
+      </div>
+
+      <ul class="landing-highlights" aria-label="Platform highlights">
+        <li>🪁 Real-time wind feed and interactions</li>
+        <li>🔒 Policy-gated, account-based access</li>
+        <li>🌍 Built-in language support</li>
+      </ul>
+    </section>
+  </main>
+
   <script src="policy.js"></script>
   <script src="i18n.js"></script>
   <script>
