@@ -10,8 +10,8 @@
   <div class="auth-wrapper">
     <div class="auth-card">
       <h1>Kite</h1>
-      <h2 data-i18n="login.title">Advanced Login</h2>
-      <p class="profile-small-text" data-i18n="login.subtitle">Secure sign-in with device trust + challenge code.</p>
+      <h2 data-i18n="login.title">Sign in to your account</h2>
+      <p class="profile-small-text" data-i18n="login.subtitle">Welcome back. Log in and continue your timeline.</p>
 
       <form id="loginForm" autocomplete="on">
         <input
@@ -32,16 +32,7 @@
           />
           <span class="password-toggle" id="togglePassword">Show</span>
         </div>
-
-        <div class="profile-edit-row">
-          <label for="challengeCode" data-i18n="login.challenge">Security challenge code (optional)</label>
-          <input type="text" id="challengeCode" maxlength="6" inputmode="numeric" placeholder="123456" />
-          <small data-i18n="login.challenge.tip">Tip: Enter 123456 in demo mode to simulate second factor.</small>
-        </div>
-
-        <label class="remember-row"><input type="checkbox" id="rememberDevice" checked /> <span data-i18n="login.trust">Trust this device for 30 days</span></label>
-
-        <button type="submit" class="primary-btn" data-i18n="login.submit">Secure Log In</button>
+        <button type="submit" class="primary-btn" data-i18n="login.submit">Sign in</button>
       </form>
 
       <p class="switch">
@@ -74,8 +65,6 @@
     const passwordInput = document.getElementById("password");
     const toggle = document.getElementById("togglePassword");
     const errorMsg = document.getElementById("errorMsg");
-    const codeInput = document.getElementById("challengeCode");
-    const rememberDevice = document.getElementById("rememberDevice");
 
     window.KITE_I18N.applyLanguage(document);
 
@@ -139,16 +128,9 @@
 
       const email = document.getElementById("email").value.trim();
       const password = passwordInput.value;
-      const challenge = codeInput.value.trim();
-
-      if (challenge && challenge !== "123456") {
-        errorMsg.textContent = "Security code is invalid (demo code: 123456).";
-        return;
-      }
-
       try {
         await firebase.auth().setPersistence(
-          rememberDevice.checked ? firebase.auth.Auth.Persistence.LOCAL : firebase.auth.Auth.Persistence.SESSION
+          firebase.auth.Auth.Persistence.LOCAL
         );
 
         await firebase.auth().signInWithEmailAndPassword(email, password);
